@@ -61,18 +61,45 @@ struct BitCard: View {
             .padding(.top, 16)
             
             // Content
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 if let title = bit.title, !title.isEmpty {
                     Text(title)
                         .font(.headline)
                         .foregroundColor(.primary)
                 }
-                
-                Text(bit.text)
-                    .font(.body)
-                    .foregroundColor(bit.isHidden ? .secondary : .primary)
-                    .opacity(bit.isHidden ? 0.6 : 1)
-                    .lineLimit(nil)
+
+                // Micro-journaling sections: Feel, Event, Action
+                VStack(alignment: .leading, spacing: 16) {
+                    // Feel section
+                    if !bit.feel.isEmpty {
+                        MicroJournalSection(
+                            title: "Feel",
+                            text: bit.feel,
+                            emotion: bit.feelEmotion,
+                            isHidden: bit.isHidden
+                        )
+                    }
+
+                    // Event section
+                    if !bit.event.isEmpty {
+                        MicroJournalSection(
+                            title: "Event",
+                            text: bit.event,
+                            emotion: bit.eventEmotion,
+                            isHidden: bit.isHidden
+                        )
+                    }
+
+                    // Action section
+                    if !bit.action.isEmpty {
+                        MicroJournalSection(
+                            title: "Action",
+                            text: bit.action,
+                            emotion: bit.actionEmotion,
+                            isHidden: bit.isHidden
+                        )
+                    }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -116,8 +143,12 @@ struct BitCard: View {
             bit: Bit(
                 id: UUID(),
                 title: "Amazing Day at the Beach",
-                text: "Today was incredible! The sunset was breathtaking and I felt so peaceful watching the waves.",
-                emotion: .joy,
+                feel: "I felt so peaceful watching the waves",
+                event: "Went to the beach and watched a breathtaking sunset",
+                action: "I want to go back next weekend with friends",
+                feelEmotion: .joy,
+                eventEmotion: .surprise,
+                actionEmotion: .excitement,
                 intensity: 4,
                 lastModified: Date(),
                 isHidden: false
@@ -127,14 +158,18 @@ struct BitCard: View {
             onDelete: {},
             onToggleHide: {}
         )
-        
+
         // Card without title
         BitCard(
             bit: Bit(
                 id: UUID(),
                 title: nil,
-                text: "Feeling grateful for my family and friends today.",
-                emotion: .gratitude,
+                feel: "Grateful for all the love around me",
+                event: "Had dinner with family",
+                action: "Plan to call my grandmother this week",
+                feelEmotion: .gratitude,
+                eventEmotion: .joy,
+                actionEmotion: .love,
                 intensity: 3,
                 lastModified: Date(),
                 isHidden: false
@@ -144,14 +179,18 @@ struct BitCard: View {
             onDelete: {},
             onToggleHide: {}
         )
-        
+
         // Hidden card
         BitCard(
             bit: Bit(
                 id: UUID(),
                 title: "Tough Conversation",
-                text: "Had a difficult talk with a friend. Feeling conflicted about the situation.",
-                emotion: .sadness,
+                feel: "Conflicted and sad about the situation",
+                event: "Had a difficult talk with a friend",
+                action: "Need to give them space and think",
+                feelEmotion: .sadness,
+                eventEmotion: .anxiety,
+                actionEmotion: .hope,
                 intensity: 2,
                 lastModified: Date(),
                 isHidden: true
@@ -164,4 +203,44 @@ struct BitCard: View {
     }
     .padding()
     .background(Color(uiColor: .systemGroupedBackground))
+}
+
+struct MicroJournalSection: View {
+    let title: String
+    let text: String
+    let emotion: Emotion
+    let isHidden: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Emotion indicator
+            VStack(spacing: 4) {
+                Text(emotion.emoji)
+                    .font(.title2)
+                Text(title)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            }
+            .frame(width: 60)
+
+            // Content
+            Text(text)
+                .font(.body)
+                .foregroundColor(isHidden ? .secondary : .primary)
+                .opacity(isHidden ? 0.6 : 1)
+                .lineLimit(nil)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(emotion.color.opacity(0.1))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(emotion.color.opacity(0.3), lineWidth: 1)
+        )
+    }
 }

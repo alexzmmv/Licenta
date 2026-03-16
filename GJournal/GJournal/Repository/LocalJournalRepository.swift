@@ -21,56 +21,64 @@ class LocalJournalRepository: BaseJournalRepository {
     }
     
     // MARK: - CRUD Operations
-    
-    override func createBit(title: String?, text: String, emotion: Emotion, intensity: Int) {
+
+    override func createBit(title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
             return
         }
-        
+
         let newBit = Bit(
             id: UUID(),
             serverId: nil,
             title: title,
-            text: text,
-            emotion: emotion,
+            feel: feel,
+            event: event,
+            action: action,
+            feelEmotion: feelEmotion,
+            eventEmotion: eventEmotion,
+            actionEmotion: actionEmotion,
             intensity: intensity,
             lastModified: Date(),
             createdAt: Date(),
             isHidden: false
         )
-        
+
         modelContext.insert(newBit)
-        
+
         do {
             try modelContext.save()
             bits.append(newBit)
-            print("[LocalRepository] Created bit: \(newBit.id)")
+            print("[LocalRepository] Created micro-journal bit: \(newBit.id)")
         } catch {
-            errorMessage = "Failed to save bit: \(error.localizedDescription)"
-            print("[LocalRepository] Failed to create bit: \(error)")
+            errorMessage = "Failed to save micro-journal bit: \(error.localizedDescription)"
+            print("[LocalRepository] Failed to create micro-journal bit: \(error)")
         }
     }
-    
-    override func updateBit(id: UUID, title: String?, text: String, emotion: Emotion, intensity: Int) {
+
+    override func updateBit(id: UUID, title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
             return
         }
-        
+
         if let index = bits.firstIndex(where: { $0.id == id }) {
             bits[index].title = title
-            bits[index].text = text
-            bits[index].emotion = emotion
+            bits[index].feel = feel
+            bits[index].event = event
+            bits[index].action = action
+            bits[index].feelEmotion = feelEmotion
+            bits[index].eventEmotion = eventEmotion
+            bits[index].actionEmotion = actionEmotion
             bits[index].intensity = intensity
             bits[index].lastModified = Date()
-            
+
             do {
                 try modelContext.save()
-                print("[LocalRepository] Updated bit: \(id)")
+                print("[LocalRepository] Updated micro-journal bit: \(id)")
             } catch {
-                errorMessage = "Failed to update bit: \(error.localizedDescription)"
-                print("[LocalRepository] Failed to update bit: \(error)")
+                errorMessage = "Failed to update micro-journal bit: \(error.localizedDescription)"
+                print("[LocalRepository] Failed to update micro-journal bit: \(error)")
             }
         } else {
             errorMessage = "Bit not found"
@@ -104,11 +112,11 @@ class LocalJournalRepository: BaseJournalRepository {
             errorMessage = "Data context not available"
             return
         }
-        
+
         if let index = bits.firstIndex(where: { $0.id == id }) {
             bits[index].isHidden.toggle()
             bits[index].lastModified = Date()
-            
+
             do {
                 try modelContext.save()
                 print("[LocalRepository] Toggled hide for bit: \(id)")

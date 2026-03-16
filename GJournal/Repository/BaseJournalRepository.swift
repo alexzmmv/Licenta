@@ -42,11 +42,11 @@ open class BaseJournalRepository: ObservableObject {
 
     // MARK: - CRUD operations (override in subclasses)
 
-    func createBit(title: String?, text: String, emotion: Emotion, intensity: Int) {
+    func createBit(title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
         // Override in subclass
     }
 
-    func updateBit(id: UUID, title: String?, text: String, emotion: Emotion, intensity: Int) {
+    func updateBit(id: UUID, title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
         // Override in subclass
     }
 
@@ -96,20 +96,27 @@ open class BaseJournalRepository: ObservableObject {
 
         let recentBits = bits.filter { $0.createdAt >= monthAgo && $0.createdAt <= now && !$0.isHidden }
 
-        var emotionData: [Emotion: (dates: [Date], totalIntensity: Int)] = [:]
+        var emotionData: [Emotion: (dates: Set<Date>, totalIntensity: Int)] = [:]
+
         for bit in recentBits {
             let day = calendar.startOfDay(for: bit.createdAt)
-            if var data = emotionData[bit.emotion] {
-                data.dates.append(day)
-                data.totalIntensity += bit.intensity
-                emotionData[bit.emotion] = data
-            } else {
-                emotionData[bit.emotion] = (dates: [day], totalIntensity: bit.intensity)
+
+            // Count each emotion type (feel, event, action) separately
+            let emotions = [bit.feelEmotion, bit.eventEmotion, bit.actionEmotion]
+
+            for emotion in emotions {
+                if var data = emotionData[emotion] {
+                    data.dates.insert(day)
+                    data.totalIntensity += bit.intensity
+                    emotionData[emotion] = data
+                } else {
+                    emotionData[emotion] = (dates: [day], totalIntensity: bit.intensity)
+                }
             }
         }
 
         return emotionData
-            .map { (emotion: $0.key, count: $0.value.dates.count, dates: Array(Set($0.value.dates)).sorted(), totalIntensity: $0.value.totalIntensity) }
+            .map { (emotion: $0.key, count: $0.value.dates.count, dates: Array($0.value.dates).sorted(), totalIntensity: $0.value.totalIntensity) }
             .sorted { first, second in
                 if first.count != second.count {
                     return first.count > second.count

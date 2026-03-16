@@ -63,29 +63,34 @@ struct CalendarView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.title3)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                         .frame(width: 44, height: 44)
+                        .background(Color.gray.opacity(0.2))
+                        .clipShape(Circle())
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     showingMonthYearPicker = true
                 } label: {
                     Text("\(monthName) \(year)")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .foregroundColor(.white)
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     changeMonth(by: 1)
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.title3)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                         .frame(width: 44, height: 44)
+                        .background(Color.gray.opacity(0.2))
+                        .clipShape(Circle())
                 }
             }
             
@@ -95,7 +100,7 @@ struct CalendarView: View {
                     Text(day)
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -164,18 +169,18 @@ struct DayCell: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(isSelected ? Color.accentColor : (isToday ? Color.accentColor.opacity(0.15) : Color(uiColor: .secondarySystemGroupedBackground)))
+                .fill(isSelected ? Color.pink : (isToday ? Color.pink.opacity(0.2) : Color.gray.opacity(0.1)))
                 .overlay(
                     Circle()
-                        .stroke(isToday && !isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                        .stroke(isToday && !isSelected ? Color.pink.opacity(0.5) : Color.clear, lineWidth: 1.5)
                 )
-            
+
             VStack(spacing: 2) {
                 Text(dayNumber)
                     .font(.system(size: 16))
                     .fontWeight(isToday ? .bold : .regular)
-                    .foregroundColor(isSelected ? .white : .primary)
-                
+                    .foregroundColor(isSelected ? .white : .white)
+
                 if hasBits {
                     Circle()
                         .fill(isSelected ? Color.white : Color.pink)

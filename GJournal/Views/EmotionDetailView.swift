@@ -13,8 +13,9 @@ struct EmotionDetailView: View {
         let calendar = Calendar.current
         let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         return repository.bits.filter { bit in
-            bit.emotion == emotion && 
-            bit.createdAt >= thirtyDaysAgo && 
+            // Check if the emotion appears in any of the emotion fields
+            (bit.feelEmotion == emotion || bit.eventEmotion == emotion || bit.actionEmotion == emotion) &&
+            bit.createdAt >= thirtyDaysAgo &&
             !bit.isHidden
         }
         .sorted { first, second in
@@ -27,52 +28,146 @@ struct EmotionDetailView: View {
 
     var body: some View {
         ZStack {
-            Color(uiColor: .systemGroupedBackground)
-                .ignoresSafeArea()
+            // Dark background
+            Color.black.ignoresSafeArea()
 
-            if bits.isEmpty {
-                VStack(spacing: 20) {
-                    Text("No entries for \(emotion.rawValue) in the last 30 days")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 16) {
+                    // Emotion icon
+                    ZStack {
+                        Circle()
+                            .fill(emotion.color.opacity(0.2))
+                            .frame(width: 80, height: 80)
+
+                        Text(emotion.emoji)
+                            .font(.system(size: 40))
+                    }
+
+                    VStack(spacing: 4) {
+                        Text(emotion.rawValue)
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+
+                        Text("Last 30 Days")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
                 }
-                .padding()
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(bits) { bit in
-                            BitCard(
-                                bit: bit,
-                                canEdit: repository.canEdit(bit: bit),
-                                onEdit: {
-                                    bitToEdit = bit
-                                },
-                                onDelete: {
-                                    bitToDelete = bit
-                                    showingDeleteAlert = true
-                                },
-                                onToggleHide: {
-                                    repository.toggleHideBit(id: bit.id)
-                                }
-                            )
+                .padding(.top, 20)
+                .padding(.bottom, 32)
+
+                if bits.isEmpty {
+                    Spacer()
+                    VStack(spacing: 20) {
+                        Image(systemName: "heart.slash")
+                            .font(.system(size: 50))
+                            .foregroundColor(.gray.opacity(0.6))
+
+                        VStack(spacing: 8) {
+                            Text("No \(emotion.rawValue.lowercased()) entries")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+
+                            Text("You haven't recorded any entries with this emotion in the last 30 days")
+                                .font(.body)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
                         }
                     }
-                    .padding()
+                    Spacer()
+                } else {
+                    // Stats section
+                    HStack(spacing: 32) {
+                        VStack(spacing: 4) {
+                            Text("\(bits.count)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+
+                            Text("Entries")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+
+                        VStack(spacing: 4) {
+                            Text("\(Set(bits.map { Calendar.current.startOfDay(for: $0.createdAt) }).count)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+
+                            Text("Days")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+
+                        VStack(spacing: 4) {
+                            let avgIntensity = bits.isEmpty ? 0 : Double(bits.map { $0.intensity }.reduce(0, +)) / Double(bits.count)
+                            Text(String(format: "%.1f", avgIntensity))
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+
+                            Text("Avg Intensity")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 32)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.gray.opacity(0.1))
+                            .stroke(emotion.color.opacity(0.3), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 20)
+
+                    // Entries list
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(bits) { bit in
+                                BitCard(
+                                    bit: bit,
+                                    canEdit: repository.canEdit(bit: bit),
+                                    onEdit: {
+                                        bitToEdit = bit
+                                    },
+                                    onDelete: {
+                                        bitToDelete = bit
+                                        showingDeleteAlert = true
+                                    },
+                                    onToggleHide: {
+                                        repository.toggleHideBit(id: bit.id)
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+                        .padding(.bottom, 100)
+                    }
                 }
             }
         }
-        .navigationTitle(emotion.rawValue)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .fontWeight(.semibold)
-                }
+        .navigationBarHidden(true)
+        .overlay(alignment: .topLeading) {
+            // Custom back button
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Color.gray.opacity(0.2))
+                    .clipShape(Circle())
             }
+            .padding(.top, 50)
+            .padding(.leading, 20)
         }
+        .preferredColorScheme(.dark)
         .sheet(item: $bitToEdit) { bit in
             AddEditBitView(repository: repository, bitToEdit: bit, date: bit.createdAt)
         }
