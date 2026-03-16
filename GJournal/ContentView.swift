@@ -30,7 +30,7 @@ struct ContentView: View {
     }
 
     private var topEmotions: [(emotion: Emotion, count: Int, dates: [Date])] {
-        repository.getTopEmotionsLastMonth()
+        repository.getTopEmotionsLast30Days()
     }
 
     private var canCreateToday: Bool {

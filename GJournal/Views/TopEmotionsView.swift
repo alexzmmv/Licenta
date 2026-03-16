@@ -100,7 +100,7 @@ struct EmotionRankCard: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
 
-                    Text("\(count) \(count == 1 ? "entry" : "entries")")
+                    Text("\(count) \(count == 1 ? "day" : "days")")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }

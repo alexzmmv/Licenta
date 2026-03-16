@@ -89,12 +89,12 @@ open class BaseJournalRepository: ObservableObject {
         return calendar.isDateInToday(date)
     }
 
-    func getTopEmotionsLastMonth() -> [(emotion: Emotion, count: Int, dates: [Date])] {
+    func getTopEmotionsLast30Days() -> [(emotion: Emotion, count: Int, dates: [Date])] {
         let calendar = Calendar.current
         let now = Date()
-        let monthAgo = calendar.date(byAdding: .month, value: -1, to: now)!
+        let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now)!
 
-        let recentBits = bits.filter { $0.createdAt >= monthAgo && $0.createdAt <= now && !$0.isHidden }
+        let recentBits = bits.filter { $0.createdAt >= thirtyDaysAgo && $0.createdAt <= now && !$0.isHidden }
 
         var emotionData: [Emotion: (dates: Set<Date>, totalIntensity: Int)] = [:]
 
