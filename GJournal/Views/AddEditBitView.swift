@@ -83,31 +83,51 @@ struct AddEditBitView: View {
                 // Dark background
                 Color.black.ignoresSafeArea()
 
-                VStack {
-                    // Progress indicator
-                    if currentStep != .welcome {
-                        ProgressIndicator(currentStep: currentStep.stepNumber, totalSteps: totalSteps)
-                            .padding(.top, 20)
-                    }
-
-                    // Content area
-                    ZStack {
-                        ForEach([currentStep], id: \.self) { step in
-                            stepView(for: step)
-                                .offset(x: slideOffset)
-                                .opacity(currentStepOpacity)
+                if isEditing {
+                    // Simple edit form for existing bits
+                    EditFormView(
+                        title: $title,
+                        feel: $feel,
+                        event: $event,
+                        action: $action,
+                        selectedFeelEmotion: $selectedFeelEmotion,
+                        selectedEventEmotion: $selectedEventEmotion,
+                        selectedActionEmotion: $selectedActionEmotion,
+                        intensity: $intensity,
+                        emotionConfigManager: emotionConfigManager,
+                        onSave: saveBit,
+                        onCancel: { dismiss() }
+                    )
+                } else {
+                    // Therapeutic journey for new bits
+                    VStack {
+                        // Progress indicator
+                        if currentStep != .welcome {
+                            ProgressIndicator(currentStep: currentStep.stepNumber, totalSteps: totalSteps)
+                                .padding(.top, 20)
                         }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    Spacer()
+                        // Content area
+                        ZStack {
+                            ForEach([currentStep], id: \.self) { step in
+                                stepView(for: step)
+                                    .offset(x: slideOffset)
+                                    .opacity(currentStepOpacity)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                        Spacer()
+                    }
                 }
             }
             .navigationBarHidden(true)
             .onAppear {
                 emotionConfigManager = EmotionConfigurationManager(modelContext: modelContext)
                 loadBitData()
-                animateIn()
+                if !isEditing {
+                    animateIn()
+                }
             }
         }
         .preferredColorScheme(.dark)
@@ -836,3 +856,264 @@ struct ReviewSection: View {
         .cornerRadius(15)
     }
 }
+
+// MARK: - Edit Form View
+
+struct EditFormView: View {
+    @Binding var title: String
+    @Binding var feel: String
+    @Binding var event: String
+    @Binding var action: String
+    @Binding var selectedFeelEmotion: Emotion
+    @Binding var selectedEventEmotion: Emotion
+    @Binding var selectedActionEmotion: Emotion
+    @Binding var intensity: Double
+
+    let emotionConfigManager: EmotionConfigurationManager?
+    let onSave: () -> Void
+    let onCancel: () -> Void
+
+    @State private var showingFeelEmotions = false
+    @State private var showingEventEmotions = false
+    @State private var showingActionEmotions = false
+
+    private let intensityLabels = ["Mild", "Moderate", "Strong", "Intense"]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button("Cancel", action: onCancel)
+                    .foregroundColor(.gray)
+
+                Spacer()
+
+                Text("Edit Entry")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Button("Save", action: onSave)
+                    .foregroundColor(.pink)
+                    .fontWeight(.semibold)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 50)
+            .padding(.bottom, 20)
+
+            // Form content
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Title section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Title (Optional)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.gray)
+
+                        TextField("Add a title for this entry...", text: $title)
+                            .font(.body)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(12)
+                    }
+
+                    // Feel section
+                    EditSection(
+                        title: "Feel",
+                        text: $feel,
+                        emotion: selectedFeelEmotion,
+                        placeholder: "How are you feeling?",
+                        onEmotionTap: { showingFeelEmotions = true }
+                    )
+
+                    // Event section
+                    EditSection(
+                        title: "Event",
+                        text: $event,
+                        emotion: selectedEventEmotion,
+                        placeholder: "What happened?",
+                        onEmotionTap: { showingEventEmotions = true }
+                    )
+
+                    // Action section
+                    EditSection(
+                        title: "Action",
+                        text: $action,
+                        emotion: selectedActionEmotion,
+                        placeholder: "What will you do?",
+                        onEmotionTap: { showingActionEmotions = true }
+                    )
+
+                    // Intensity section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Intensity")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.gray)
+
+                        VStack(spacing: 16) {
+                            HStack {
+                                Text(intensityLabels[Int(intensity) - 1])
+                                    .font(.body)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.white)
+
+                                Spacer()
+
+                                Text("\(Int(intensity))/4")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+
+                            Slider(value: $intensity, in: 1...4, step: 1)
+                                .accentColor(.pink)
+                        }
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 100)
+            }
+        }
+        .sheet(isPresented: $showingFeelEmotions) {
+            EmotionPickerSheet(
+                title: "Feel Emotion",
+                selectedEmotion: $selectedFeelEmotion,
+                emotions: emotionConfigManager?.getEmotionsForField(.feel) ?? Emotion.allCases,
+                isPresented: $showingFeelEmotions
+            )
+        }
+        .sheet(isPresented: $showingEventEmotions) {
+            EmotionPickerSheet(
+                title: "Event Emotion",
+                selectedEmotion: $selectedEventEmotion,
+                emotions: emotionConfigManager?.getEmotionsForField(.event) ?? Emotion.allCases,
+                isPresented: $showingEventEmotions
+            )
+        }
+        .sheet(isPresented: $showingActionEmotions) {
+            EmotionPickerSheet(
+                title: "Action Emotion",
+                selectedEmotion: $selectedActionEmotion,
+                emotions: emotionConfigManager?.getEmotionsForField(.action) ?? Emotion.allCases,
+                isPresented: $showingActionEmotions
+            )
+        }
+    }
+}
+
+struct EditSection: View {
+    let title: String
+    @Binding var text: String
+    let emotion: Emotion
+    let placeholder: String
+    let onEmotionTap: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.gray)
+
+                Spacer()
+
+                Button(action: onEmotionTap) {
+                    HStack(spacing: 8) {
+                        Text(emotion.emoji)
+                            .font(.body)
+
+                        Text(emotion.rawValue)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+
+                        Image(systemName: "chevron.down")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(emotion.color.opacity(0.2))
+                    .cornerRadius(8)
+                }
+            }
+
+            TextEditor(text: $text)
+                .font(.body)
+                .foregroundColor(.white)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+                .frame(minHeight: 80)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(12)
+        }
+    }
+}
+
+struct EmotionPickerSheet: View {
+    let title: String
+    @Binding var selectedEmotion: Emotion
+    let emotions: [Emotion]
+    @Binding var isPresented: Bool
+
+    let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.black.ignoresSafeArea()
+
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        ForEach(emotions, id: \.self) { emotion in
+                            Button(action: {
+                                selectedEmotion = emotion
+                                isPresented = false
+                            }) {
+                                VStack(spacing: 8) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(selectedEmotion == emotion ? emotion.color : Color.gray.opacity(0.2))
+                                            .frame(width: 60, height: 60)
+
+                                        Text(emotion.emoji)
+                                            .font(.title2)
+                                    }
+
+                                    Text(emotion.rawValue)
+                                        .font(.caption)
+                                        .fontWeight(selectedEmotion == emotion ? .semibold : .regular)
+                                        .foregroundColor(selectedEmotion == emotion ? .white : .gray)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .scaleEffect(selectedEmotion == emotion ? 1.1 : 1.0)
+                            .animation(.easeInOut(duration: 0.2), value: selectedEmotion)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                trailing: Button("Done") {
+                    isPresented = false
+                }
+                .foregroundColor(.pink)
+            )
+        }
+        .preferredColorScheme(.dark)
+    }
