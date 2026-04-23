@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AddEditBitView: View {
     @Environment(\.dismiss) var dismiss
@@ -1066,14 +1067,14 @@ struct EmotionPickerSheet: View {
     @Binding var selectedEmotion: Emotion
     let emotions: [Emotion]
     @Binding var isPresented: Bool
-
+    
     let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
-
+    
     var body: some View {
         NavigationView {
             ZStack {
                 Color.black.ignoresSafeArea()
-
+                
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(emotions, id: \.self) { emotion in
@@ -1086,11 +1087,11 @@ struct EmotionPickerSheet: View {
                                         Circle()
                                             .fill(selectedEmotion == emotion ? emotion.color : Color.gray.opacity(0.2))
                                             .frame(width: 60, height: 60)
-
+                                        
                                         Text(emotion.emoji)
                                             .font(.title2)
                                     }
-
+                                    
                                     Text(emotion.rawValue)
                                         .font(.caption)
                                         .fontWeight(selectedEmotion == emotion ? .semibold : .regular)
@@ -1112,8 +1113,9 @@ struct EmotionPickerSheet: View {
                 trailing: Button("Done") {
                     isPresented = false
                 }
-                .foregroundColor(.pink)
+                    .foregroundColor(.pink)
             )
         }
         .preferredColorScheme(.dark)
     }
+}
