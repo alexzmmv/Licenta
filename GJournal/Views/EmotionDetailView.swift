@@ -8,11 +8,11 @@ struct EmotionDetailView: View {
     @State private var bitToEdit: Bit?
     @State private var showingDeleteAlert = false
     @State private var bitToDelete: Bit?
+    @State private var bits: [Bit] = []
 
-    private var bits: [Bit] {
-        let calendar = Calendar.current
-        let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        return repository.bits.filter { bit in
+    private func updateData() {
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        self.bits = repository.bits.filter { bit in
             // Check if the emotion appears in any of the emotion fields
             (bit.feelEmotion == emotion || bit.eventEmotion == emotion || bit.actionEmotion == emotion) &&
             bit.createdAt >= thirtyDaysAgo &&
@@ -153,6 +153,12 @@ struct EmotionDetailView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            updateData()
+        }
+        .onChange(of: repository.bits) {
+            updateData()
+        }
         .overlay(alignment: .topLeading) {
             // Custom back button
             Button(action: { dismiss() }) {

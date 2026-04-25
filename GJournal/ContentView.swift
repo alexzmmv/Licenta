@@ -7,7 +7,7 @@ struct IdentifiableDate: Identifiable {
 }
 
 struct ContentView: View {
-    @StateObject private var repository: BaseJournalRepository
+    @ObservedObject var repository: BaseJournalRepository
     @EnvironmentObject var authManager: AuthManager
     @Environment(\.modelContext) private var modelContext
     @State private var currentMonth = Date()
@@ -16,22 +16,24 @@ struct ContentView: View {
     @State private var showingAddBit = false
     @State private var showingRepoError = false
     @State private var showingSettings = false
+    @State private var showingBitsList = false
+    @State private var showingGraph = false
 
     // New: emotion sheet state
     @State private var selectedEmotion: Emotion? = nil
     @State private var showingEmotionSheet = false
 
-    // Injectable initializer
+    // Injectable initializer — repository is owned by MainAppView
     init(repository: BaseJournalRepository) {
-        _repository = StateObject(wrappedValue: repository)
+        self.repository = repository
     }
 
-    private var daysWithBits: Set<Date> {
-        repository.getDaysWithBits()
-    }
+    @State private var daysWithBits: Set<Date> = []
+    @State private var topEmotions: [(emotion: Emotion, count: Int, dates: [Date])] = []
 
-    private var topEmotions: [(emotion: Emotion, count: Int, dates: [Date])] {
-        repository.getTopEmotionsLast30Days()
+    private func updateDashboardData() {
+        self.daysWithBits = repository.getDaysWithBits()
+        self.topEmotions = repository.getTopEmotionsLast30Days()
     }
 
     private var canCreateToday: Bool {
@@ -40,6 +42,12 @@ struct ContentView: View {
 
     private var isFirstTimeUser: Bool {
         repository.bits.isEmpty
+    }
+
+    /// Get the friendly display name from the user's saved name
+    private var displayName: String {
+        guard let name = authManager.currentUser, !name.isEmpty else { return "" }
+        return name.prefix(1).uppercased() + name.dropFirst()
     }
 
     private var greeting: String {
@@ -65,7 +73,7 @@ struct ContentView: View {
                         // Greeting header
                         HStack {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(greeting+", Alex")
+                                Text(displayName.isEmpty ? greeting : "\(greeting), \(displayName)")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -77,15 +85,39 @@ struct ContentView: View {
 
                             Spacer()
 
-                            Button {
-                                showingSettings = true
-                            } label: {
-                                Image(systemName: "gearshape.fill")
-                                    .font(.title3)
-                                    .foregroundColor(.gray)
-                                    .padding(8)
-                                    .background(Color.gray.opacity(0.2))
-                                    .clipShape(Circle())
+                            HStack(spacing: 8) {
+                                Button {
+                                    showingBitsList = true
+                                } label: {
+                                    Image(systemName: "list.bullet")
+                                        .font(.title3)
+                                        .foregroundColor(.gray)
+                                        .padding(8)
+                                        .background(Color.gray.opacity(0.2))
+                                        .clipShape(Circle())
+                                }
+
+                                Button {
+                                    showingGraph = true
+                                } label: {
+                                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                                        .font(.title3)
+                                        .foregroundColor(.gray)
+                                        .padding(8)
+                                        .background(Color.gray.opacity(0.2))
+                                        .clipShape(Circle())
+                                }
+
+                                Button {
+                                    showingSettings = true
+                                } label: {
+                                    Image(systemName: "gearshape.fill")
+                                        .font(.title3)
+                                        .foregroundColor(.gray)
+                                        .padding(8)
+                                        .background(Color.gray.opacity(0.2))
+                                        .clipShape(Circle())
+                                }
                             }
                         }
                         .padding(.horizontal, 20)
@@ -176,6 +208,16 @@ struct ContentView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
+            .fullScreenCover(isPresented: $showingBitsList) {
+                NavigationView {
+                    BitsListView(repository: repository)
+                }
+            }
+            .fullScreenCover(isPresented: $showingGraph) {
+                NavigationView {
+                    ClusterGraphView(repository: repository)
+                }
+            }
             // Emotion sheet
             .sheet(isPresented: $showingEmotionSheet) {
                 if let emotion = selectedEmotion {
@@ -197,8 +239,11 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear {
-            // Ensure repository has a ModelContext from SwiftData before performing CRUD
             repository.configure(with: modelContext)
+            updateDashboardData()
+        }
+        .onChange(of: repository.bits) {
+            updateDashboardData()
         }
     }
 }

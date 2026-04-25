@@ -244,3 +244,145 @@ struct MicroJournalSection: View {
         )
     }
 }
+//
+//  BitDetailView.swift
+//  GJournal
+//
+//  A read-only detailed view of a single journal entry (Bit).
+//
+
+import SwiftUI
+
+struct BitDetailView: View {
+    let bit: Bit
+    var clusterName: String?
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Header Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        if let title = bit.title, !title.isEmpty {
+                            Text(title)
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+
+                        HStack(spacing: 12) {
+                            Text(bit.feelEmotion.emoji)
+                                .font(.title2)
+                            
+                            Text(bit.feelEmotion.rawValue)
+                                .font(.headline)
+                                .foregroundColor(bit.feelEmotion.color)
+
+                            Spacer()
+
+                            Text(formatDate(bit.createdAt))
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding(.bottom, 8)
+
+                    // Content Sections
+                    VStack(alignment: .leading, spacing: 20) {
+                        detailSection(title: "How you felt", content: bit.feel)
+                        
+                        if !bit.event.isEmpty {
+                            detailSection(title: "What happened", content: bit.event)
+                        }
+                        
+                        if !bit.action.isEmpty {
+                            detailSection(title: "What you did", content: bit.action)
+                        }
+                    }
+
+                    // Metadata Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Divider()
+                            .background(Color.gray.opacity(0.3))
+                            .padding(.vertical, 8)
+
+                        Text("Metadata")
+                            .font(.headline)
+                            .foregroundColor(.white)
+
+                        metadataRow(title: "Intensity", value: String(repeating: "🔥", count: bit.intensity))
+                        
+                        if let clusterID = bit.clusterID, clusterID >= 0 {
+                            if let name = clusterName {
+                                metadataRow(title: "Cluster", value: name)
+                            } else {
+                                metadataRow(title: "Cluster", value: "Cluster \(clusterID)")
+                            }
+                        }
+                        
+                        metadataRow(title: "Last Modified", value: formatDateTime(bit.lastModified))
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(20)
+            }
+            .background(Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.pink)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func detailSection(title: String, content: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.gray)
+
+            Text(content)
+                .font(.body)
+                .foregroundColor(.white)
+                .lineSpacing(6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color(red: 0.12, green: 0.12, blue: 0.14))
+        .cornerRadius(12)
+    }
+
+    private func metadataRow(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.gray)
+            Spacer()
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+        }
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    private func formatDateTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+}

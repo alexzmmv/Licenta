@@ -18,7 +18,7 @@ struct GJournalApp: App {
     init() {
         do {
             modelContainer = try ModelContainer(
-                for: Bit.self, SyncOperationModel.self,
+                for: Bit.self,
                 configurations: ModelConfiguration(isStoredInMemoryOnly: false)
             )
         } catch {
@@ -33,11 +33,6 @@ struct GJournalApp: App {
                     // User is logged in - show biometric lock screen or main app
                     BiometricLockView()
                         .environmentObject(authManager)
-                        .onAppear {
-                            // Configure SyncQueue with ModelContext
-                            let context = modelContainer.mainContext
-                            SyncQueue.shared.configure(with: context)
-                        }
                 } else {
                     // User not logged in - show login screen
                     LoginView()
@@ -56,3 +51,4 @@ struct GJournalApp: App {
 }
 
 // Note: ContentView preview removed as it requires authentication context
+

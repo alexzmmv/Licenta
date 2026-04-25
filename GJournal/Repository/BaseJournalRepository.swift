@@ -27,13 +27,19 @@ open class BaseJournalRepository: ObservableObject {
     open func loadBitsFromContext() {
         guard let modelContext = modelContext else { return }
         
+        // Use SwiftData Predicate for maximum database query efficiency
+        let predicate = #Predicate<Bit> { bit in
+            bit.deletedAt == nil
+        }
+        
         let descriptor = FetchDescriptor<Bit>(
+            predicate: predicate,
             sortBy: [SortDescriptor(\.lastModified, order: .reverse)]
         )
         
         do {
             bits = try modelContext.fetch(descriptor)
-            print("[Repository] Loaded \(bits.count) bits from SwiftData")
+            print("[Repository] Loaded \(bits.count) active bits from SwiftData")
         } catch {
             print("[Repository] Failed to load bits: \(error)")
             bits = []
@@ -125,5 +131,59 @@ open class BaseJournalRepository: ObservableObject {
             }
             .prefix(3)
             .map { (emotion: $0.emotion, count: $0.count, dates: $0.dates) }
+    }
+
+    // MARK: - Search & Filter
+
+    func searchBits(
+        query: String = "",
+        emotions: [Emotion]? = nil,
+        dateRange: ClosedRange<Date>? = nil,
+        intensityRange: ClosedRange<Int>? = nil,
+        clusterIDs: [Int]? = nil
+    ) -> [Bit] {
+        var results = bits
+
+        // Filter by cluster
+        if let clusterIDs = clusterIDs, !clusterIDs.isEmpty {
+            results = results.filter { bit in
+                if let id = bit.clusterID {
+                    return clusterIDs.contains(id)
+                }
+                return false
+            }
+        }
+
+        // Text search across title, feel, event, action
+        if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let lowered = query.lowercased()
+            results = results.filter { bit in
+                (bit.title?.lowercased().contains(lowered) ?? false) ||
+                bit.feel.lowercased().contains(lowered) ||
+                bit.event.lowercased().contains(lowered) ||
+                bit.action.lowercased().contains(lowered)
+            }
+        }
+
+        // Emotion filter — match if any of the three emotion fields matches
+        if let emotions = emotions, !emotions.isEmpty {
+            results = results.filter { bit in
+                emotions.contains(bit.feelEmotion) ||
+                emotions.contains(bit.eventEmotion) ||
+                emotions.contains(bit.actionEmotion)
+            }
+        }
+
+        // Date range filter
+        if let dateRange = dateRange {
+            results = results.filter { dateRange.contains($0.createdAt) }
+        }
+
+        // Intensity filter
+        if let intensityRange = intensityRange {
+            results = results.filter { intensityRange.contains($0.intensity) }
+        }
+
+        return results.sorted { $0.createdAt > $1.createdAt }
     }
 }

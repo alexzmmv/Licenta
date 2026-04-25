@@ -2,144 +2,201 @@
 //  LoginView.swift
 //  GJournal
 //
-//  Created for user authentication
+//  Simplified auth: email entry only, then biometric or passcode.
+//  No password required — privacy-first, device-secured access.
 //
 
 import SwiftUI
 
 struct LoginView: View {
     @EnvironmentObject var authManager: AuthManager
-    @State private var email = ""
-    @State private var password = ""
+    @State private var name = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @State private var showingRegister = false
-    
+
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color(uiColor: .systemGroupedBackground)
-                    .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Logo/Header
-                        VStack(spacing: 12) {
-                            Image(systemName: "heart.text.square.fill")
-                                .font(.system(size: 80))
-                                .foregroundColor(.pink)
-                            
-                            Text("GJournal")
-                                .font(.system(size: 36, weight: .bold))
-                            
-                            Text("Your emotional journey")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.top, 40)
-                        .padding(.bottom, 20)
-                        
-                        // Login Form
-                        VStack(spacing: 16) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                TextField("email@example.com", text: $email)
-                                    .textFieldStyle(.roundedBorder)
-                                    .textContentType(.emailAddress)
-                                    .autocapitalization(.none)
-                                    .keyboardType(.emailAddress)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Password")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                SecureField("Enter password", text: $password)
-                                    .textFieldStyle(.roundedBorder)
-                                    .textContentType(.password)
-                            }
-                            
-                            if let error = errorMessage {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .foregroundColor(.red)
-                                    Text(error)
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.red.opacity(0.1))
-                                .cornerRadius(8)
-                            }
-                            
-                            Button {
-                                Task {
-                                    await login()
-                                }
-                            } label: {
-                                if isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(.circular)
-                                        .tint(.white)
-                                } else {
-                                    Text("Log In")
-                                        .fontWeight(.semibold)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.pink.opacity(0.8))
+        ZStack {
+            // Rich dark gradient background
+            LinearGradient(
+                colors: [
+                    Color(red: 0.05, green: 0.05, blue: 0.08),
+                    Color(red: 0.10, green: 0.04, blue: 0.12)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            // Subtle radial glow
+            Circle()
+                .fill(Color.pink.opacity(0.15))
+                .frame(width: 400, height: 400)
+                .blur(radius: 80)
+                .offset(x: -60, y: -120)
+
+            VStack(spacing: 0) {
+                Spacer()
+
+                // Logo & branding
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.pink.opacity(0.15))
+                            .frame(width: 100, height: 100)
+
+                        Image(systemName: "heart.text.square.fill")
+                            .font(.system(size: 52))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.pink, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+
+                    VStack(spacing: 8) {
+                        Text("GJournal")
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
-                            .cornerRadius(12)
-                            .disabled(isLoading || email.isEmpty || password.isEmpty)
-                            
-                            Button {
-                                showingRegister = true
-                            } label: {
-                                Text("Don't have an account? Sign up")
-                                    .font(.subheadline)
-                            }
-                            .padding(.top, 8)
-                        }
-                        .padding(.horizontal, 32)
-                        
-                        Spacer()
+
+                        Text("Your private emotional journal")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
                     }
                 }
-            }
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showingRegister) {
-                RegisterView()
+                .padding(.bottom, 52)
+
+                // Name form
+                VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("What's your name?")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.gray)
+
+                        HStack {
+                            Image(systemName: "person.fill")
+                                .foregroundColor(.gray)
+                                .frame(width: 20)
+
+                            TextField("Alex", text: $name)
+                                .foregroundColor(.white)
+                                .autocapitalization(.words)
+                                .disableAutocorrection(true)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(Color.white.opacity(0.07))
+                        .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                    }
+
+                    if let error = errorMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption)
+                            Text(error)
+                                .font(.caption)
+                        }
+                        .foregroundColor(.red.opacity(0.9))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.red.opacity(0.08))
+                        .cornerRadius(10)
+                    }
+
+                    // Continue button
+                    Button {
+                        Task { await continueWithName() }
+                    } label: {
+                        HStack(spacing: 10) {
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(.white)
+                                    .scaleEffect(0.85)
+                            } else {
+                                Image(systemName: authManager.canUseBiometric() ? "faceid" : "lock.fill")
+                                Text("Continue")
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            LinearGradient(
+                                colors: [.pink, .purple.opacity(0.9)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                        .shadow(color: .pink.opacity(0.4), radius: 12, y: 6)
+                    }
+                    .disabled(isLoading || !isValidName(name))
+                    .opacity(isValidName(name) ? 1.0 : 0.5)
+                    .animation(.easeInOut(duration: 0.2), value: isValidName(name))
+                }
+                .padding(.horizontal, 32)
+
+                Spacer()
+
+                // Privacy note
+                VStack(spacing: 4) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.caption)
+                        .foregroundColor(.gray.opacity(0.6))
+
+                    Text("All data stays on your device")
+                        .font(.caption2)
+                        .foregroundColor(.gray.opacity(0.5))
+                }
+                .padding(.bottom, 32)
             }
         }
+        .preferredColorScheme(.dark)
     }
-    
-    private func login() async {
+
+    private func continueWithName() async {
+        guard isValidName(name) else {
+            errorMessage = "Please enter a valid name (at least 2 characters)"
+            return
+        }
+
         isLoading = true
         errorMessage = nil
-        
-        // Simulate network delay for better UX
-        try? await Task.sleep(nanoseconds: 300_000_000)
-        
+
+        // Brief haptic feedback simulation delay
+        try? await Task.sleep(nanoseconds: 200_000_000)
+
         do {
-            try authManager.loginLocal(email: email, password: password)
-            
-            // Enable biometric by default if available
+            // Register if new user, login if existing
+            if authManager.isUserRegistered() {
+                try authManager.loginWithNameOnly(name: name)
+            } else {
+                try authManager.registerWithNameOnly(name: name)
+            }
+
+            // Enable biometric if available
             if authManager.canUseBiometric() {
                 authManager.isBiometricEnabled = true
             }
         } catch let error as AuthError {
-            errorMessage = error.errorDescription ?? "Login failed"
+            errorMessage = error.errorDescription
         } catch {
-            errorMessage = "Login failed. Please try again."
+            errorMessage = "Something went wrong. Please try again."
         }
-        
+
         isLoading = false
+    }
+
+    private func isValidName(_ name: String) -> Bool {
+        return name.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
     }
 }
 

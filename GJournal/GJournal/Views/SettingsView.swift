@@ -6,11 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) var dismiss
     @State private var showingLogoutAlert = false
+    @State private var showingDeleteAllAlert = false
     
     var body: some View {
         NavigationView {
@@ -70,6 +73,25 @@ struct SettingsView: View {
                 
                 // Actions Section
                 Section {
+                    Button {
+                        SeedDataManager.generateSeedData(context: modelContext)
+                    } label: {
+                        HStack {
+                            Image(systemName: "leaf.fill")
+                                .foregroundColor(.green)
+                            Text("Generate Seed Data")
+                        }
+                    }
+                    
+                    Button(role: .destructive) {
+                        showingDeleteAllAlert = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "trash.fill")
+                            Text("Delete All Data")
+                        }
+                    }
+
                     Button(role: .destructive) {
                         showingLogoutAlert = true
                     } label: {
@@ -97,6 +119,20 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("Are you sure you want to log out?")
+            }
+            .alert("Delete All Data", isPresented: $showingDeleteAllAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete Everything", role: .destructive) {
+                    do {
+                        try modelContext.delete(model: Bit.self)
+                        try modelContext.save()
+                        print("[Settings] Successfully deleted all data.")
+                    } catch {
+                        print("[Settings] Failed to delete all data: \(error)")
+                    }
+                }
+            } message: {
+                Text("This will permanently delete all your journal entries. This action cannot be undone.")
             }
         }
     }

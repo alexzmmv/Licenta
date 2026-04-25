@@ -20,7 +20,7 @@ class AuthManager: ObservableObject {
     }
     @Published var currentUser: String?
     
-    private let emailKey = "user_email"
+    private let nameKey = "user_name"
     private let passwordHashKey = "user_password_hash"
     private let saltKey = "password_salt"
     private let biometricEnabledKey = "biometric_enabled"
@@ -34,8 +34,8 @@ class AuthManager: ObservableObject {
         // Check if user is already registered and logged in
         if UserDefaults.standard.bool(forKey: userRegisteredKey) {
             let isLoggedIn = UserDefaults.standard.bool(forKey: userLoggedInKey)
-            if isLoggedIn, let email = UserDefaults.standard.string(forKey: emailKey), !email.isEmpty {
-                currentUser = email
+            if isLoggedIn, let name = UserDefaults.standard.string(forKey: nameKey), !name.isEmpty {
+                currentUser = name
                 isAuthenticated = true // User is logged in persistently
                 // Restore session state from storage
                 isSessionAuthenticated = UserDefaults.standard.bool(forKey: sessionAuthenticatedKey)
@@ -46,9 +46,9 @@ class AuthManager: ObservableObject {
     // MARK: - Local Authentication
     
     func registerLocal(email: String, password: String) throws {
-        // Validate email format
-        guard isValidEmail(email.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            throw AuthError.invalidEmail
+        // Validate name format
+        guard isValidName(email.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            throw AuthError.invalidName
         }
         
         // Validate password requirements
@@ -69,7 +69,7 @@ class AuthManager: ObservableObject {
         let hashedPassword = hashPassword(password, with: salt)
         
         // Store credentials securely
-        UserDefaults.standard.set(email.trimmingCharacters(in: .whitespacesAndNewlines), forKey: emailKey)
+        UserDefaults.standard.set(email.trimmingCharacters(in: .whitespacesAndNewlines), forKey: nameKey)
         UserDefaults.standard.set(hashedPassword, forKey: passwordHashKey)
         UserDefaults.standard.set(salt.base64EncodedString(), forKey: saltKey)
         UserDefaults.standard.set(true, forKey: userRegisteredKey)
@@ -97,7 +97,7 @@ class AuthManager: ObservableObject {
         }
         
         // Verify email matches
-        let storedEmail = UserDefaults.standard.string(forKey: emailKey) ?? ""
+        let storedEmail = UserDefaults.standard.string(forKey: nameKey) ?? ""
         guard email.trimmingCharacters(in: .whitespacesAndNewlines) == storedEmail else {
             throw AuthError.unauthorized
         }
@@ -121,14 +121,53 @@ class AuthManager: ObservableObject {
     }
     
     func getToken() -> String? {
-        // Local mode doesn't use tokens, but return email as identifier
-        return UserDefaults.standard.string(forKey: emailKey)
+        // Local mode doesn't use tokens, but return name as identifier
+        return UserDefaults.standard.string(forKey: nameKey)
+    }
+
+    // MARK: - Email-Only Auth (no password, device-secured)
+
+    /// Register a new user using name as identifier only.
+    /// Security is handled entirely by device biometrics/passcode.
+    func registerWithNameOnly(name: String) throws {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isValidName(trimmed) else { throw AuthError.invalidName }
+
+        if UserDefaults.standard.bool(forKey: userRegisteredKey) {
+            throw AuthError.userAlreadyExists
+        }
+
+        UserDefaults.standard.set(trimmed, forKey: nameKey)
+        UserDefaults.standard.set(true, forKey: userRegisteredKey)
+        UserDefaults.standard.set(true, forKey: userLoggedInKey)
+
+        currentUser = trimmed
+        isAuthenticated = true
+        isSessionAuthenticated = true
+    }
+
+    /// Login an existing user by name identifier only.
+    func loginWithNameOnly(name: String) throws {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isValidName(trimmed) else { throw AuthError.invalidName }
+
+        guard UserDefaults.standard.bool(forKey: userRegisteredKey) else {
+            throw AuthError.userNotFound
+        }
+
+        let storedName = UserDefaults.standard.string(forKey: nameKey) ?? ""
+        guard trimmed == storedName else { throw AuthError.unauthorized }
+
+        currentUser = trimmed
+        isAuthenticated = true
+        UserDefaults.standard.set(true, forKey: userLoggedInKey)
+        isSessionAuthenticated = true
     }
     
     func logout() {
-        let email = UserDefaults.standard.string(forKey: emailKey) ?? ""
-        if !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            deletePasswordFromKeychain(email: email)
+        let name = UserDefaults.standard.string(forKey: nameKey) ?? ""
+        if !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            deletePasswordFromKeychain(email: name) // Method parameter kept for internal consistency if needed
         }
         UserDefaults.standard.set(false, forKey: userLoggedInKey)
         UserDefaults.standard.set(false, forKey: sessionAuthenticatedKey)
@@ -201,10 +240,8 @@ class AuthManager: ObservableObject {
     
     // MARK: - Private Helper Methods
     
-    private func isValidEmail(_ email: String) -> Bool {
-        let emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-        let predicate = NSPredicate(format: "SELF MATCHES %@", emailPattern)
-        return predicate.evaluate(with: email)
+    private func isValidName(_ name: String) -> Bool {
+        return name.count >= 2
     }
     
     private func generateSalt() -> Data {
@@ -261,7 +298,7 @@ enum AuthError: LocalizedError {
     case emptyEmail
     case emptyPassword
     case passwordTooShort
-    case invalidEmail
+    case invalidName
     case unauthorized
     case userNotFound
     case userAlreadyExists
@@ -275,10 +312,10 @@ enum AuthError: LocalizedError {
             return "Password cannot be empty"
         case .passwordTooShort:
             return "Password must be at least 6 characters"
-        case .invalidEmail:
-            return "Please enter a valid email address"
+        case .invalidName:
+            return "Please enter a valid name (at least 2 characters)"
         case .unauthorized:
-            return "Invalid email or password"
+            return "Invalid name or password"
         case .userNotFound:
             return "User not found"
         case .userAlreadyExists:
