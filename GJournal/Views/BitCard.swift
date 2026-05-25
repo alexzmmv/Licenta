@@ -129,9 +129,23 @@ struct BitCard: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .background(
+            ZStack {
+                Color.white.opacity(0.05)
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.2), Color.white.opacity(0.04)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        )
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 2)
         .opacity(bit.isHidden ? 0.45 : 1)
     }
 }
@@ -236,11 +250,11 @@ struct MicroJournalSection: View {
         .padding(.horizontal, 12)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(emotion.color.opacity(0.1))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(emotion.color.opacity(0.3), lineWidth: 1)
+                .fill(emotion.color.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(emotion.color.opacity(0.25), lineWidth: 1)
+                )
         )
     }
 }
@@ -334,7 +348,7 @@ struct BitDetailView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.pink)
+                    .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                 }
             }
         }

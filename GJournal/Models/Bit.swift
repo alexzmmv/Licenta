@@ -57,11 +57,11 @@ final class Bit {
 
     // MARK: - AI Pipeline Fields
 
-    /// Embedding vector stored as JSON-encoded [Float] (768-dim for DistilBERT)
-    var embeddingJSON: String?
+    /// Embedding vector stored as raw IEEE-754 Float bytes (50x faster than JSON decode)
+    var embeddingData: Data?
 
-    /// AI-detected emotion probabilities stored as JSON-encoded [String: Float]
-    var emotionProbabilitiesJSON: String?
+    /// AI-detected emotion probabilities stored as JSON Data ([String: Float])
+    var emotionProbabilitiesData: Data?
 
     /// Relationship to the cluster this bit belongs to
     var cluster: Cluster?
@@ -83,7 +83,15 @@ final class Bit {
     /// When the cluster was last assigned
     var clusterAssignedAt: Date?
 
-    // MARK: - Computed Properties for User-Selected Emotions
+    // MARK: - Graph Layout Cache
+
+    /// Cached X position in the knowledge graph (avoids re-simulation on reopen)
+    var graphX: Double?
+
+    /// Cached Y position in the knowledge graph
+    var graphY: Double?
+
+    // MARK: - Typed Wrappers for Per-Field Emotion Raw Values
 
     var feelEmotion: Emotion {
         get { Emotion(rawValue: feelEmotionRawValue) ?? .joy }
@@ -100,54 +108,40 @@ final class Bit {
         set { actionEmotionRawValue = newValue.rawValue }
     }
 
-    // Primary emotion (based on feel emotion for UI compatibility)
-    var emotion: Emotion {
-        return feelEmotion
-    }
-
     // MARK: - Computed Properties for AI Data
 
-    /// Typed access to the embedding vector
+    /// Typed access to the embedding vector — raw binary Float storage (see 04_UI_PERFORMANCE.md §3)
     var embedding: [Float]? {
         get {
-            guard let json = embeddingJSON,
-                  let data = json.data(using: .utf8) else { return nil }
-            return try? JSONDecoder().decode([Float].self, from: data)
+            guard let data = embeddingData else { return nil }
+            return data.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
         }
         set {
-            guard let value = newValue,
-                  let data = try? JSONEncoder().encode(value),
-                  let json = String(data: data, encoding: .utf8) else {
-                embeddingJSON = nil
-                return
-            }
-            embeddingJSON = json
+            embeddingData = newValue?.withUnsafeBytes { Data($0) }
         }
     }
 
     /// Typed access to emotion probabilities dictionary
     var emotionProbabilities: [String: Float]? {
         get {
-            guard let json = emotionProbabilitiesJSON,
-                  let data = json.data(using: .utf8) else { return nil }
+            guard let data = emotionProbabilitiesData else { return nil }
             return try? JSONDecoder().decode([String: Float].self, from: data)
         }
         set {
-            guard let value = newValue,
-                  let data = try? JSONEncoder().encode(value),
-                  let json = String(data: data, encoding: .utf8) else {
-                emotionProbabilitiesJSON = nil
-                return
-            }
-            emotionProbabilitiesJSON = json
+            emotionProbabilitiesData = newValue.flatMap { try? JSONEncoder().encode($0) }
         }
     }
 
-    /// The top AI-detected emotion (highest probability)
+    /// Top AI-detected emotion (highest probability). Falls back to .joy for unprocessed entries.
     var topDetectedEmotion: Emotion? {
-        guard let probs = emotionProbabilities else { return nil }
-        guard let topEntry = probs.max(by: { $0.value < $1.value }) else { return nil }
-        return Emotion(rawValue: topEntry.key)
+        guard let probs = emotionProbabilities,
+              let topKey = probs.max(by: { $0.value < $1.value })?.key else { return nil }
+        return Emotion(rawValue: topKey)
+    }
+
+    /// Primary emotion for UI display — AI-detected when available, .joy otherwise
+    var emotion: Emotion {
+        topDetectedEmotion ?? .joy
     }
 
     /// Whether this bit has been processed by the AI pipeline

@@ -10,13 +10,10 @@ import SwiftUI
 struct MainAppView: View {
     @EnvironmentObject var authManager: AuthManager
 
-    /// Shared service container with AI services
-    @StateObject private var serviceContainer = ServiceContainer.makeMock()
-
-    /// Repository with AI processing manager attached
+    /// Repository with AI processing manager — single production ServiceContainer instance
     @StateObject private var repository: LocalJournalRepository = {
         let repo = LocalJournalRepository()
-        let services = ServiceContainer.makeMock()
+        let services = ServiceContainer.makeProduction()
         repo.aiProcessingManager = AIProcessingManager(services: services)
         return repo
     }()
@@ -24,6 +21,5 @@ struct MainAppView: View {
     var body: some View {
         ContentView(repository: repository)
             .environmentObject(authManager)
-            .environmentObject(serviceContainer)
     }
 }

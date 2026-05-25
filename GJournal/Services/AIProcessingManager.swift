@@ -37,6 +37,10 @@ final class AIProcessingManager: ObservableObject {
     /// Callback triggered when clustering completes and data is saved to DB
     var onClusteringComplete: (() -> Void)?
 
+    // Epsilon recalibration — recalculate every 10 new processed entries
+    private var entriesSinceLastCalibration = 0
+    private let calibrationInterval = 10
+
     init(services: ServiceContainer) {
         self.services = services
     }
@@ -112,7 +116,8 @@ final class AIProcessingManager: ObservableObject {
             }
         }
 
-        // Step 6: Trigger re-clustering (includes all entries)
+        // Step 6: Trigger re-clustering; recalibrate epsilon every 10 entries
+        await MainActor.run { self.entriesSinceLastCalibration += 1 }
         try await runClustering()
     }
 
@@ -164,8 +169,26 @@ final class AIProcessingManager: ObservableObject {
 
         print("[AIProcessingManager] Step 6 — Clustering \(clusterableEntries.count) entries...")
 
+        // Recalibrate epsilon every calibrationInterval new entries
+        let shouldCalibrate = await MainActor.run {
+            if self.entriesSinceLastCalibration >= self.calibrationInterval {
+                self.entriesSinceLastCalibration = 0
+                return true
+            }
+            return false
+        }
+
+        var clusterer = services.clusteringService as? DBSCANClusterer
+        if shouldCalibrate, let c = clusterer {
+            let embeddings = clusterableEntries.map { $0.embedding }
+            let newEpsilon = DBSCANClusterer.estimateEpsilon(from: embeddings, minPoints: c.minPoints)
+            clusterer = DBSCANClusterer(epsilon: newEpsilon, minPoints: c.minPoints)
+            print("[AIProcessingManager] Recalibrated epsilon → \(String(format: "%.3f", newEpsilon))")
+        }
+        let activeClusterer = clusterer ?? services.clusteringService
+
         // Run DBSCAN off-actor
-        let assignments = try await services.clusteringService.clusterEntries(clusterableEntries)
+        let assignments = try await activeClusterer.clusterEntries(clusterableEntries)
 
         // Persist cluster assignments on the MainActor
         await MainActor.run {

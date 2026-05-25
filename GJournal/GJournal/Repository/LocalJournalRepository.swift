@@ -266,11 +266,8 @@ struct SeedDataManager {
                 bit.cluster = cluster
             }
             
-            bit.embeddingGeneratedAt = entryDate
             bit.clusterAssignedAt = entryDate
-            
-            // Generate a random vector just so it's not empty
-            bit.embedding = (0..<768).map { _ in Float.random(in: -1...1) }
+            // No embedding — NLEmbeddingService will generate one on first AI run
             
             context.insert(bit)
         }

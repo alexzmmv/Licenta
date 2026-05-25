@@ -180,7 +180,7 @@ struct BitsListView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .frame(width: 18, height: 18)
-                            .background(Color.pink)
+                            .background(Color(red: 0.55, green: 0.4, blue: 0.95))
                             .clipShape(Circle())
                             .offset(x: 4, y: -4)
                     }
@@ -253,7 +253,7 @@ struct BitsListView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "circle.grid.hex")
                             .font(.caption2)
-                            .foregroundColor(.pink)
+                            .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                         Text(clusterName(for: clusterID))
                             .font(.caption)
                             .foregroundColor(.white)
@@ -268,7 +268,7 @@ struct BitsListView: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.pink.opacity(0.15))
+                    .background(Color(red: 0.55, green: 0.4, blue: 0.95).opacity(0.15))
                     .cornerRadius(16)
                 }
 
@@ -279,7 +279,7 @@ struct BitsListView: View {
                     } label: {
                         Text("Clear All")
                             .font(.caption)
-                            .foregroundColor(.pink)
+                            .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                     }
                     .padding(.leading, 4)
                 }
@@ -474,7 +474,7 @@ struct FilterSheetView: View {
 
                                             if sortOrder == order {
                                                 Image(systemName: "checkmark")
-                                                    .foregroundColor(.pink)
+                                                    .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                                                     .fontWeight(.semibold)
                                             }
                                         }
@@ -482,7 +482,7 @@ struct FilterSheetView: View {
                                         .padding(.vertical, 12)
                                         .background(
                                             RoundedRectangle(cornerRadius: 10)
-                                                .fill(sortOrder == order ? Color.pink.opacity(0.15) : Color.gray.opacity(0.1))
+                                                .fill(sortOrder == order ? Color(red: 0.55, green: 0.4, blue: 0.95).opacity(0.15) : Color.gray.opacity(0.1))
                                         )
                                     }
                                 }
@@ -545,7 +545,7 @@ struct FilterSheetView: View {
                                     } label: {
                                         VStack(spacing: 4) {
                                             Circle()
-                                                .fill(isSelected ? Color.pink : Color.gray.opacity(0.3))
+                                                .fill(isSelected ? Color(red: 0.55, green: 0.4, blue: 0.95) : Color.gray.opacity(0.3))
                                                 .frame(width: 40, height: 40)
                                                 .overlay(
                                                     Text("\(level)")
@@ -588,7 +588,7 @@ struct FilterSheetView: View {
                                                     .padding(.vertical, 8)
                                                     .background(
                                                         RoundedRectangle(cornerRadius: 20)
-                                                            .fill(isSelected ? Color.pink : Color.gray.opacity(0.2))
+                                                            .fill(isSelected ? Color(red: 0.55, green: 0.4, blue: 0.95) : Color.gray.opacity(0.2))
                                                     )
                                                     .foregroundColor(.white)
                                             }
@@ -607,10 +607,10 @@ struct FilterSheetView: View {
                         } label: {
                             Text("Reset All Filters")
                                 .font(.body)
-                                .foregroundColor(.pink)
+                                .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color.pink.opacity(0.15))
+                                .background(Color(red: 0.55, green: 0.4, blue: 0.95).opacity(0.15))
                                 .cornerRadius(12)
                         }
                         .padding(.top, 8)
@@ -627,7 +627,7 @@ struct FilterSheetView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.pink)
+                    .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                 }
             }
         }

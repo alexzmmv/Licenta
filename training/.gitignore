@@ -1,0 +1,9 @@
+venv/
+hf_cache/
+models/
+coreml_models/
+results/
+__pycache__/
+*.pyc
+*.onnx
+*.pkl

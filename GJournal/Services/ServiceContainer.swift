@@ -44,16 +44,36 @@ final class ServiceContainer: ObservableObject {
         )
     }
 
-    /// Create a container with production Core ML services.
-    /// Currently returns mock services — will be updated when Core ML models are integrated.
+    /// Create a container wired to real Core ML services.
+    /// Automatically picks the best available embedding model:
+    ///   MobileBERT (primary) → DistilBERT (backup A) → NLEmbedding (backup C)
+    /// Falls back to MockEmotionDetectionService if the classifier .mlpackage is missing.
     static func makeProduction() -> ServiceContainer {
-        // TODO: Replace with real Core ML services when models are ready
-        // return ServiceContainer(
-        //     embeddingService: CoreMLEmbeddingService(),
-        //     emotionService: CoreMLEmotionDetectionService(),
-        //     clusteringService: DBSCANClusterer(),
-        //     safetyFilter: SafetyFilter()
-        // )
-        return makeMock()
+        let embeddingService: EmbeddingServiceProtocol = {
+            if Bundle.main.url(forResource: "GJournalEmbeddingMobileBERT", withExtension: "mlpackage") != nil {
+                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT")
+            } else if Bundle.main.url(forResource: "GJournalEmbeddingDistilBERT", withExtension: "mlpackage") != nil {
+                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingDistilBERT")
+            } else {
+                print("[ServiceContainer] No embedding .mlpackage found — using NLEmbedding fallback")
+                return NLEmbeddingService()
+            }
+        }()
+
+        let emotionService: EmotionDetectionServiceProtocol = {
+            if Bundle.main.url(forResource: "GJournalEmotionClassifier", withExtension: "mlpackage") != nil {
+                return CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
+            } else {
+                print("[ServiceContainer] No emotion .mlpackage found — using MockEmotionDetectionService")
+                return MockEmotionDetectionService()
+            }
+        }()
+
+        return ServiceContainer(
+            embeddingService: embeddingService,
+            emotionService: emotionService,
+            clusteringService: DBSCANClusterer(epsilon: 0.3, minPoints: 3),
+            safetyFilter: SafetyFilter()
+        )
     }
 }

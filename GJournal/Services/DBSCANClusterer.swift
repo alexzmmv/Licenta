@@ -10,6 +10,7 @@
 //
 
 import Foundation
+import Accelerate
 
 /// DBSCAN clustering algorithm for grouping journal entries by semantic similarity.
 ///
@@ -80,8 +81,9 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
             // Start a new cluster
             labels[i] = currentCluster
 
-            // Expand cluster
+            // Expand cluster — Set<Int> for O(1) membership checks (vs O(N) Array.contains)
             var seedSet = neighbors
+            var seedMembership = Set(neighbors)
             var j = 0
             while j < seedSet.count {
                 let q = seedSet[j]
@@ -90,9 +92,8 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
                     visited[q] = true
                     let qNeighbors = regionQuery(index: q, distances: distances)
                     if qNeighbors.count >= minPoints {
-                        // Add new neighbors to seed set (union)
                         for neighbor in qNeighbors {
-                            if !seedSet.contains(neighbor) {
+                            if seedMembership.insert(neighbor).inserted {
                                 seedSet.append(neighbor)
                             }
                         }
@@ -100,7 +101,6 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
                 }
 
                 if labels[q] == -1 {
-                    // Was noise or unvisited, assign to current cluster
                     labels[q] = currentCluster
                 }
 
@@ -113,55 +113,111 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
         return labels
     }
 
-    // MARK: - Distance Computations
+    // MARK: - Adaptive Epsilon
 
-    /// Find all points within epsilon distance of the given point.
-    private func regionQuery(index: Int, distances: [[Double]]) -> [Int] {
-        var neighbors: [Int] = []
-        for j in 0..<distances[index].count {
-            if j != index && distances[index][j] <= epsilon {
-                neighbors.append(j)
+    /// Estimate a good epsilon using the k-distance heuristic (90th percentile of k-NN distances).
+    /// Call this periodically — recalibrate every 10 new entries (see AIProcessingManager).
+    static func estimateEpsilon(from points: [[Float]], minPoints: Int) -> Double {
+        guard points.count > minPoints else { return 0.3 }
+        let k = minPoints
+        let normalized = preNormalize(points)
+
+        var kDistances: [Double] = []
+        for i in 0..<normalized.count {
+            var dists: [Double] = []
+            for j in 0..<normalized.count where j != i {
+                dists.append(cosineDistanceAccelerate(normalized[i], normalized[j]))
             }
+            dists.sort()
+            if k - 1 < dists.count { kDistances.append(dists[k - 1]) }
+        }
+
+        kDistances.sort()
+        let idx = Int(Double(kDistances.count) * 0.9)
+        return kDistances[min(idx, kDistances.count - 1)]
+    }
+
+    /// Silhouette score for evaluating cluster quality (range −1…1; higher is better).
+    static func silhouetteScore(labels: [Int], points: [[Float]]) -> Double {
+        let n = points.count
+        guard n > 1 else { return 0 }
+        let normalized = preNormalize(points)
+        var scores: [Double] = []
+
+        for i in 0..<n {
+            let ci = labels[i]
+            guard ci != -1 else { continue }
+
+            let sameCluster   = (0..<n).filter { labels[$0] == ci && $0 != i }
+            let otherClusters = Set(labels.filter { $0 != -1 && $0 != ci })
+
+            guard !sameCluster.isEmpty, !otherClusters.isEmpty else { continue }
+
+            let a = sameCluster.map { cosineDistanceAccelerate(normalized[i], normalized[$0]) }
+                                .reduce(0, +) / Double(sameCluster.count)
+
+            let b = otherClusters.map { otherID -> Double in
+                let members = (0..<n).filter { labels[$0] == otherID }
+                return members.map { cosineDistanceAccelerate(normalized[i], normalized[$0]) }
+                              .reduce(0, +) / Double(members.count)
+            }.min() ?? 0
+
+            let s = max(a, b) > 0 ? (b - a) / max(a, b) : 0
+            scores.append(s)
+        }
+
+        return scores.isEmpty ? 0 : scores.reduce(0, +) / Double(scores.count)
+    }
+
+    // MARK: - Distance Computations (Accelerate-optimised)
+
+    private func regionQuery(index: Int, distances: [[Double]]) -> [Int] {
+        let row = distances[index]
+        var neighbors: [Int] = []
+        for j in 0..<row.count where j != index && row[j] <= epsilon {
+            neighbors.append(j)
         }
         return neighbors
     }
 
-    /// Compute pairwise cosine distance matrix.
-    /// Cosine distance = 1 - cosine_similarity
+    /// Pre-normalise all vectors once with vDSP — avoids re-computing norms per pair.
+    private static func preNormalize(_ points: [[Float]]) -> [[Float]] {
+        return points.map { v in
+            var normSq: Float = 0
+            vDSP_svesq(v, 1, &normSq, vDSP_Length(v.count))
+            let norm = sqrt(normSq)
+            guard norm > 0 else { return v }
+            var result = v
+            var scalar = 1.0 / norm
+            vDSP_vsmul(v, 1, &scalar, &result, 1, vDSP_Length(v.count))
+            return result
+        }
+    }
+
+    /// Cosine distance using vDSP dot product on pre-normalised vectors (O(D) per pair).
+    private static func cosineDistanceAccelerate(_ a: [Float], _ b: [Float]) -> Double {
+        guard a.count == b.count, !a.isEmpty else { return 2.0 }
+        var dot: Float = 0
+        vDSP_dotpr(a, 1, b, 1, &dot, vDSP_Length(a.count))
+        return Double(max(0, 1.0 - dot))
+    }
+
     private func computeDistanceMatrix(points: [[Float]]) -> [[Double]] {
         let n = points.count
+        let normalized = DBSCANClusterer.preNormalize(points)
         var matrix = Array(repeating: Array(repeating: 0.0, count: n), count: n)
 
         for i in 0..<n {
             for j in (i + 1)..<n {
-                let dist = cosineDistance(points[i], points[j])
-                matrix[i][j] = dist
-                matrix[j][i] = dist
+                let d = DBSCANClusterer.cosineDistanceAccelerate(normalized[i], normalized[j])
+                matrix[i][j] = d
+                matrix[j][i] = d
             }
         }
-
         return matrix
     }
 
-    /// Cosine distance between two vectors: 1 - cosine_similarity
-    /// Returns 0.0 for identical vectors, 2.0 for opposite vectors.
     private func cosineDistance(_ a: [Float], _ b: [Float]) -> Double {
-        guard a.count == b.count, !a.isEmpty else { return 2.0 }
-
-        var dotProduct: Float = 0
-        var normA: Float = 0
-        var normB: Float = 0
-
-        for i in 0..<a.count {
-            dotProduct += a[i] * b[i]
-            normA += a[i] * a[i]
-            normB += b[i] * b[i]
-        }
-
-        let denominator = sqrt(normA) * sqrt(normB)
-        guard denominator > 0 else { return 2.0 }
-
-        let similarity = Double(dotProduct / denominator)
-        return 1.0 - similarity
+        DBSCANClusterer.cosineDistanceAccelerate(a, b)
     }
 }

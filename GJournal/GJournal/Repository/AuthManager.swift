@@ -31,15 +31,27 @@ class AuthManager: ObservableObject {
     private let keychainService = "com.gjournal.auth"
     
     init() {
-        // Check if user is already registered and logged in
+        migrateCredentialsToKeychainIfNeeded()
         if UserDefaults.standard.bool(forKey: userRegisteredKey) {
             let isLoggedIn = UserDefaults.standard.bool(forKey: userLoggedInKey)
             if isLoggedIn, let name = UserDefaults.standard.string(forKey: nameKey), !name.isEmpty {
                 currentUser = name
-                isAuthenticated = true // User is logged in persistently
-                // Restore session state from storage
+                isAuthenticated = true
                 isSessionAuthenticated = UserDefaults.standard.bool(forKey: sessionAuthenticatedKey)
             }
+        }
+    }
+
+    // One-time migration: move password_hash + password_salt from UserDefaults to Keychain
+    private func migrateCredentialsToKeychainIfNeeded() {
+        guard readFromKeychain(key: passwordHashKey) == nil else { return }  // already migrated
+        if let hash = UserDefaults.standard.string(forKey: passwordHashKey) {
+            storeInKeychain(key: passwordHashKey, value: hash)
+            UserDefaults.standard.removeObject(forKey: passwordHashKey)
+        }
+        if let salt = UserDefaults.standard.string(forKey: saltKey) {
+            storeInKeychain(key: saltKey, value: salt)
+            UserDefaults.standard.removeObject(forKey: saltKey)
         }
     }
     
@@ -68,15 +80,12 @@ class AuthManager: ObservableObject {
         let salt = generateSalt()
         let hashedPassword = hashPassword(password, with: salt)
         
-        // Store credentials securely
+        // Store non-sensitive fields in UserDefaults; secrets in Keychain
         UserDefaults.standard.set(email.trimmingCharacters(in: .whitespacesAndNewlines), forKey: nameKey)
-        UserDefaults.standard.set(hashedPassword, forKey: passwordHashKey)
-        UserDefaults.standard.set(salt.base64EncodedString(), forKey: saltKey)
         UserDefaults.standard.set(true, forKey: userRegisteredKey)
         UserDefaults.standard.set(true, forKey: userLoggedInKey)
-        
-        // Store password in Keychain for reference
-        _ = try? storePasswordInKeychain(email: email, password: password)
+        storeInKeychain(key: passwordHashKey, value: hashedPassword)
+        storeInKeychain(key: saltKey, value: salt.base64EncodedString())
         
         currentUser = email.trimmingCharacters(in: .whitespacesAndNewlines)
         isAuthenticated = true
@@ -102,9 +111,9 @@ class AuthManager: ObservableObject {
             throw AuthError.unauthorized
         }
         
-        // Verify password
-        guard let storedHash = UserDefaults.standard.string(forKey: passwordHashKey),
-              let saltString = UserDefaults.standard.string(forKey: saltKey),
+        // Verify password — read hash+salt from Keychain
+        guard let storedHash = readFromKeychain(key: passwordHashKey),
+              let saltString = readFromKeychain(key: saltKey),
               let salt = Data(base64Encoded: saltString) else {
             throw AuthError.unauthorized
         }
@@ -259,36 +268,48 @@ class AuthManager: ObservableObject {
         }
     }
     
-    // MARK: - Keychain Methods
-    
-    private func storePasswordInKeychain(email: String, password: String) throws {
-        guard let passwordData = password.data(using: .utf8) else {
-            throw AuthError.keychainError
-        }
-        
+    // MARK: - Keychain Helpers
+
+    @discardableResult
+    private func storeInKeychain(key: String, value: String) -> Bool {
+        guard let data = value.data(using: .utf8) else { return false }
         let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: email.trimmingCharacters(in: .whitespacesAndNewlines),
-            kSecValueData as String: passwordData
+            kSecClass as String:                kSecClassGenericPassword,
+            kSecAttrService as String:          keychainService,
+            kSecAttrAccount as String:          key,
+            kSecAttrAccessible as String:       kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            kSecValueData as String:            data,
         ]
-        
         SecItemDelete(query as CFDictionary)
-        let status = SecItemAdd(query as CFDictionary, nil)
-        
-        guard status == errSecSuccess else {
-            throw AuthError.keychainError
-        }
+        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
     }
-    
-    private func deletePasswordFromKeychain(email: String) {
+
+    private func readFromKeychain(key: String) -> String? {
         let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
+            kSecClass as String:       kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: email.trimmingCharacters(in: .whitespacesAndNewlines)
+            kSecAttrAccount as String: key,
+            kSecReturnData as String:  true,
+            kSecMatchLimit as String:  kSecMatchLimitOne,
         ]
-        
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let data = result as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    private func deleteFromKeychain(key: String) {
+        let query: [String: Any] = [
+            kSecClass as String:       kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: key,
+        ]
         SecItemDelete(query as CFDictionary)
+    }
+
+    private func deletePasswordFromKeychain(email: String) {
+        deleteFromKeychain(key: passwordHashKey)
+        deleteFromKeychain(key: saltKey)
     }
 }
 

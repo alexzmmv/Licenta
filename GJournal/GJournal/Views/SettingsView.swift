@@ -73,6 +73,7 @@ struct SettingsView: View {
                 
                 // Actions Section
                 Section {
+                    #if DEBUG
                     Button {
                         SeedDataManager.generateSeedData(context: modelContext)
                     } label: {
@@ -82,6 +83,7 @@ struct SettingsView: View {
                             Text("Generate Seed Data")
                         }
                     }
+                    #endif
                     
                     Button(role: .destructive) {
                         showingDeleteAllAlert = true

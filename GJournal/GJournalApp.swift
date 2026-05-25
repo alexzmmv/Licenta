@@ -16,13 +16,45 @@ struct GJournalApp: App {
     let modelContainer: ModelContainer
     
     init() {
-        do {
-            modelContainer = try ModelContainer(
-                for: Bit.self,
-                configurations: ModelConfiguration(isStoredInMemoryOnly: false)
+        modelContainer = Self.makeModelContainer()
+    }
+
+    /// Creates the SwiftData ModelContainer, wiping the store on schema-migration failure.
+    /// Safe for development — no production data exists yet.
+    private static func makeModelContainer() -> ModelContainer {
+        let config = ModelConfiguration(isStoredInMemoryOnly: false)
+
+        func tryCreate() throws -> ModelContainer {
+            let container = try ModelContainer(
+                for: Bit.self, Cluster.self, EmotionConfiguration.self,
+                configurations: config
             )
+            // Encrypt the store file at rest
+            let storeURL = config.url
+            try? (storeURL as NSURL).setResourceValue(
+                URLFileProtection.completeUnlessOpen,
+                forKey: .fileProtectionKey
+            )
+            return container
+        }
+
+        do {
+            return try tryCreate()
         } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+            // Schema changed (e.g. new fields added) — destroy the store and rebuild
+            let storeURL = config.url
+            let dir = storeURL.deletingLastPathComponent()
+            let name = storeURL.lastPathComponent
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(
+                    at: dir.appendingPathComponent(name + suffix)
+                )
+            }
+            do {
+                return try tryCreate()
+            } catch {
+                fatalError("Cannot create ModelContainer after store reset: \(error)")
+            }
         }
     }
 

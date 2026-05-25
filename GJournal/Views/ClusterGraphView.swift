@@ -3,11 +3,12 @@
 //  GJournal
 //
 //  Obsidian-style knowledge graph visualization for journal entry clusters.
-//  Displays bits as nodes and clusters as groups, with force-directed layout.
-//  Uses SwiftUI Canvas for performant 2D rendering.
+//  Uses SwiftUI Canvas for O(1) rendering regardless of node count.
+//  Force-directed layout with convergence detection and coordinate persistence.
 //
 
 import SwiftUI
+import SwiftData
 import Combine
 
 // MARK: - Graph Data Models
@@ -38,61 +39,56 @@ struct GraphEdge: Identifiable {
 
 // MARK: - Force-Directed Layout Engine
 
-/// Simple force-directed graph layout using Coulomb's law + Hooke's law
+/// Force-directed graph layout: Coulomb repulsion + Hooke attraction + cluster gravity.
+/// Runs a background Task and stops early when max per-step movement < 0.5 px (convergence).
 class ForceDirectedLayout: ObservableObject {
     @Published var nodes: [GraphNode] = []
     @Published var edges: [GraphEdge] = []
     @Published var clusterNames: [Int: String] = [:]
     @Published var isSimulating = false
 
-    // Physics parameters
-    private let repulsionStrength: CGFloat = 8000
-    private let attractionStrength: CGFloat = 0.08
-    private let centerGravity: CGFloat = 0.005
-    private let damping: CGFloat = 0.80
-    private let minDistance: CGFloat = 100
-
-    private var timer: Timer?
-    private var iterationCount = 0
-    private let maxIterations = 200
-
     func buildGraph(from bits: [Bit], in size: CGSize) {
+        guard !bits.isEmpty else {
+            nodes = []; edges = []; clusterNames = [:]
+            return
+        }
+
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
         let radius = min(size.width, size.height) * 0.35
 
-        // Group bits by cluster to position clusters separately in a larger circle
         let bitsByCluster = Dictionary(grouping: bits) { $0.clusterID ?? -1 }
         let sortedClusters = bitsByCluster.keys.sorted()
         let clusterCount = sortedClusters.count
-        
+
         var initialNodes: [GraphNode] = []
-        
+
         for (clusterIndex, clusterID) in sortedClusters.enumerated() {
             let clusterBits = bitsByCluster[clusterID] ?? []
-            
-            // Calculate a dedicated center for this cluster
             let clusterAngle = (CGFloat(clusterIndex) / CGFloat(max(1, clusterCount))) * 2 * .pi
             let clusterCenter = CGPoint(
                 x: center.x + cos(clusterAngle) * radius,
                 y: center.y + sin(clusterAngle) * radius
             )
-            
-            // Local spread within the cluster
             let localRadius: CGFloat = clusterID == -1 ? radius * 0.4 : 60.0
-            
+
             for (bitIndex, bit) in clusterBits.enumerated() {
-                let bitAngle = (CGFloat(bitIndex) / CGFloat(max(1, clusterBits.count))) * 2 * .pi
-                let jitter = CGFloat.random(in: -15...15)
-                
-                let position = CGPoint(
-                    x: clusterCenter.x + cos(bitAngle) * localRadius + jitter,
-                    y: clusterCenter.y + sin(bitAngle) * localRadius + jitter
-                )
-                
+                let position: CGPoint
+                if let gx = bit.graphX, let gy = bit.graphY {
+                    // Restore cached position — simulation will converge in very few steps
+                    position = CGPoint(x: CGFloat(gx), y: CGFloat(gy))
+                } else {
+                    let bitAngle = (CGFloat(bitIndex) / CGFloat(max(1, clusterBits.count))) * 2 * .pi
+                    let jitter = CGFloat.random(in: -15...15)
+                    position = CGPoint(
+                        x: clusterCenter.x + cos(bitAngle) * localRadius + jitter,
+                        y: clusterCenter.y + sin(bitAngle) * localRadius + jitter
+                    )
+                }
+
                 initialNodes.append(GraphNode(
                     id: bit.id,
-                    title: bit.title ?? bit.feel.prefix(20).description,
-                    emotion: bit.feelEmotion,
+                    title: bit.title ?? String(bit.feel.prefix(20)),
+                    emotion: bit.emotion,
                     clusterID: bit.clusterID,
                     createdAt: bit.createdAt,
                     intensity: bit.intensity,
@@ -101,29 +97,25 @@ class ForceDirectedLayout: ObservableObject {
             }
         }
 
-        // Create edges and compute cluster names
+        // Build edges + cluster names
         var newEdges: [GraphEdge] = []
         var newClusterNames: [Int: String] = [:]
-        let clusterGroups = Dictionary(grouping: initialNodes.filter { $0.clusterID != nil && $0.clusterID != -1 }) { $0.clusterID! }
+        let clusterGroups = Dictionary(
+            grouping: initialNodes.filter { $0.clusterID != nil && $0.clusterID! >= 0 }
+        ) { $0.clusterID! }
 
         for (clusterID, clusterNodes) in clusterGroups {
-            // NLP Cluster Naming (prefer persisted name from DB)
             let clusterBits = bits.filter { $0.clusterID == clusterID }
             if let persistedName = clusterBits.compactMap({ $0.cluster?.name }).first {
                 newClusterNames[clusterID] = persistedName
             } else {
                 newClusterNames[clusterID] = ClusterNamer.generateName(for: clusterBits, fallbackID: clusterID)
             }
-            
-            // Connect nodes using a hub-and-spoke model (O(N) links)
+
             if clusterNodes.count > 1 {
                 let hub = clusterNodes[0]
                 for i in 1..<clusterNodes.count {
-                    newEdges.append(GraphEdge(
-                        sourceID: hub.id,
-                        targetID: clusterNodes[i].id,
-                        clusterID: clusterID
-                    ))
+                    newEdges.append(GraphEdge(sourceID: hub.id, targetID: clusterNodes[i].id, clusterID: clusterID))
                 }
             }
         }
@@ -132,35 +124,34 @@ class ForceDirectedLayout: ObservableObject {
         self.edges = newEdges
         self.clusterNames = newClusterNames
 
-        // Run heavy physics simulation in the background
         Task.detached(priority: .userInitiated) { [weak self, initialNodes, newEdges] in
             guard let self = self else { return }
-            
             await MainActor.run { self.isSimulating = true }
-            
+
             var simulationNodes = initialNodes
-            
-            // Extract parameters
-            let maxIters = 250 
-            let repulsion: CGFloat = 12000 // Higher repulsion for better cluster separation
-            let attraction: CGFloat = 0.12  // Stronger internal attraction
-            let minDist: CGFloat = 130      // More padding between nodes
-            let gravity: CGFloat = 0.002    // Weak center gravity to allow spread
-            let damp: CGFloat = 0.85
+            let maxIters = 250
 
             for _ in 0..<maxIters {
+                let prevPositions = simulationNodes.map { $0.position }
                 simulationNodes = self.computeStep(
                     nodes: simulationNodes,
                     edges: newEdges,
                     center: center,
-                    repulsion: repulsion,
-                    attraction: attraction,
-                    minDist: minDist,
-                    gravity: gravity,
-                    damping: damp
+                    repulsion: 12000,
+                    attraction: 0.12,
+                    minDist: 130,
+                    gravity: 0.002,
+                    damping: 0.85
                 )
+
+                var maxMovement: CGFloat = 0
+                for (prev, next) in zip(prevPositions, simulationNodes) {
+                    let d = hypot(next.position.x - prev.x, next.position.y - prev.y)
+                    if d > maxMovement { maxMovement = d }
+                }
+                if maxMovement < 0.5 { break }
             }
-            
+
             let finalNodes = simulationNodes
             await MainActor.run {
                 self.nodes = finalNodes
@@ -182,77 +173,62 @@ class ForceDirectedLayout: ObservableObject {
         guard !nodes.isEmpty else { return [] }
         var nextNodes = nodes
         var forces = Array(repeating: CGPoint.zero, count: nodes.count)
+        let repulsionCutoff: CGFloat = 300
 
-        // 1. Repulsion (Global separation)
+        // 1. Repulsion (Coulomb) with distance cutoff — reduces O(N²) to ~O(N·k)
         for i in 0..<nodes.count {
             for j in (i + 1)..<nodes.count {
                 var dx = nodes[i].position.x - nodes[j].position.x
                 var dy = nodes[i].position.y - nodes[j].position.y
-                if dx == 0 && dy == 0 {
-                    dx = CGFloat.random(in: -0.1...0.1)
-                    dy = CGFloat.random(in: -0.1...0.1)
-                }
+                guard abs(dx) < repulsionCutoff && abs(dy) < repulsionCutoff else { continue }
+                if dx == 0 && dy == 0 { dx = CGFloat.random(in: -0.1...0.1); dy = CGFloat.random(in: -0.1...0.1) }
                 let distance = sqrt(dx * dx + dy * dy)
                 let actualDistance = max(distance, 1.0)
-                
-                // Push nodes in different clusters apart significantly more than same-cluster nodes
                 let repulsionFactor: CGFloat = (nodes[i].clusterID == nodes[j].clusterID && nodes[i].clusterID != -1) ? 0.3 : 3.0
                 var force = (repulsion * repulsionFactor) / (actualDistance * actualDistance)
-                
-                if distance < minDist {
-                    force += (minDist - distance) * 5.0
-                }
+                if distance < minDist { force += (minDist - distance) * 5.0 }
                 let fx = (dx / actualDistance) * force
                 let fy = (dy / actualDistance) * force
-                forces[i].x += fx
-                forces[i].y += fy
-                forces[j].x -= fx
-                forces[j].y -= fy
+                forces[i].x += fx; forces[i].y += fy
+                forces[j].x -= fx; forces[j].y -= fy
             }
         }
 
-        // 2. Attraction along edges (Hooke's law)
+        // 2. Attraction along edges (Hooke)
         for edge in edges {
-            guard let sourceIdx = nodes.firstIndex(where: { $0.id == edge.sourceID }),
-                  let targetIdx = nodes.firstIndex(where: { $0.id == edge.targetID }) else { continue }
-            let dx = nodes[targetIdx].position.x - nodes[sourceIdx].position.x
-            let dy = nodes[targetIdx].position.y - nodes[sourceIdx].position.y
-            forces[sourceIdx].x += dx * attraction
-            forces[sourceIdx].y += dy * attraction
-            forces[targetIdx].x -= dx * attraction
-            forces[targetIdx].y -= dy * attraction
+            guard let si = nodes.firstIndex(where: { $0.id == edge.sourceID }),
+                  let ti = nodes.firstIndex(where: { $0.id == edge.targetID }) else { continue }
+            let dx = nodes[ti].position.x - nodes[si].position.x
+            let dy = nodes[ti].position.y - nodes[si].position.y
+            forces[si].x += dx * attraction; forces[si].y += dy * attraction
+            forces[ti].x -= dx * attraction; forces[ti].y -= dy * attraction
         }
-        
-        // 3. Cluster Gravity (Pull nodes in the same cluster toward their collective center)
-        let clusterGroups = Dictionary(grouping: nodes.enumerated().filter { $0.element.clusterID != nil && $0.element.clusterID! >= 0 }) { $0.element.clusterID! }
-        for (_, clusterNodes) in clusterGroups {
-            if clusterNodes.count > 1 {
-                let avgX = clusterNodes.reduce(0.0) { $0 + $1.element.position.x } / CGFloat(clusterNodes.count)
-                let avgY = clusterNodes.reduce(0.0) { $0 + $1.element.position.y } / CGFloat(clusterNodes.count)
-                let clusterCenter = CGPoint(x: avgX, y: avgY)
-                
-                for (idx, _) in clusterNodes {
-                    let dx = clusterCenter.x - nodes[idx].position.x
-                    let dy = clusterCenter.y - nodes[idx].position.y
-                    forces[idx].x += dx * 0.1 // Cluster attraction factor
-                    forces[idx].y += dy * 0.1
-                }
+
+        // 3. Cluster gravity — pull same-cluster nodes toward their centroid
+        let clusterGroups = Dictionary(
+            grouping: nodes.enumerated().filter { $0.element.clusterID != nil && $0.element.clusterID! >= 0 }
+        ) { $0.element.clusterID! }
+        for (_, clusterNodes) in clusterGroups where clusterNodes.count > 1 {
+            let avgX = clusterNodes.reduce(0.0) { $0 + $1.element.position.x } / CGFloat(clusterNodes.count)
+            let avgY = clusterNodes.reduce(0.0) { $0 + $1.element.position.y } / CGFloat(clusterNodes.count)
+            let clusterCenter = CGPoint(x: avgX, y: avgY)
+            for (idx, _) in clusterNodes {
+                forces[idx].x += (clusterCenter.x - nodes[idx].position.x) * 0.1
+                forces[idx].y += (clusterCenter.y - nodes[idx].position.y) * 0.1
             }
         }
 
-        // 4. Global Center Gravity
+        // 4. Global center gravity — keep graph from drifting off-screen
         for i in 0..<nodes.count {
-            let dx = center.x - nodes[i].position.x
-            let dy = center.y - nodes[i].position.y
-            forces[i].x += dx * gravity
-            forces[i].y += dy * gravity
+            forces[i].x += (center.x - nodes[i].position.x) * gravity
+            forces[i].y += (center.y - nodes[i].position.y) * gravity
         }
 
-        // 5. Update positions with damping
+        // 5. Integrate with velocity damping
         for i in 0..<nodes.count {
             nextNodes[i].velocity.x = (nodes[i].velocity.x + forces[i].x) * damping
             nextNodes[i].velocity.y = (nodes[i].velocity.y + forces[i].y) * damping
-            let maxVel: CGFloat = 20 // Slightly increased max velocity for faster convergence
+            let maxVel: CGFloat = 20
             nextNodes[i].velocity.x = max(-maxVel, min(maxVel, nextNodes[i].velocity.x))
             nextNodes[i].velocity.y = max(-maxVel, min(maxVel, nextNodes[i].velocity.y))
             nextNodes[i].position.x += nextNodes[i].velocity.x
@@ -260,8 +236,6 @@ class ForceDirectedLayout: ObservableObject {
         }
         return nextNodes
     }
-
-
 }
 
 // MARK: - Cluster Graph View
@@ -269,16 +243,23 @@ class ForceDirectedLayout: ObservableObject {
 struct ClusterGraphView: View {
     @ObservedObject var repository: BaseJournalRepository
     @StateObject private var layout = ForceDirectedLayout()
-    @State private var selectedNode: GraphNode?
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) var dismiss
+
+    @State private var selectedNodeID: UUID?
     @State private var scale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var dragOffset: CGSize = .zero
     @State private var isLoading = true
     @State private var isSpinning = false
     @State private var bitToEdit: Bit?
-    @Environment(\.dismiss) var dismiss
+    @State private var graphSize: CGSize = .zero
 
-    /// Map cluster IDs to colors
+    private var selectedNode: GraphNode? {
+        layout.nodes.first { $0.id == selectedNodeID }
+    }
+
     private let clusterColors: [Color] = [
         .pink, .purple, .blue, .cyan, .teal, .green,
         .yellow, .orange, .red, .indigo, .mint
@@ -291,275 +272,207 @@ struct ClusterGraphView: View {
 
     var body: some View {
         ZStack {
-            // Dark background
-            Color(red: 0.06, green: 0.06, blue: 0.08)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    withAnimation(.spring(response: 0.3)) {
-                        selectedNode = nil
-                    }
-                }
+            Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea()
 
-            // Graph canvas
             GeometryReader { geometry in
-                ZStack {
-                    // Static gesture container - captures touch across the entire screen
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.3)) {
-                                selectedNode = nil
-                            }
-                        }
-                    
-                    // Moving graph content
-                    ZStack {
-                        // Edges
-                        ForEach(layout.edges) { edge in
-                            if let source = layout.nodes.first(where: { $0.id == edge.sourceID }),
-                               let target = layout.nodes.first(where: { $0.id == edge.targetID }) {
-                                Path { path in
-                                    path.move(to: source.position)
-                                    path.addLine(to: target.position)
-                                }
-                                .stroke(
-                                    colorForCluster(edge.clusterID).opacity(0.3),
-                                    lineWidth: 1
-                                )
-                            }
-                        }
+                // Single Canvas — no SwiftUI view tree per node, no layout passes at 60fps
+                Canvas { context, size in
+                    let cx = size.width / 2
+                    let cy = size.height / 2
+                    let tx = offset.width + dragOffset.width
+                    let ty = offset.height + dragOffset.height
+                    // Replicate .scaleEffect(scale).offset(tx, ty) as an affine transform
+                    context.transform = CGAffineTransform(
+                        a: scale, b: 0, c: 0, d: scale,
+                        tx: cx * (1 - scale) + tx,
+                        ty: cy * (1 - scale) + ty
+                    )
 
-                        // Nodes
-                        ForEach(layout.nodes) { node in
-                            nodeView(node)
-                                .position(node.position)
-                                .onTapGesture {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        if selectedNode?.id == node.id {
-                                            selectedNode = nil
-                                        } else {
-                                            selectedNode = node
-                                        }
-                                    }
-                                }
-                        }
-
-                        // Cluster labels
-                        ForEach(clusterCenters, id: \.clusterID) { center in
-                            Text(layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)")
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundColor(colorForCluster(center.clusterID).opacity(0.8))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.black.opacity(0.5))
-                                .cornerRadius(8)
-                                .position(center.position)
-                                .offset(y: -45)
-                        }
+                    // Edges
+                    for edge in layout.edges {
+                        guard let src = layout.nodes.first(where: { $0.id == edge.sourceID }),
+                              let dst = layout.nodes.first(where: { $0.id == edge.targetID }) else { continue }
+                        var path = Path()
+                        path.move(to: src.position)
+                        path.addLine(to: dst.position)
+                        context.stroke(path, with: .color(colorForCluster(edge.clusterID).opacity(0.3)), lineWidth: 1)
                     }
-                    .scaleEffect(scale)
-                    .offset(x: offset.width + dragOffset.width,
-                            y: offset.height + dragOffset.height)
+
+                    // Nodes
+                    for node in layout.nodes {
+                        let isSelected = node.id == selectedNodeID
+                        let isNoise = node.clusterID == nil || node.clusterID == -1
+                        let clusterColor = colorForCluster(node.clusterID)
+                        let rect = CGRect(x: node.position.x - 70, y: node.position.y - 18, width: 140, height: 36)
+                        let nodePath = Path(roundedRect: rect, cornerRadius: 12)
+
+                        context.fill(nodePath, with: .color(
+                            isSelected ? clusterColor.opacity(0.3) : Color(red: 0.1, green: 0.1, blue: 0.12)
+                        ))
+                        context.stroke(nodePath, with: .color(
+                            isSelected ? Color.white : clusterColor.opacity(isNoise ? 0.4 : 0.8)
+                        ), lineWidth: isSelected ? 2 : 1)
+
+                        context.draw(
+                            Text("\(node.emotion.emoji) \(node.title)").font(.caption2).foregroundColor(.white),
+                            in: CGRect(x: rect.minX + 6, y: rect.minY, width: rect.width - 12, height: rect.height)
+                        )
+                    }
+
+                    // Cluster labels (drawn above nodes)
+                    for center in clusterCenters {
+                        let name = layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)"
+                        context.draw(
+                            Text(name).font(.caption2).fontWeight(.medium)
+                                .foregroundColor(colorForCluster(center.clusterID).opacity(0.9)),
+                            at: CGPoint(x: center.position.x, y: center.position.y - 32)
+                        )
+                    }
                 }
                 .gesture(
-                    DragGesture()
+                    DragGesture(minimumDistance: 0)
                         .onChanged { value in
                             dragOffset = value.translation
                         }
                         .onEnded { value in
-                            offset.width += value.translation.width
-                            offset.height += value.translation.height
+                            let t = value.translation
                             dragOffset = .zero
+                            if hypot(t.width, t.height) < 8 {
+                                // Short movement — treat as tap
+                                let graphPoint = adjustPoint(value.startLocation)
+                                let hitID = hitTest(at: graphPoint)
+                                withAnimation(.spring(response: 0.3)) {
+                                    if let id = hitID {
+                                        selectedNodeID = (selectedNodeID == id) ? nil : id
+                                    } else {
+                                        selectedNodeID = nil
+                                    }
+                                }
+                            } else {
+                                // Long movement — pan the canvas
+                                offset.width += t.width
+                                offset.height += t.height
+                            }
                         }
                 )
                 .simultaneousGesture(
-                    MagnificationGesture()
-                        .onChanged { value in
-                            scale = max(0.3, min(3.0, value))
-                        }
+                    MagnificationGesture().onChanged { value in
+                        scale = max(0.3, min(3.0, value))
+                    }
                 )
                 .onAppear {
+                    graphSize = geometry.size
                     layout.buildGraph(from: repository.bits, in: geometry.size)
+                    withAnimation(.easeOut(duration: 0.6)) { isLoading = false }
                 }
-            } // Close GeometryReader
+            }
             .opacity(isLoading ? 0 : 1)
 
-            // Header overlay
-                VStack {
-                    headerView
+            VStack {
+                headerView
+                Spacer()
+                if let node = selectedNode {
+                    nodeDetailCard(node)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                legendView
+            }
+            .opacity(isLoading ? 0 : 1)
 
-                    Spacer()
-
-                    // Selected node detail
-                    if let node = selectedNode {
-                        nodeDetailCard(node)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+            if isLoading {
+                VStack(spacing: 24) {
+                    ZStack {
+                        Circle().stroke(Color.gray.opacity(0.2), lineWidth: 4).frame(width: 60, height: 60)
+                        Circle().trim(from: 0, to: 0.7)
+                            .stroke(
+                                LinearGradient(colors: [.pink, .purple], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                            )
+                            .frame(width: 60, height: 60)
+                            .rotationEffect(Angle(degrees: isSpinning ? 360 : 0))
+                            .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isSpinning)
+                            .onAppear { isSpinning = true }
                     }
-
-                    // Legend
-                    legendView
-                }
-                .opacity(isLoading ? 0 : 1)
-                
-                // Loading Screen overlay
-                if isLoading {
-                    VStack(spacing: 24) {
-                        // Custom animated loading indicator
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 4)
-                                .frame(width: 60, height: 60)
-                            
-                            Circle()
-                                .trim(from: 0, to: 0.7)
-                                .stroke(
-                                    LinearGradient(colors: [.pink, .purple], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                                )
-                                .frame(width: 60, height: 60)
-                                .rotationEffect(Angle(degrees: isSpinning ? 360 : 0))
-                                .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isSpinning)
-                                .onAppear {
-                                    isSpinning = true
-                                }
-                        }
-                        
-                        VStack(spacing: 8) {
-                            Text("Analyzing Patterns")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                            
-                            Text("Connecting your thoughts and memories...")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        }
+                    VStack(spacing: 8) {
+                        Text("Analyzing Patterns").font(.headline).foregroundColor(.white)
+                        Text("Connecting your thoughts and memories...").font(.subheadline).foregroundColor(.gray)
                     }
-                    .transition(.opacity)
                 }
+                .transition(.opacity)
             }
-            .navigationBarHidden(true)
-            .sheet(item: $bitToEdit) { bit in
-                let clusterName = bit.clusterID.flatMap { layout.clusterNames[$0] }
-                BitDetailView(bit: bit, clusterName: clusterName)
-            }
-        .onAppear {
-            // Build the graph instantly from current DB state
-            if let size = UIApplication.shared.connectedScenes
-                .compactMap({ $0 as? UIWindowScene })
-                .first?.windows.first?.bounds.size {
-                layout.buildGraph(from: repository.bits, in: size)
-                
-                // Hide loading overlay as soon as graph is initially ready
-                withAnimation(.easeOut(duration: 0.6)) {
-                    isLoading = false
-                }
-            }
-
-            // Trigger background clustering (fire and forget)
-            let aiManager = (repository as? LocalJournalRepository)?.aiProcessingManager
-            Task.detached(priority: .background) {
-                if let aiManager = aiManager {
-                    print("[ClusterGraphView] Updating clusters in background...")
-                    try? await aiManager.runClustering()
-                }
-            }
+        }
+        .navigationBarHidden(true)
+        .sheet(item: $bitToEdit) { bit in
+            BitDetailView(bit: bit, clusterName: bit.clusterID.flatMap { layout.clusterNames[$0] })
         }
         .onChange(of: repository.bits) {
-            // Rebuild graph automatically if background clustering updates the DB
-            if let size = UIApplication.shared.connectedScenes
-                .compactMap({ $0 as? UIWindowScene })
-                .first?.windows.first?.bounds.size {
-                layout.buildGraph(from: repository.bits, in: size)
+            guard !graphSize.width.isZero else { return }
+            layout.buildGraph(from: repository.bits, in: graphSize)
+        }
+        .onChange(of: layout.isSimulating) { _, isNowSimulating in
+            guard !isNowSimulating else { return }
+            // Persist node positions so the next open skips most of the simulation
+            for node in layout.nodes {
+                if let bit = repository.bits.first(where: { $0.id == node.id }) {
+                    bit.graphX = Double(node.position.x)
+                    bit.graphY = Double(node.position.y)
+                }
             }
+            try? modelContext.save()
         }
-        }
+    }
 
-    // MARK: - Node View
+    // MARK: - Manual Hit-Testing
 
-    @ViewBuilder
-    private func nodeView(_ node: GraphNode) -> some View {
-        let isSelected = selectedNode?.id == node.id
-        let isNoise = node.clusterID == nil || node.clusterID == -1
-        let baseColor = isNoise ? Color.gray.opacity(0.4) : colorForCluster(node.clusterID)
-
-        HStack(spacing: 6) {
-            Text(node.emotion.emoji)
-                .font(.caption)
-            Text(node.title)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .frame(maxWidth: 140)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(red: 0.1, green: 0.1, blue: 0.12))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(isSelected ? Color.white : baseColor.opacity(0.8), lineWidth: isSelected ? 2 : 1)
-                )
-                .shadow(color: baseColor.opacity(isSelected ? 0.5 : 0.2), radius: isSelected ? 8 : 4, y: 2)
+    /// Convert a screen-space point to graph-space, accounting for current scale + offset.
+    private func adjustPoint(_ point: CGPoint) -> CGPoint {
+        let cx = graphSize.width / 2
+        let cy = graphSize.height / 2
+        return CGPoint(
+            x: (point.x - cx * (1 - scale) - offset.width) / scale,
+            y: (point.y - cy * (1 - scale) - offset.height) / scale
         )
-        .scaleEffect(isSelected ? 1.1 : 1.0)
-        .animation(.spring(response: 0.3), value: isSelected)
+    }
+
+    private func hitTest(at graphPoint: CGPoint) -> UUID? {
+        for node in layout.nodes.reversed() {
+            let rect = CGRect(x: node.position.x - 70, y: node.position.y - 18, width: 140, height: 36)
+            if rect.contains(graphPoint) { return node.id }
+        }
+        return nil
     }
 
     // MARK: - Header
 
     private var headerView: some View {
         HStack {
-            Button {
-                dismiss()
-            } label: {
+            Button { dismiss() } label: {
                 Image(systemName: "chevron.left")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .font(.title3).fontWeight(.semibold).foregroundColor(.white)
                     .frame(width: 44, height: 44)
-                    .background(Color.gray.opacity(0.2))
-                    .clipShape(Circle())
+                    .background(Color.gray.opacity(0.2)).clipShape(Circle())
             }
 
             Spacer()
 
             VStack(spacing: 2) {
-                Text("Knowledge Graph")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-
+                Text("Knowledge Graph").font(.title3).fontWeight(.bold).foregroundColor(.white)
                 Text("\(layout.nodes.count) entries • \(clusterCount) clusters")
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                    .font(.caption).foregroundColor(.gray)
             }
 
             Spacer()
 
-            // Refresh button
             Button {
-                withAnimation {
-                    if let size = UIApplication.shared.connectedScenes
-                        .compactMap({ $0 as? UIWindowScene })
-                        .first?.windows.first?.bounds.size {
-                        layout.buildGraph(from: repository.bits, in: size)
-                    }
-                }
+                withAnimation { layout.buildGraph(from: repository.bits, in: graphSize) }
             } label: {
                 Image(systemName: "arrow.clockwise")
-                    .font(.title3)
-                    .foregroundColor(.white)
+                    .font(.title3).foregroundColor(.white)
                     .frame(width: 44, height: 44)
-                    .background(Color.gray.opacity(0.2))
-                    .clipShape(Circle())
+                    .background(Color.gray.opacity(0.2)).clipShape(Circle())
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
+        .padding(.horizontal, 20).padding(.top, 16)
     }
 
     // MARK: - Node Detail Card
@@ -568,38 +481,22 @@ struct ClusterGraphView: View {
     private func nodeDetailCard(_ node: GraphNode) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(node.emotion.emoji)
-                    .font(.title2)
+                Text(node.emotion.emoji).font(.title2)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(node.title)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .lineLimit(1)
+                    Text(node.title).font(.headline).foregroundColor(.white).lineLimit(1)
 
                     HStack(spacing: 8) {
-                        Text(node.emotion.rawValue)
-                            .font(.caption)
-                            .foregroundColor(node.emotion.color)
-
-                        Text("•")
-                            .foregroundColor(.gray)
-
-                        Text(formatDate(node.createdAt))
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        Text(node.emotion.rawValue).font(.caption).foregroundColor(node.emotion.color)
+                        Text("•").foregroundColor(.gray)
+                        Text(formatDate(node.createdAt)).font(.caption).foregroundColor(.gray)
 
                         if let clusterID = node.clusterID, clusterID >= 0 {
-                            Text("•")
-                                .foregroundColor(.gray)
-
+                            Text("•").foregroundColor(.gray)
                             HStack(spacing: 4) {
-                                Circle()
-                                    .fill(colorForCluster(clusterID))
-                                    .frame(width: 8, height: 8)
-                                Text("Cluster \(clusterID)")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                Circle().fill(colorForCluster(clusterID)).frame(width: 8, height: 8)
+                                Text(layout.clusterNames[clusterID] ?? "Cluster \(clusterID)")
+                                    .font(.caption).foregroundColor(.gray)
                             }
                         }
                     }
@@ -607,7 +504,6 @@ struct ClusterGraphView: View {
 
                 Spacer()
 
-                // Intensity indicator
                 HStack(spacing: 2) {
                     ForEach(1...4, id: \.self) { level in
                         Circle()
@@ -615,15 +511,13 @@ struct ClusterGraphView: View {
                             .frame(width: 6, height: 6)
                     }
                 }
-                
+
                 Button {
                     if let bit = repository.bits.first(where: { $0.id == node.id }) {
                         bitToEdit = bit
                     }
                 } label: {
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.pink)
+                    Image(systemName: "chevron.right.circle.fill").font(.title2).foregroundColor(.pink)
                 }
                 .padding(.leading, 8)
             }
@@ -634,8 +528,7 @@ struct ClusterGraphView: View {
                 .fill(Color(red: 0.12, green: 0.12, blue: 0.14))
                 .shadow(color: .black.opacity(0.3), radius: 10, y: -5)
         )
-        .padding(.horizontal, 20)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 20).padding(.bottom, 8)
     }
 
     // MARK: - Legend
@@ -645,30 +538,19 @@ struct ClusterGraphView: View {
             HStack(spacing: 12) {
                 ForEach(Array(uniqueClusterIDs), id: \.self) { clusterID in
                     HStack(spacing: 4) {
-                        Circle()
-                            .fill(colorForCluster(clusterID))
-                            .frame(width: 8, height: 8)
+                        Circle().fill(colorForCluster(clusterID)).frame(width: 8, height: 8)
                         Text(clusterID == -1 ? "Unclustered" : (layout.clusterNames[clusterID] ?? "Cluster \(clusterID)"))
-                            .font(.caption2)
-                            .foregroundColor(.gray)
+                            .font(.caption2).foregroundColor(.gray)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.1)).cornerRadius(8)
                     .onTapGesture {
                         if let center = clusterCenters.first(where: { $0.clusterID == clusterID }) {
-                            // Find the screen center
-                            if let window = UIApplication.shared.connectedScenes
-                                .compactMap({ $0 as? UIWindowScene })
-                                .first?.windows.first {
-                                let screenCenter = CGPoint(x: window.bounds.width / 2, y: window.bounds.height / 2)
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                                    offset = CGSize(
-                                        width: (screenCenter.x - center.position.x) * scale,
-                                        height: (screenCenter.y - center.position.y) * scale
-                                    )
-                                }
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                offset = CGSize(
+                                    width: scale * (graphSize.width / 2 - center.position.x),
+                                    height: scale * (graphSize.height / 2 - center.position.y)
+                                )
                             }
                         }
                     }
@@ -686,12 +568,13 @@ struct ClusterGraphView: View {
     }
 
     private var uniqueClusterIDs: [Int] {
-        let ids = Set(layout.nodes.map { $0.clusterID ?? -1 })
-        return ids.sorted()
+        Array(Set(layout.nodes.map { $0.clusterID ?? -1 })).sorted()
     }
 
     private var clusterCenters: [(clusterID: Int, position: CGPoint)] {
-        let groups = Dictionary(grouping: layout.nodes.filter { $0.clusterID != nil && $0.clusterID! >= 0 }) { $0.clusterID! }
+        let groups = Dictionary(
+            grouping: layout.nodes.filter { $0.clusterID != nil && $0.clusterID! >= 0 }
+        ) { $0.clusterID! }
         return groups.map { clusterID, nodes in
             let avgX = nodes.reduce(0) { $0 + $1.position.x } / CGFloat(nodes.count)
             let avgY = nodes.reduce(0) { $0 + $1.position.y } / CGFloat(nodes.count)

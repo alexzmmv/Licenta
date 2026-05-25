@@ -159,36 +159,43 @@ struct DayCell: View {
     let hasBits: Bool
     let isSelected: Bool
     let isToday: Bool
-    
+
     private var dayNumber: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d"
         return formatter.string(from: date)
     }
-    
+
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(isSelected ? Color.pink : (isToday ? Color.pink.opacity(0.2) : Color.gray.opacity(0.1)))
-                .overlay(
-                    Circle()
-                        .stroke(isToday && !isSelected ? Color.pink.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                )
+        VStack(spacing: 4) {
+            ZStack {
+                // Selected: filled rounded rectangle
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(isSelected
+                          ? Color(red: 0.42, green: 0.26, blue: 0.88)
+                          : Color.clear)
+                    .frame(width: 36, height: 36)
 
-            VStack(spacing: 2) {
-                Text(dayNumber)
-                    .font(.system(size: 16))
-                    .fontWeight(isToday ? .bold : .regular)
-                    .foregroundColor(isSelected ? .white : .white)
-
-                if hasBits {
-                    Circle()
-                        .fill(isSelected ? Color.white : Color.pink)
-                        .frame(width: 5, height: 5)
+                // Today (unselected): subtle outline rectangle
+                if isToday && !isSelected {
+                    RoundedRectangle(cornerRadius: 9)
+                        .stroke(Color.white.opacity(0.35), lineWidth: 1.5)
+                        .frame(width: 36, height: 36)
                 }
+
+                Text(dayNumber)
+                    .font(.system(size: 15, weight: isToday ? .bold : .regular))
+                    .foregroundColor(.white)
             }
+
+            // Entry indicator: small square, not a period-tracker dot
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(hasBits
+                      ? (isSelected ? Color.white.opacity(0.85) : Color(red: 0.55, green: 0.4, blue: 0.95))
+                      : Color.clear)
+                .frame(width: 12, height: 3)
         }
-        .frame(height: 44)
+        .frame(height: 52)
     }
 }
 

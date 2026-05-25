@@ -18,12 +18,18 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var showingBitsList = false
     @State private var showingGraph = false
-
-    // New: emotion sheet state
-    @State private var selectedEmotion: Emotion? = nil
+    @State private var bitToEdit: Bit?
+    @State private var selectedEmotion: Emotion?
     @State private var showingEmotionSheet = false
 
-    // Injectable initializer — repository is owned by MainAppView
+    // Section appear animations
+    @State private var headerAppeared = false
+    @State private var moodCardAppeared = false
+    @State private var weekStripAppeared = false
+    @State private var calendarAppeared = false
+    @State private var recentAppeared = false
+    @State private var emotionsAppeared = false
+
     init(repository: BaseJournalRepository) {
         self.repository = repository
     }
@@ -36,132 +42,170 @@ struct ContentView: View {
         self.topEmotions = repository.getTopEmotionsLast30Days()
     }
 
-    private var canCreateToday: Bool {
-        repository.canCreate(for: Date())
+    private var canCreateToday: Bool { repository.canCreate(for: Date()) }
+    private var isFirstTimeUser: Bool { repository.bits.isEmpty }
+
+    private var todayEmotion: Emotion? {
+        let calendar = Calendar.current
+        let todayBits = repository.bits.filter {
+            !$0.isDeleted && calendar.isDateInToday($0.createdAt)
+        }
+        guard !todayBits.isEmpty else { return nil }
+        var counts: [Emotion: Int] = [:]
+        for bit in todayBits { counts[bit.emotion, default: 0] += 1 }
+        return counts.max(by: { $0.value < $1.value })?.key
     }
 
-    private var isFirstTimeUser: Bool {
-        repository.bits.isEmpty
+    private var weekData: [(date: Date, emotion: Emotion?, intensity: Double)] {
+        let calendar = Calendar.current
+        return (0..<7).reversed().map { offset in
+            let date = calendar.date(byAdding: .day, value: -offset, to: Date())!
+            let dayStart = calendar.startOfDay(for: date)
+            let dayBits = repository.bits.filter {
+                !$0.isDeleted && calendar.startOfDay(for: $0.createdAt) == dayStart
+            }
+            let avgIntensity = dayBits.isEmpty ? 0.0 :
+                Double(dayBits.map(\.intensity).reduce(0, +)) / Double(dayBits.count)
+            var counts: [Emotion: Int] = [:]
+            for bit in dayBits { counts[bit.emotion, default: 0] += 1 }
+            return (date: date, emotion: counts.max(by: { $0.value < $1.value })?.key, intensity: avgIntensity)
+        }
     }
 
-    /// Get the friendly display name from the user's saved name
     private var displayName: String {
         guard let name = authManager.currentUser, !name.isEmpty else { return "" }
         return name.prefix(1).uppercased() + name.dropFirst()
     }
 
     private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 0..<12:
-            return "Good Morning"
-        case 12..<17:
-            return "Good Afternoon"
-        default:
-            return "Good Evening"
+        switch Calendar.current.component(.hour, from: Date()) {
+        case 0..<12: return "Good Morning"
+        case 12..<17: return "Good Afternoon"
+        default: return "Good Evening"
         }
+    }
+
+    private var recentEntriesSection: some View {
+        let recent = Array(repository.bits
+            .filter { !$0.isDeleted }
+            .sorted { $0.createdAt > $1.createdAt }
+            .prefix(5))
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Recent Entries")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                Spacer()
+                Button { showingBitsList = true } label: {
+                    Text("See all")
+                        .font(.subheadline)
+                        .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                }
+            }
+            .padding(.horizontal, 20)
+
+            if recent.isEmpty {
+                Text("No entries yet — tap + to add your first.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 20)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(recent) { bit in
+                        RecentEntryRow(bit: bit) { bitToEdit = bit }
+                            .padding(.horizontal, 20)
+                    }
+                }
+            }
+        }
+    }
+
+    private func animateSections() {
+        let spring = Animation.spring(response: 0.55, dampingFraction: 0.78)
+        withAnimation(spring) { headerAppeared = true }
+        withAnimation(spring.delay(0.1)) { moodCardAppeared = true }
+        withAnimation(spring.delay(0.18)) { weekStripAppeared = true }
+        withAnimation(spring.delay(0.26)) { calendarAppeared = true }
+        withAnimation(spring.delay(0.34)) { recentAppeared = true }
+        withAnimation(spring.delay(0.42)) { emotionsAppeared = true }
     }
 
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottomTrailing) {
-                // Dark background
-                Color.black.ignoresSafeArea()
+                // Background: black + subtle purple glow at bottom
+                ZStack(alignment: .bottom) {
+                    Color.black.ignoresSafeArea()
+                    LinearGradient(
+                        colors: [Color.clear, Color(red: 0.18, green: 0.08, blue: 0.38).opacity(0.5)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 320)
+                    .ignoresSafeArea()
+                }
 
                 ScrollView {
-                    VStack(spacing: 32) {
-                        // Greeting header
-                        HStack {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(displayName.isEmpty ? greeting : "\(greeting), \(displayName)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-
-                                Text("How are you feeling today?")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
-
-                            Spacer()
-
-                            HStack(spacing: 8) {
-                                Button {
-                                    showingBitsList = true
-                                } label: {
-                                    Image(systemName: "list.bullet")
-                                        .font(.title3)
-                                        .foregroundColor(.gray)
-                                        .padding(8)
-                                        .background(Color.gray.opacity(0.2))
-                                        .clipShape(Circle())
-                                }
-
-                                Button {
-                                    showingGraph = true
-                                } label: {
-                                    Image(systemName: "point.3.connected.trianglepath.dotted")
-                                        .font(.title3)
-                                        .foregroundColor(.gray)
-                                        .padding(8)
-                                        .background(Color.gray.opacity(0.2))
-                                        .clipShape(Circle())
-                                }
-
-                                Button {
-                                    showingSettings = true
-                                } label: {
-                                    Image(systemName: "gearshape.fill")
-                                        .font(.title3)
-                                        .foregroundColor(.gray)
-                                        .padding(8)
-                                        .background(Color.gray.opacity(0.2))
-                                        .clipShape(Circle())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                    VStack(spacing: 28) {
+                        // Header
+                        headerSection
+                            .opacity(headerAppeared ? 1 : 0)
+                            .offset(y: headerAppeared ? 0 : -12)
 
                         if isFirstTimeUser {
-                            // First-time user welcome
-                            FirstTimeWelcomeView {
-                                showingAddBit = true
-                            }
+                            FirstTimeWelcomeView { showingAddBit = true }
                         } else {
-                            // Regular content for existing users
-                            VStack(spacing: 32) {
-                                // Calendar section
-                                VStack(alignment: .leading, spacing: 16) {
-                                    Text("Your Journey")
-                                        .font(.title3)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 20)
+                            // Today mood card
+                            TodayMoodCard(emotion: todayEmotion)
+                                .padding(.horizontal, 20)
+                                .opacity(moodCardAppeared ? 1 : 0)
+                                .offset(y: moodCardAppeared ? 0 : 20)
 
-                                    CalendarView(
-                                        month: $currentMonth,
-                                        daysWithBits: daysWithBits,
-                                        onDateSelected: { date in
-                                            selectedDate = date
-                                            selectedDateForSheet = IdentifiableDate(date: date)
-                                        },
-                                        selectedDate: $selectedDate
-                                    )
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .fill(Color.gray.opacity(0.1))
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                    )
-                                    .padding(.horizontal, 20)
-                                }
-
-                                // Top emotions section
-                                TopEmotionsView(topEmotions: topEmotions) { emotion in
-                                    selectedEmotion = emotion
-                                    showingEmotionSheet = true
-                                }
+                            // Week strip
+                            WeekMoodStrip(weekData: weekData) { date in
+                                selectedDate = date
+                                selectedDateForSheet = IdentifiableDate(date: date)
                             }
+                            .opacity(weekStripAppeared ? 1 : 0)
+                            .offset(y: weekStripAppeared ? 0 : 20)
+
+                            // Calendar
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Your Journey")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+
+                                CalendarView(
+                                    month: $currentMonth,
+                                    daysWithBits: daysWithBits,
+                                    onDateSelected: { date in
+                                        selectedDate = date
+                                        selectedDateForSheet = IdentifiableDate(date: date)
+                                    },
+                                    selectedDate: $selectedDate
+                                )
+                                .glassCard()
+                                .padding(.horizontal, 20)
+                            }
+                            .opacity(calendarAppeared ? 1 : 0)
+                            .offset(y: calendarAppeared ? 0 : 20)
+
+                            // Recent entries
+                            recentEntriesSection
+                                .opacity(recentAppeared ? 1 : 0)
+                                .offset(y: recentAppeared ? 0 : 20)
+
+                            // Top emotions
+                            TopEmotionsView(topEmotions: topEmotions) { emotion in
+                                selectedEmotion = emotion
+                                showingEmotionSheet = true
+                            }
+                            .opacity(emotionsAppeared ? 1 : 0)
+                            .offset(y: emotionsAppeared ? 0 : 20)
                         }
 
                         Color.clear.frame(height: 100)
@@ -172,19 +216,21 @@ struct ContentView: View {
                 // Floating Action Button
                 if canCreateToday {
                     Button {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
                         showingAddBit = true
                     } label: {
                         ZStack {
                             Circle()
                                 .fill(
                                     LinearGradient(
-                                        gradient: Gradient(colors: [Color.pink, Color.purple.opacity(0.8)]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
+                                        colors: [Color(red: 0.8, green: 0.3, blue: 0.95), Color(red: 0.42, green: 0.26, blue: 0.88)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
                                     )
                                 )
                                 .frame(width: 64, height: 64)
-                                .shadow(color: Color.pink.opacity(0.4), radius: 12, x: 0, y: 6)
+                                .shadow(color: Color(red: 0.6, green: 0.2, blue: 0.9).opacity(0.5), radius: 16, x: 0, y: 8)
 
                             Image(systemName: "plus")
                                 .font(.title2)
@@ -197,10 +243,8 @@ struct ContentView: View {
                 }
             }
             .navigationBarHidden(true)
-            .sheet(item: $selectedDateForSheet) { identifiableDate in
-                NavigationView {
-                    DayDetailView(repository: repository, date: identifiableDate.date)
-                }
+            .sheet(item: $selectedDateForSheet) { id in
+                NavigationView { DayDetailView(repository: repository, date: id.date) }
             }
             .sheet(isPresented: $showingAddBit) {
                 AddEditBitView(repository: repository, bitToEdit: nil, date: Date())
@@ -208,31 +252,25 @@ struct ContentView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
+            .sheet(item: $bitToEdit) { bit in
+                AddEditBitView(repository: repository, bitToEdit: bit, date: bit.createdAt)
+            }
             .fullScreenCover(isPresented: $showingBitsList) {
-                NavigationView {
-                    BitsListView(repository: repository)
-                }
+                NavigationView { BitsListView(repository: repository) }
             }
             .fullScreenCover(isPresented: $showingGraph) {
-                NavigationView {
-                    ClusterGraphView(repository: repository)
-                }
+                NavigationView { ClusterGraphView(repository: repository) }
             }
-            // Emotion sheet
             .sheet(isPresented: $showingEmotionSheet) {
                 if let emotion = selectedEmotion {
-                    NavigationView {
-                        EmotionDetailView(repository: repository, emotion: emotion)
-                    }
+                    NavigationView { EmotionDetailView(repository: repository, emotion: emotion) }
                 }
             }
             .onReceive(repository.$errorMessage) { new in
                 showingRepoError = new != nil
             }
             .alert("Error", isPresented: $showingRepoError) {
-                Button("OK") {
-                    repository.errorMessage = nil
-                }
+                Button("OK") { repository.errorMessage = nil }
             } message: {
                 Text(repository.errorMessage ?? "Unknown error")
             }
@@ -241,12 +279,281 @@ struct ContentView: View {
         .onAppear {
             repository.configure(with: modelContext)
             updateDashboardData()
+            animateSections()
         }
-        .onChange(of: repository.bits) {
-            updateDashboardData()
+        .onChange(of: repository.bits) { updateDashboardData() }
+    }
+
+    // MARK: - Header
+
+    private var headerSection: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(displayName.isEmpty ? greeting : "\(greeting),")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                if !displayName.isEmpty {
+                    Text(displayName)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                }
+            }
+
+            Spacer()
+
+            HStack(spacing: 10) {
+                headerButton(icon: "list.bullet") { showingBitsList = true }
+                headerButton(icon: "point.3.connected.trianglepath.dotted") { showingGraph = true }
+                headerButton(icon: "gearshape.fill") { showingSettings = true }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+    }
+
+    private func headerButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Color.white.opacity(0.7))
+                .frame(width: 38, height: 38)
+                .background(Color.white.opacity(0.08))
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white.opacity(0.1), lineWidth: 1))
         }
     }
 }
+
+// MARK: - Glass Card Modifier
+
+extension View {
+    func glassCard(cornerRadius: CGFloat = 20) -> some View {
+        self
+            .background(
+                ZStack {
+                    Color.white.opacity(0.05)
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.25), Color.white.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                }
+                .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+}
+
+// MARK: - Today Mood Card
+
+struct TodayMoodCard: View {
+    let emotion: Emotion?
+
+    private var dayOfWeek: String {
+        let f = DateFormatter(); f.dateFormat = "EEEE"; return f.string(from: Date())
+    }
+    private var dateString: String {
+        let f = DateFormatter(); f.dateFormat = "MMMM d"; return f.string(from: Date())
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(dayOfWeek.uppercased())
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white.opacity(0.6))
+                    .tracking(1.5)
+                Text(dateString)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                Text(emotion != nil ? "You're feeling \(emotion!.rawValue.lowercased()) today" : "How are you feeling today?")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.75))
+            }
+            Spacer()
+            Text(emotion?.emoji ?? "✨")
+                .font(.system(size: 60))
+                .shadow(color: (emotion?.color ?? Color(red: 0.6, green: 0.3, blue: 0.9)).opacity(0.6), radius: 12)
+        }
+        .padding(.horizontal, 22)
+        .padding(.vertical, 22)
+        .background(
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        (emotion?.color ?? Color(red: 0.42, green: 0.26, blue: 0.88)).opacity(0.45),
+                        (emotion?.color ?? Color(red: 0.42, green: 0.26, blue: 0.88)).opacity(0.08)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 22))
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+    }
+}
+
+// MARK: - Week Mood Strip
+
+struct WeekMoodStrip: View {
+    let weekData: [(date: Date, emotion: Emotion?, intensity: Double)]
+    let onDateTapped: (Date) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("This Week")
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+
+            HStack(spacing: 6) {
+                ForEach(weekData.indices, id: \.self) { i in
+                    let day = weekData[i]
+                    WeekDayPill(
+                        date: day.date,
+                        emotion: day.emotion,
+                        isToday: Calendar.current.isDateInToday(day.date)
+                    )
+                    .onTapGesture {
+                        if day.emotion != nil {
+                            let impact = UISelectionFeedbackGenerator()
+                            impact.selectionChanged()
+                            onDateTapped(day.date)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+}
+
+struct WeekDayPill: View {
+    let date: Date
+    let emotion: Emotion?
+    let isToday: Bool
+
+    private var dayLetter: String {
+        let f = DateFormatter(); f.dateFormat = "EEEEE"; return f.string(from: date)
+    }
+    private var dayNumber: String {
+        let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: date)
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Text(dayLetter)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.gray)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(emotion != nil
+                          ? emotion!.color.opacity(0.25)
+                          : Color.white.opacity(0.04))
+                    .frame(width: 38, height: 46)
+
+                if isToday {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.white.opacity(0.45), lineWidth: 1.5)
+                        .frame(width: 38, height: 46)
+                }
+
+                if let emotion = emotion {
+                    Text(emotion.emoji)
+                        .font(.system(size: 22))
+                } else {
+                    Image(systemName: "minus")
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray.opacity(0.4))
+                }
+            }
+
+            Text(dayNumber)
+                .font(.system(size: 10, weight: isToday ? .bold : .regular))
+                .foregroundColor(isToday ? .white : .gray.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Recent Entry Row
+
+struct RecentEntryRow: View {
+    let bit: Bit
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 14) {
+                // Emotion badge
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(bit.emotion.color.opacity(0.2))
+                        .frame(width: 44, height: 44)
+                    Text(bit.emotion.emoji)
+                        .font(.title3)
+                }
+
+                // Text content
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(bit.title ?? String(bit.feel.prefix(40)))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    Text(bit.feel.isEmpty ? bit.event : bit.feel)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                // Date + intensity
+                VStack(alignment: .trailing, spacing: 5) {
+                    Text(formatDate(bit.createdAt))
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                    HStack(spacing: 3) {
+                        ForEach(1...4, id: \.self) { i in
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(i <= bit.intensity
+                                      ? bit.emotion.color.opacity(0.8)
+                                      : Color.white.opacity(0.08))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .glassCard(cornerRadius: 14)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let c = Calendar.current
+        if c.isDateInToday(date) { return "Today" }
+        if c.isDateInYesterday(date) { return "Yesterday" }
+        let f = DateFormatter(); f.dateFormat = "MMM d"
+        return f.string(from: date)
+    }
+}
+
+// MARK: - First-Time Welcome
 
 struct FirstTimeWelcomeView: View {
     let onAddFirstBit: () -> Void
@@ -256,24 +563,23 @@ struct FirstTimeWelcomeView: View {
             Spacer()
 
             VStack(spacing: 32) {
-                // Welcome illustration
                 ZStack {
                     Circle()
                         .fill(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color.pink.opacity(0.3), Color.purple.opacity(0.2)]),
+                                colors: [Color(red: 0.8, green: 0.3, blue: 0.95).opacity(0.3),
+                                         Color(red: 0.42, green: 0.26, blue: 0.88).opacity(0.15)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 140, height: 140)
 
-                    Image(systemName: "heart.text.square.fill")
+                    Text("✨")
                         .font(.system(size: 60))
-                        .foregroundColor(.pink)
                 }
 
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     Text("Welcome to Your Journey")
                         .font(.largeTitle)
                         .fontWeight(.bold)
@@ -285,36 +591,30 @@ struct FirstTimeWelcomeView: View {
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
-                        .lineLimit(nil)
                         .lineSpacing(4)
                 }
             }
 
             Spacer()
 
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 Button(action: onAddFirstBit) {
                     HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-
-                        Text("Add Your First Bit")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                        Image(systemName: "plus.circle.fill").font(.title2)
+                        Text("Add Your First Bit").font(.headline).fontWeight(.semibold)
                     }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .padding(.horizontal, 24)
                     .background(
                         LinearGradient(
-                            gradient: Gradient(colors: [Color.pink, Color.purple.opacity(0.8)]),
+                            colors: [Color(red: 0.8, green: 0.3, blue: 0.95), Color(red: 0.42, green: 0.26, blue: 0.88)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
                     .cornerRadius(20)
-                    .shadow(color: Color.pink.opacity(0.4), radius: 12, x: 0, y: 6)
+                    .shadow(color: Color(red: 0.6, green: 0.2, blue: 0.9).opacity(0.4), radius: 14, x: 0, y: 6)
                 }
                 .padding(.horizontal, 32)
 
