@@ -31,9 +31,9 @@ Expected output includes: `CUDA available: True` (PC) or `MPS available: True` (
 
 ```
 Phase 1: Download + Evaluate (any machine — no GPU needed for embedding scripts)
-  ├── python train_embedding_mobilebert.py    ~1 min  (download + eval, all-MiniLM-L6-v2)
-  ├── python train_embedding_distilbert.py    ~1 min  (download + eval, paraphrase-MiniLM-L6-v2)
-  └── python train_emotion_classifier.py      ~35 min (RTX) | ~2.5h  (M1)  [only script that trains]
+  ├── python train_embedding_mobilebert.py    ~1 min  (download + eval, all-MiniLM-L6-v2, mean pooling)
+  ├── python train_embedding_distilbert.py    ~1 min  (download + eval, BAAI/bge-small-en-v1.5, CLS pooling)
+  └── python train_emotion_classifier.py      ~16 min (RTX 2070) | ~2.5h (M1)  [only script that trains]
 
 Phase 2: Conversion (run on Mac — coremltools works best on macOS)
   └── python convert_to_coreml.py
@@ -102,7 +102,7 @@ This is already implemented in `GJournal/Services/NLEmbeddingService.swift` (Tas
 
 ```
 Embedding:
-  all-MiniLM-L6-v2 (SLOT 1)  →  paraphrase-MiniLM-L6-v2 (SLOT 2)  →  ONNX path  →  NLEmbedding
+  all-MiniLM-L6-v2 (SLOT 1, mean)  →  BAAI/bge-small-en-v1.5 (SLOT 2, CLS)  →  ONNX path  →  NLEmbedding
 
 Emotion:
   MobileBERT GoEmotions  →  DistilBERT GoEmotions  →  TF-IDF sklearn  →  keyword SafetyFilter
@@ -117,9 +117,9 @@ See full details in `docs/audit/09_AI_PITFALLS.md`.
 | Pitfall | What goes wrong | Fix |
 |:--------|:----------------|:----|
 | `confusion → Anxiety` | Wrong label mapping corrupts Anxiety class | Use `confusion → Surprise` |
-| `fp16=True` on M1 | Crashes on MPS | Use `bf16=True` on M1, `fp16=True` on CUDA |
+| `fp16=True` on RTX 2070 or M1 | NaN loss, gradient explosion, model predicts one class | Use `fp16=False, bf16=False` — RTX 2070 (Turing) has no native bf16 |
 | Hardcoded `cuda` device | Crashes on Mac | Auto-detect: `cuda → mps → cpu` |
-| `[CLS]` pooling in Swift | Embeddings incompatible with MiniLM training | Use mean pooling — verify with `verify_tokenizer.py` |
+| Wrong pooling mode in Swift | Embeddings incompatible with model training objective | SLOT 1 (MiniLM) → `poolingMode: .mean`; SLOT 2 (BGE) → `poolingMode: .cls` |
 | Variable-length Core ML inputs | Conversion or inference crash | Always pad to fixed length 128 |
 | LayerNorm FP16 on Neural Engine | ANE arithmetic overflow → garbage embeddings | Force LayerNorm ops to FP32 via `op_selector` in coremltools |
 

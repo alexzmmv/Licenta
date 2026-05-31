@@ -8,8 +8,8 @@
 | Biometric auth | ✅ Working | Face ID / Touch ID lock |
 | UI redesign | ✅ Working | Glass cards, week strip, today mood, animations |
 | DBSCAN clustering | ✅ Working | Pure Swift, Accelerate-optimised |
-| Embedding service | ⚠️ Fallback | Apple NLEmbedding (no .mlpackage present) |
-| Emotion detection | ⚠️ Fallback | Keyword heuristic mock (no .mlpackage present) |
+| Embedding service | ⚠️ Fallback | Apple NLEmbedding (models trained, CoreML conversion pending) |
+| Emotion detection | ⚠️ Fallback | Keyword heuristic mock (classifier training in progress) |
 | Graph view | ✅ Working | Canvas-rendered force-directed graph |
 | Schema migration | ⚠️ Dev-only | Auto-wipe on mismatch — unsafe for production |
 
@@ -23,31 +23,21 @@ All scripts are in `training/`. Run them in order from the PC.
 
 ```bash
 cd training
-bash setup.sh          # creates venv, installs torch + sentence-transformers + coremltools
+bash setup.sh          # creates venv, installs torch + sentence-transformers>=5.5 + coremltools
 ```
 
 Expected output: prints `CUDA available: True` and the GPU name.
 
-### 1.2 Train the Embedding Model
+### 1.2 Train the Embedding Model ✅ DONE
 
-Try MobileBERT first (smaller, faster on-device):
+Two pre-trained models downloaded and evaluated:
 
-```bash
-python train_embedding_mobilebert.py
-```
+| Slot | Model | Pooling | Spearman | Size |
+|:-----|:------|:--------|:---------|:-----|
+| SLOT 1 | `sentence-transformers/all-MiniLM-L6-v2` | Mean | **0.8696** | ~80MB |
+| SLOT 2 | `BAAI/bge-small-en-v1.5` | CLS | **0.8828** | ~130MB |
 
-If it fails during training or Core ML conversion, fall back to DistilBERT:
-
-```bash
-python train_embedding_distilbert.py
-```
-
-Both scripts:
-- Fine-tune on STS-B (semantic textual similarity) for 3 epochs
-- Save the HuggingFace model to `models/`
-- Automatically detect CUDA / MPS / CPU
-
-Expected output: Spearman correlation ≥ 0.80 on the STS-B dev set.
+Both saved to `models/`. Swift `CoreMLEmbeddingService` updated with `PoolingMode` enum to support both.
 
 ### 1.3 Train the Emotion Classifier
 

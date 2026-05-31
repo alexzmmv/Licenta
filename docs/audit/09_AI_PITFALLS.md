@@ -523,16 +523,16 @@ Use this decision tree if a model fails at training or Core ML conversion.
 ### 8.1 Embedding model fallback chain
 
 ```
-all-MiniLM-L6-v2 (SLOT 1 — primary)
+all-MiniLM-L6-v2 (SLOT 1 — primary, mean pooling)
     ↓ if Core ML conversion fails
-paraphrase-MiniLM-L6-v2 (SLOT 2 — backup A, same vocab, same arch)
+BAAI/bge-small-en-v1.5 (SLOT 2 — backup A, CLS pooling)
     ↓ if conversion still fails
 ONNX intermediate (backup B — export PyTorch → ONNX → CoreML)
     ↓ if ONNX pipeline fails
 NLEmbedding (backup C — Apple's built-in, zero config, no training)
 ```
 
-Both SLOT 1 and SLOT 2 models use identical WordPiece vocabulary and architecture — a Swift tokenizer built for one works for the other with no changes.
+Both models share the same BERT WordPiece vocabulary — one `vocab.txt` works for both. The difference is pooling mode: pass `poolingMode: .mean` for SLOT 1 and `poolingMode: .cls` for SLOT 2 in `CoreMLEmbeddingService`.
 
 ```python
 # Backup B: ONNX intermediate path
