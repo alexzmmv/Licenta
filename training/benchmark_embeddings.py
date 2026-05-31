@@ -145,6 +145,18 @@ print(f"  PyTorch latency: {lat:.1f}ms" if lat else "  PyTorch latency: N/A")
 print(f"  CoreML latency:  {cml_lat:.1f}ms" if cml_lat else "  CoreML latency: N/A")
 print(f"  Model size: {size:.1f}MB" if size else "  Model size: N/A")
 
+print("\n── MiniLM-L6-v2 ────────────────────────────────────────────────────")
+corr, lat, size = spearman_for_st("models/minilm-stsb")
+cml_lat = coreml_latency_ms(
+    "coreml_models/GJournalEmbeddingMiniLM.mlpackage",
+    "models/minilm-stsb",
+)
+results["MiniLM-L6-v2"] = dict(spearman=corr, pytorch_lat_ms=lat, size_mb=size, coreml_lat_ms=cml_lat)
+print(f"  Spearman: {corr:.4f}" if corr else "  Spearman: not available")
+print(f"  PyTorch latency: {lat:.1f}ms" if lat else "  PyTorch latency: N/A")
+print(f"  CoreML latency:  {cml_lat:.1f}ms" if cml_lat else "  CoreML latency: N/A")
+print(f"  Model size: {size:.1f}MB" if size else "  Model size: N/A")
+
 print("\n── NLEmbedding (Apple baseline) ─────────────────────────────────────")
 corr, lat, size = spearman_for_nlembedding()
 results["NLEmbedding"] = dict(spearman=corr, pytorch_lat_ms=lat, size_mb=size, coreml_lat_ms=None)
