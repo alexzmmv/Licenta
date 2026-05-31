@@ -97,7 +97,6 @@ raw = datasets.load_dataset(
     "google-research-datasets/go_emotions",
     "simplified",
     cache_dir="./hf_cache",
-    trust_remote_code=True,
 )
 
 # Feature name lookup for int → label string conversion
@@ -165,6 +164,7 @@ class_weights = compute_class_weight(
     classes=np.arange(len(TARGET_LABELS)),
     y=all_labels,
 )
+class_weights = np.clip(class_weights, 0.2, 8.0)
 weights_tensor = torch.tensor(class_weights, dtype=torch.float)
 print(f"\nClass weights range: [{weights_tensor.min():.2f}, {weights_tensor.max():.2f}]")
 
@@ -203,13 +203,14 @@ training_args = TrainingArguments(
     per_device_train_batch_size=BATCH_SIZE,
     per_device_eval_batch_size=64,
     learning_rate=LEARNING_RATE,
+    max_grad_norm=1.0,
     warmup_ratio=0.06,
     eval_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
     metric_for_best_model="f1",
-    fp16=torch.cuda.is_available(),
-    bf16=torch.backends.mps.is_available(),
+    fp16=False,
+    bf16=False,
     logging_steps=100,
     report_to="none",
 )

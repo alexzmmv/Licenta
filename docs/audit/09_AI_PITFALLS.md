@@ -418,19 +418,21 @@ let floats = data.withUnsafeBytes { buffer in
 
 ## Category 7: Training Environment
 
-### Pitfall 7.1: Using fp16=True on M1 MPS
+### Pitfall 7.1: fp16 causes NaN on RTX 2070 (Turing) and MPS
 
-MPS (Apple Silicon GPU) does not support all float16 operations. Using `fp16=True` in `TrainingArguments` will raise a runtime error on M1.
+MPS (Apple Silicon) does not support all fp16 operations and crashes. RTX 2070 is Turing architecture — it lacks native bf16 support, and fp16 causes `exp()` overflow to `inf` in losses like `CoSENTLoss` and `WeightedCrossEntropy`, producing `NaN` gradients and model collapse.
+
+Symptom: `loss: 0`, `grad_norm: nan`, model predicts only one class.
 
 ```python
-# ❌ WRONG: fp16 on MPS crashes
+# ❌ WRONG: fp16 on MPS crashes; fp16 on RTX 2070 causes NaN with weighted losses
 training_args = TrainingArguments(fp16=True, ...)
 
-# ✅ CORRECT: Detect backend and choose precision
-import torch
+# ✅ CORRECT: Disable mixed precision on Turing GPUs (RTX 2070 and earlier)
+# fp16 is safe only on Ampere (RTX 3000) and newer
 training_args = TrainingArguments(
-    fp16=torch.cuda.is_available(),   # RTX 2070 supports fp16
-    bf16=torch.backends.mps.is_available(),  # M1 supports bf16
+    fp16=False,
+    bf16=False,
     ...
 )
 ```
@@ -471,28 +473,32 @@ dataset = datasets.load_dataset(
 
 ### Pitfall 7.4: SentenceTransformer pooling mismatch
 
-The sentence-transformers library defaults to **mean pooling** over all token positions. If your Swift `CoreMLEmbeddingService` uses `[CLS]` token extraction instead, embeddings will be incompatible — DBSCAN will cluster garbage.
+Pooling mode must match the model's training objective. Using the wrong pooling produces incompatible embeddings — DBSCAN will cluster garbage.
+
+- **SLOT 1 (`all-MiniLM-L6-v2`)**: mean pooling — average over all non-padding token positions
+- **SLOT 2 (`BAAI/bge-small-en-v1.5`)**: CLS pooling — take position 0 only. Applying mean pooling to BGE violates its contrastive training objective.
 
 ```python
-# Verify pooling mode in the sentence-transformer config
+# Verify pooling mode in the saved config
 import json
 with open("models/mobilebert-stsb/1_Pooling/config.json") as f:
-    pooling_config = json.load(f)
-print(pooling_config)
-# Must show: "pooling_mode_mean_tokens": true
-# NOT: "pooling_mode_cls_token": true
+    cfg = json.load(f)
+# ST 5.x format: {"pooling_mode": "mean"}
+# ST 3.x format: {"pooling_mode_mean_tokens": true}
+print(cfg)  # SLOT 1: mode=mean | SLOT 2: mode=cls
+
+with open("models/distilbert-stsb/1_Pooling/config.json") as f:
+    cfg = json.load(f)
+print(cfg)  # Must show cls for BGE
 ```
 
-Then in Swift, **always use mean pooling** to match:
+In Swift, `CoreMLEmbeddingService` uses a `PoolingMode` enum — pass the correct mode per model:
 ```swift
-// Mean pool over non-padding tokens — must match training
-var sum = [Float](repeating: 0, count: embeddingDim)
-for pos in 0..<realTokenCount {
-    for dim in 0..<embeddingDim {
-        sum[dim] += hiddenState[[0, NSNumber(value: pos), NSNumber(value: dim)]].floatValue
-    }
-}
-let embedding = sum.map { $0 / Float(realTokenCount) }
+// SLOT 1 — mean pooling
+CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT", poolingMode: .mean)
+
+// SLOT 2 — CLS pooling (BGE)
+CoreMLEmbeddingService(modelName: "GJournalEmbeddingDistilBERT", poolingMode: .cls)
 ```
 
 ### Pitfall 7.5: GoEmotions label mapping error — `confusion` is `Surprise`, not `Anxiety`
@@ -517,14 +523,16 @@ Use this decision tree if a model fails at training or Core ML conversion.
 ### 8.1 Embedding model fallback chain
 
 ```
-MobileBERT (primary)
+all-MiniLM-L6-v2 (SLOT 1 — primary)
     ↓ if Core ML conversion fails
-DistilBERT (backup A — better coremltools support)
+paraphrase-MiniLM-L6-v2 (SLOT 2 — backup A, same vocab, same arch)
     ↓ if conversion still fails
 ONNX intermediate (backup B — export PyTorch → ONNX → CoreML)
     ↓ if ONNX pipeline fails
 NLEmbedding (backup C — Apple's built-in, zero config, no training)
 ```
+
+Both SLOT 1 and SLOT 2 models use identical WordPiece vocabulary and architecture — a Swift tokenizer built for one works for the other with no changes.
 
 ```python
 # Backup B: ONNX intermediate path
@@ -547,7 +555,32 @@ mlmodel = ct.converters.onnx.convert(
 mlmodel.save("GJournalEmbedding_onnx.mlpackage")
 ```
 
-### 8.2 Emotion classifier fallback chain
+### 8.2 LayerNorm FP16 overflow on Apple Neural Engine
+
+When coremltools compiles with `compute_precision=FLOAT16` and `compute_units=ALL`, LayerNorm's intermediate squaring step overflows FP16 range on the A13 Neural Engine, producing NaN/Inf embeddings.
+
+```python
+# ❌ WRONG: Blanket FP16 causes ANE LayerNorm overflow
+mlmodel = ct.convert(traced, compute_precision=ct.precision.FLOAT16, ...)
+
+# ✅ CORRECT: Force LayerNorm ops to FP32 while keeping everything else FP16
+def op_selector(op):
+    # Keep LayerNorm in FP32 to prevent ANE arithmetic overflow
+    return op.op_type not in {"layer_norm", "pow", "reduce_mean"}
+
+mlmodel = ct.convert(
+    traced,
+    compute_precision=ct.transform.FP16ComputePrecision(op_selector),
+    compute_units=ct.ComputeUnit.ALL,
+    ...
+)
+```
+
+**How to detect this**: After conversion, run the model with `compute_units=ALL` on a physical device. Compute the cosine similarity of a sentence with itself — it should be 1.0. If it's NaN or random, LayerNorm overflow is the cause.
+
+---
+
+### 8.3 Emotion classifier fallback chain
 
 ```
 MobileBERT fine-tuned on GoEmotions (primary)
@@ -580,7 +613,7 @@ mlmodel = ct.converters.sklearn.convert(
 mlmodel.save("GJournalEmotionClassifier_simple.mlpackage")
 ```
 
-### 8.3 When to abandon a path
+### 8.4 When to abandon a path
 
 | Symptom | Action |
 |:--------|:-------|
@@ -608,3 +641,4 @@ mlmodel.save("GJournalEmotionClassifier_simple.mlpackage")
 12. ✅ Training precision: `fp16` on CUDA, `bf16` on MPS, neither on CPU
 13. ✅ GoEmotions mapping: `confusion → Surprise` (not Anxiety)
 14. ✅ Have the backup model chain ready before starting conversion
+15. ✅ Test LayerNorm FP16 overflow after CoreML conversion: cosine_sim(x, x) must be ~1.0 on device

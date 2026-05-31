@@ -50,10 +50,12 @@ final class ServiceContainer: ObservableObject {
     /// Falls back to MockEmotionDetectionService if the classifier .mlpackage is missing.
     static func makeProduction() -> ServiceContainer {
         let embeddingService: EmbeddingServiceProtocol = {
+            // SLOT 1: all-MiniLM-L6-v2 — mean pooling (primary)
             if Bundle.main.url(forResource: "GJournalEmbeddingMobileBERT", withExtension: "mlpackage") != nil {
-                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT")
+                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT", poolingMode: .mean)
+            // SLOT 2: BAAI/bge-small-en-v1.5 — CLS pooling (backup)
             } else if Bundle.main.url(forResource: "GJournalEmbeddingDistilBERT", withExtension: "mlpackage") != nil {
-                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingDistilBERT")
+                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingDistilBERT", poolingMode: .cls)
             } else {
                 print("[ServiceContainer] No embedding .mlpackage found — using NLEmbedding fallback")
                 return NLEmbeddingService()

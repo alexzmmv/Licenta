@@ -2,23 +2,30 @@
 //  CoreMLEmbeddingService.swift
 //  GJournal
 //
-//  Generates sentence embeddings from a fine-tuned BERT .mlpackage using mean pooling.
-//  Mean pooling MUST match sentence-transformers training (see 09_AI_PITFALLS.md Pitfall 7.4).
+//  Generates sentence embeddings from a BERT .mlpackage.
+//  Supports mean pooling (all-MiniLM) and CLS pooling (BGE).
+//  Pooling mode must match the model's training objective.
 //
 
 import Foundation
 import CoreML
 
+enum PoolingMode {
+    case mean
+    case cls
+}
+
 final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
     private let modelName: String
+    private let poolingMode: PoolingMode
     private var model: MLModel?
     private var tokenizer: WordPieceTokenizer?
 
-    init(modelName: String) {
+    init(modelName: String, poolingMode: PoolingMode = .mean) {
         self.modelName = modelName
+        self.poolingMode = poolingMode
     }
 
-    // Lazy load on first use to avoid blocking app launch
     private func loadIfNeeded() throws {
         guard model == nil else { return }
 
@@ -27,10 +34,9 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
         }
 
         let config = MLModelConfiguration()
-        config.computeUnits = .all  // CPU + GPU + Neural Engine
+        config.computeUnits = .all
         model = try MLModel(contentsOf: modelURL, configuration: config)
 
-        // Prefer vocab bundled alongside the model; fall back to generic "vocab.txt"
         let vocabName = "vocab_\(modelName.lowercased().replacingOccurrences(of: "-", with: "_"))"
         if let url = Bundle.main.url(forResource: vocabName, withExtension: "txt") {
             tokenizer = try WordPieceTokenizer(vocabURL: url)
@@ -49,13 +55,12 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
             let tokens = tokenizer.tokenize(text)
             let maxLen = WordPieceTokenizer.maxLength
 
-            // Build MLMultiArray inputs — FIXED shape (1, 128), see Pitfall 2.2
-            let inputIDs    = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
+            let inputIDs      = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
             let attentionMask = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
 
             for i in 0..<maxLen {
-                inputIDs[i]     = NSNumber(value: tokens.inputIDs[i])
-                attentionMask[i] = NSNumber(value: tokens.attentionMask[i])
+                inputIDs[i]       = NSNumber(value: tokens.inputIDs[i])
+                attentionMask[i]  = NSNumber(value: tokens.attentionMask[i])
             }
 
             let input = try MLDictionaryFeatureProvider(dictionary: [
@@ -69,21 +74,27 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
                 throw AIServiceError.embeddingGenerationFailed
             }
 
-            // Mean pooling over real (non-padding) token positions — must match sentence-transformers
             let embeddingDim = hiddenState.shape[2].intValue
-            let realLen = tokens.realTokenCount
-            var sum = [Double](repeating: 0, count: embeddingDim)
+            var embedding: [Float]
 
-            for pos in 0..<realLen {
-                for dim in 0..<embeddingDim {
-                    let idx = pos * embeddingDim + dim
-                    sum[dim] += hiddenState[idx].doubleValue
+            switch self.poolingMode {
+            case .mean:
+                // Average over all real (non-padding) token positions
+                let realLen = tokens.realTokenCount
+                var sum = [Double](repeating: 0, count: embeddingDim)
+                for pos in 0..<realLen {
+                    for dim in 0..<embeddingDim {
+                        sum[dim] += hiddenState[pos * embeddingDim + dim].doubleValue
+                    }
                 }
+                embedding = sum.map { Float($0 / Double(realLen)) }
+
+            case .cls:
+                // Take the [CLS] token at position 0 — required for BGE contrastive models
+                embedding = (0..<embeddingDim).map { Float(hiddenState[$0].doubleValue) }
             }
 
-            var embedding = sum.map { Float($0 / Double(realLen)) }
-            embedding = CoreMLEmbeddingService.l2Normalize(embedding)
-            return embedding
+            return CoreMLEmbeddingService.l2Normalize(embedding)
         }.value
     }
 

@@ -30,10 +30,10 @@ Expected output includes: `CUDA available: True` (PC) or `MPS available: True` (
 ## Execution Order
 
 ```
-Phase 1: Training (PC preferred, M1 works)
-  ├── python train_embedding_mobilebert.py    ~10 min (RTX) | ~45 min (M1)
-  ├── python train_embedding_distilbert.py    ~20 min (RTX) | ~90 min (M1)
-  └── python train_emotion_classifier.py      ~35 min (RTX) | ~2.5h  (M1)
+Phase 1: Download + Evaluate (any machine — no GPU needed for embedding scripts)
+  ├── python train_embedding_mobilebert.py    ~1 min  (download + eval, all-MiniLM-L6-v2)
+  ├── python train_embedding_distilbert.py    ~1 min  (download + eval, paraphrase-MiniLM-L6-v2)
+  └── python train_emotion_classifier.py      ~35 min (RTX) | ~2.5h  (M1)  [only script that trains]
 
 Phase 2: Conversion (run on Mac — coremltools works best on macOS)
   └── python convert_to_coreml.py
@@ -64,22 +64,22 @@ Phase 4: Validate tokenizer (before Swift integration)
 
 Read `docs/audit/09_AI_PITFALLS.md` Categories 7 and 8 before running any script.
 
-### If MobileBERT Core ML conversion fails
+### If all-MiniLM-L6-v2 Core ML conversion fails
 
 `convert_to_coreml.py` automatically tries three paths:
 1. Default `ct.convert()`
 2. `convert_to="mlprogram"`
 3. ONNX → CoreML via `ct.converters.onnx`
 
-If all three fail, use DistilBERT instead — it has better coremltools support.
+If all three fail, swap to the other MiniLM variant (SLOT 2 model):
 In `GJournal/Services/ServiceContainer.swift`, change:
 ```swift
-embeddingService: CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT")
+embeddingService: CoreMLEmbeddingService(modelName: "GJournalEmbeddingMiniLM")
 // to:
-embeddingService: CoreMLEmbeddingService(modelName: "GJournalEmbeddingDistilBERT")
+embeddingService: CoreMLEmbeddingService(modelName: "GJournalEmbeddingParaphrase")
 ```
 
-### If DistilBERT also fails
+### If both MiniLM models fail Core ML conversion
 
 Use Apple's built-in `NLEmbedding` (zero training, zero bundle size):
 ```swift
@@ -102,7 +102,7 @@ This is already implemented in `GJournal/Services/NLEmbeddingService.swift` (Tas
 
 ```
 Embedding:
-  MobileBERT fine-tuned  →  DistilBERT fine-tuned  →  ONNX path  →  NLEmbedding
+  all-MiniLM-L6-v2 (SLOT 1)  →  paraphrase-MiniLM-L6-v2 (SLOT 2)  →  ONNX path  →  NLEmbedding
 
 Emotion:
   MobileBERT GoEmotions  →  DistilBERT GoEmotions  →  TF-IDF sklearn  →  keyword SafetyFilter
@@ -119,8 +119,9 @@ See full details in `docs/audit/09_AI_PITFALLS.md`.
 | `confusion → Anxiety` | Wrong label mapping corrupts Anxiety class | Use `confusion → Surprise` |
 | `fp16=True` on M1 | Crashes on MPS | Use `bf16=True` on M1, `fp16=True` on CUDA |
 | Hardcoded `cuda` device | Crashes on Mac | Auto-detect: `cuda → mps → cpu` |
-| `[CLS]` pooling in Swift | Embeddings incompatible with training | Use mean pooling — verify with `verify_tokenizer.py` |
+| `[CLS]` pooling in Swift | Embeddings incompatible with MiniLM training | Use mean pooling — verify with `verify_tokenizer.py` |
 | Variable-length Core ML inputs | Conversion or inference crash | Always pad to fixed length 128 |
+| LayerNorm FP16 on Neural Engine | ANE arithmetic overflow → garbage embeddings | Force LayerNorm ops to FP32 via `op_selector` in coremltools |
 
 ---
 

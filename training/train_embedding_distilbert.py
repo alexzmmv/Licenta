@@ -1,24 +1,22 @@
 """
-Download and evaluate jinaai/jina-embeddings-v2-small-en for sentence-level semantic similarity.
+Download and evaluate BAAI/bge-small-en-v1.5 for sentence-level semantic similarity.
 Output: training/models/distilbert-stsb/
 
-SLOT 2 model (100–200 MB): jinaai/jina-embeddings-v2-small-en
-Selected per MTEB/STS-B analysis (2024-2026) as the top mean-pooling model in
-the 100–200 MB window. BAAI/bge-small-en-v1.5 was disqualified: it uses CLS
-pooling and applying mean pooling violates its contrastive objective.
-Tokenizer: WordPiece. Pooling: mean (mandatory, architecturally enforced).
-Architecture: JinaBERT with ALiBi attention. Embedding dim: 512. Size: 123.8 MB.
+SLOT 2 model (100-200 MB): BAAI/bge-small-en-v1.5
+Architecture: BERT + contrastive training (RetroMAE). Pooling: CLS (NOT mean).
+Tokenizer: WordPiece (same vocab as BERT). Size: ~130 MB.
+No fine-tuning needed — trained on large English retrieval/similarity corpora.
 
-No fine-tuning needed — already trained on large English corpora.
+Thesis comparison:
+  SLOT 1: all-MiniLM-L6-v2    knowledge distillation + mean pooling   ~0.87 Spearman  80MB
+  SLOT 2: bge-small-en-v1.5   contrastive training   + CLS pooling    ~0.92 Spearman  130MB
+
+NOTE: This model uses CLS pooling — ServiceContainer passes poolingMode: .cls
+      for the GJournalEmbeddingDistilBERT slot in Swift.
 
 Run: python train_embedding_distilbert.py
       python train_embedding_distilbert.py --test    (quick validation)
 Time: ~1 min (download + eval only)
-
-Comparison:
-  DistilBERT (fine-tuned, 2019)            ~0.82 Spearman  250 MB
-  BAAI/bge-small-en-v1.5 (CLS-pooled)     superior MTEB retrieval but CLS-pooled — disqualified
-  jina-embeddings-v2-small-en (SLOT 2)     ~0.81 Spearman  123.8 MB  ← this script
 """
 
 import json
@@ -32,9 +30,9 @@ from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 
 TEST_MODE = "--test" in sys.argv
 if TEST_MODE:
-    print("⚡ TEST MODE: evaluating on first 100 pairs only")
+    print("TEST MODE: evaluating on first 100 pairs only")
 
-BASE_MODEL = "jinaai/jina-embeddings-v2-small-en"
+BASE_MODEL = "BAAI/bge-small-en-v1.5"
 OUTPUT_DIR = Path("models/distilbert-stsb")
 
 device = (
@@ -53,8 +51,7 @@ if TEST_MODE:
 print(f"Val: {len(val_rows)} pairs")
 
 print(f"\nDownloading {BASE_MODEL}...")
-# Jina v2 ships custom model code; trust_remote_code is required
-model = SentenceTransformer(BASE_MODEL, device=device, trust_remote_code=True)
+model = SentenceTransformer(BASE_MODEL, device=device)
 print("Done.")
 
 evaluator = EmbeddingSimilarityEvaluator(

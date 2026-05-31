@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"\\\\\\\\wsl.localhost\\\\Ubuntu\\\\home\\\\alex\\\\Licenta\\\\GJournal\" -name \"*.swift\")",
+      "Bash(xargs grep -l -i \"embed\\\\|pool\\\\|tokeniz\")"
+    ]
+  }
+}

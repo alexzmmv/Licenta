@@ -96,7 +96,7 @@ graph TD
 
 ## What Must Be Built (Thesis Deliverables)
 
-1. **Fine-tune & convert 3 embedding models** → `01_AI_PIPELINE.md`
+1. **Download, evaluate & convert 2 pre-trained embedding models** (`all-MiniLM-L6-v2` SLOT 1, `paraphrase-MiniLM-L6-v2` SLOT 2) + NLEmbedding baseline → `01_AI_PIPELINE.md`
 2. **Fine-tune GoEmotions classifier** → `01_AI_PIPELINE.md`
 3. **Design GoEmotions 28→12 label mapping** → `05_SCIENCE.md`
 4. **Fix TextFlattener format** → `01_AI_PIPELINE.md`
@@ -140,13 +140,13 @@ graph TD
 ## 🎓 PhD Review — Academic Rigor Assessment
 
 1. **Architecture is well-factored for a thesis**: The Repository pattern + Protocol-based DI + Service Container is a textbook clean architecture that will present well. Cite Martin's Clean Architecture (2017) or the VIPER pattern literature.
-2. **The comparative study design** (3 embedding models benchmarked on the same dataset and device) is strong experimental methodology. Ensure you define **independent variables** (model architecture), **dependent variables** (latency, memory, silhouette score), and **controlled variables** (device, iOS version, dataset).
+2. **The comparative study design** (3 embedding approaches benchmarked on the same dataset and device) is strong experimental methodology. Ensure you define **independent variables** (model training objective: contrastive vs. paraphrase vs. Apple OS), **dependent variables** (latency, memory, STS-B Spearman, silhouette score), and **controlled variables** (device, iOS version, dataset).
 3. **Missing: Evaluation protocol**. Your thesis needs a formal evaluation section. Plan for: (a) quantitative benchmarks on devices, (b) qualitative assessment of clustering quality (do the clusters make semantic sense?), and (c) ideally a small user study (even N=1, yourself, with a structured self-report).
-4. **Literature gap**: Cite Devlin et al. (2019) for BERT, Sun et al. (2020) for MobileBERT, Sanh et al. (2019) for DistilBERT, Ester et al. (1996) for DBSCAN.
+4. **Literature gap**: Cite Devlin et al. (2019) for BERT, Reimers & Gurevych (2019) for Sentence-BERT / MiniLM models, Ester et al. (1996) for DBSCAN. Note: the models used (`all-MiniLM-L6-v2`, `paraphrase-MiniLM-L6-v2`) are sentence-transformers derivatives, not raw MobileBERT/DistilBERT — cite accordingly.
 
 ## 🔴 Red-Hat Review — What Could Go Wrong
 
-1. **2-week timeline is extremely tight**. The critical path (training → Core ML conversion → Swift tokenizer) has multiple failure points. If `coremltools` conversion fails for MobileBERT (known issues with some model architectures), you lose 1-2 days debugging. **Mitigation**: Start with DistilBERT (better coremltools support), have NLEmbedding as fallback.
-2. **WordPiece tokenizer in Swift** is the single riskiest implementation task. Getting tokenization wrong means embeddings are garbage even with a perfect model. **Mitigation**: Use `swift-transformers` package or validate against Python tokenizer output exhaustively.
+1. **2-week timeline is extremely tight**. The critical path (Core ML conversion → Swift tokenizer → live DBSCAN) has multiple failure points. The embedding scripts are now download-only (~1 min each), which removes training risk — the conversion step is the main danger. **Mitigation**: Test `coremltools` conversion on Day 1; have NLEmbedding as fallback.
+2. **WordPiece tokenizer in Swift** is the single riskiest implementation task. Getting tokenization wrong means embeddings are garbage even with a perfect model. Both MiniLM models share the same BERT WordPiece vocabulary (30,522 tokens). **Mitigation**: Use `swift-transformers` package or validate against Python tokenizer output exhaustively with `backup/verify_tokenizer.py`.
 3. **The "Generate Seed Data" button** in Settings currently generates random embeddings. If accidentally left in the production build, it will corrupt real clustering data. **Mitigation**: Gate behind `#if DEBUG` preprocessor flag.
 4. **Thesis scope creep**: The behavioral tagging feature (07_FUTURE.md) is exciting but must NOT be attempted in the 2-week window. It's post-thesis work.

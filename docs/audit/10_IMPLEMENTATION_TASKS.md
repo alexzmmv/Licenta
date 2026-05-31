@@ -23,34 +23,36 @@ Create a bash script that:
 
 **Validation**: Script runs without errors. GPU detected.
 
-### Task 1.2: Create MobileBERT embedding fine-tuning script
+### Task 1.2: Download and evaluate all-MiniLM-L6-v2 (SLOT 1)
 
-**File**: `ml/train_embedding_mobilebert.py`
+**File**: `training/train_embedding_mobilebert.py` ✅ (script exists)
 
 ```
-Follow 01_AI_PIPELINE.md Section 2 exactly. Key requirements:
-- Base model: google/mobilebert-uncased
+Key requirements (no training — download + eval only):
+- Model: sentence-transformers/all-MiniLM-L6-v2
 - Dataset: STS-B from HuggingFace datasets (glue/stsb)
 - Framework: sentence-transformers
-- Loss: CosineSimilarityLoss
-- Epochs: 4, batch_size: 16
+- NO fine-tuning — model is already pre-trained on 1B+ pairs
 - Evaluator: EmbeddingSimilarityEvaluator on validation split
-- Output dir: ml/models/mobilebert-stsb/
+- Output dir: training/models/mobilebert-stsb/
 - Print final Spearman correlation score
-- IMPORTANT: Use mean pooling (sentence-transformers default)
+- Verify pooling config after save: pooling_mode_mean_tokens must be true
 ```
 
-**Validation**: Spearman correlation > 0.75 on STS-B test set.
+**Validation**: Spearman correlation > 0.75. Expected: ~0.8696.
 
-### Task 1.3: Create DistilBERT embedding fine-tuning script
+### Task 1.3: Download and evaluate paraphrase-MiniLM-L6-v2 (SLOT 2)
 
-**File**: `ml/train_embedding_distilbert.py`
+**File**: `training/train_embedding_distilbert.py` ✅ (script exists)
 
 ```
-Same as Task 1.2 but:
-- Base model: distilbert-base-uncased
-- Output dir: ml/models/distilbert-stsb/
+Same structure as Task 1.2 but:
+- Model: sentence-transformers/paraphrase-MiniLM-L6-v2
+- Output dir: training/models/distilbert-stsb/
+- NO fine-tuning — model is already pre-trained
 ```
+
+**Validation**: Spearman correlation > 0.75. Expected: ~0.8695.
 
 ### Task 1.4: Create GoEmotions classifier training script
 
@@ -83,8 +85,8 @@ Key requirements:
 Follow 01_AI_PIPELINE.md Section 4 and 09_AI_PITFALLS.md Section 3.
 MUST convert 3 models:
 
-1. MobileBERT embedding → GJournalEmbeddingMobileBERT.mlpackage
-2. DistilBERT embedding → GJournalEmbeddingDistilBERT.mlpackage  
+1. all-MiniLM-L6-v2 (SLOT 1) → GJournalEmbeddingMiniLM.mlpackage
+2. paraphrase-MiniLM-L6-v2 (SLOT 2) → GJournalEmbeddingParaphrase.mlpackage
 3. Emotion classifier → GJournalEmotionClassifier.mlpackage
 
 Key requirements per 09_AI_PITFALLS.md:
@@ -98,8 +100,9 @@ Key requirements per 09_AI_PITFALLS.md:
 - Output dir: ml/coreml_models/
 - Also copy vocab.txt from each model's tokenizer to ml/coreml_models/
 
-IMPORTANT: If MobileBERT conversion fails, try convert_to="mlprogram".
-If that also fails, log the error and continue with DistilBERT only.
+IMPORTANT: If all-MiniLM conversion fails, try convert_to="mlprogram".
+If that also fails, log the error and continue with paraphrase-MiniLM only.
+Both models share the same vocab.txt — copy ONE file named vocab_minilm.txt.
 ```
 
 **Validation**: .mlpackage files created. Each < 100MB.
@@ -110,9 +113,9 @@ If that also fails, log the error and continue with DistilBERT only.
 
 ```
 Compare all 3 embedding approaches on STS-B test set:
-1. Fine-tuned MobileBERT
-2. Fine-tuned DistilBERT
-3. Raw (unfine-tuned) MobileBERT baseline
+1. all-MiniLM-L6-v2 (SLOT 1, contrastive pre-training)
+2. paraphrase-MiniLM-L6-v2 (SLOT 2, paraphrase pre-training)
+3. Apple NLEmbedding (OS baseline — no bundle cost)
 
 Report:
 - Spearman correlation per model
@@ -212,7 +215,7 @@ Implements EmotionDetectionServiceProtocol.
 
 ```
 Update makeProduction() to return real services:
-- embeddingService: CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT")
+- embeddingService: CoreMLEmbeddingService(modelName: "GJournalEmbeddingMiniLM")
 - emotionService: CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
 - clusteringService: DBSCANClusterer(epsilon: 0.3, minPoints: 3)
 - safetyFilter: SafetyFilter()
