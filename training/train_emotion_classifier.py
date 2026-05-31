@@ -3,6 +3,7 @@ Fine-tune MobileBERT on GoEmotions → 12-class GJournal emotion classifier.
 Output: training/models/emotion-classifier/
 
 Run: python train_emotion_classifier.py
+      python train_emotion_classifier.py --test    (5 min quick validation)
 Time: ~35 min (RTX 2070) | ~2.5h (M1 MPS) | ~8h (CPU)
 
 IMPORTANT pitfall fixes applied:
@@ -12,6 +13,7 @@ IMPORTANT pitfall fixes applied:
 - Multi-label examples duplicated once per label (not dropped)
 """
 
+import sys
 from pathlib import Path
 from collections import Counter
 
@@ -29,11 +31,16 @@ from transformers import (
 )
 import evaluate
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# ── Test mode flag ──────────────────────────────────────────────────────────
+TEST_MODE = "--test" in sys.argv
+if TEST_MODE:
+    print("⚡ TEST MODE: 2000 examples, 1 epoch, will finish in ~5 min")
+
+# ── Config ──────────────────────────────────────────────────────────────────
 BASE_MODEL   = "google/mobilebert-uncased"
 OUTPUT_DIR   = Path("models/emotion-classifier")
 BATCH_SIZE   = 32 if torch.cuda.is_available() else 16
-EPOCHS       = 3
+EPOCHS       = 1 if TEST_MODE else 3
 MAX_LENGTH   = 128
 LEARNING_RATE = 2e-5
 
@@ -44,7 +51,7 @@ device = (
 )
 print(f"Device: {device}")
 
-# ── GoEmotions → 12-class mapping ─────────────────────────────────────────────
+# ── GoEmotions → 12-class mapping ───────────────────────────────────────────
 # confusion → Surprise (corrected from 01_AI_PIPELINE.md which had confusion → Anxiety)
 LABEL_MAP = {
     "joy":           "Joy",
@@ -84,7 +91,7 @@ TARGET_LABELS = [
 LABEL2ID = {label: i for i, label in enumerate(TARGET_LABELS)}
 ID2LABEL = {i: label for label, i in LABEL2ID.items()}
 
-# ── Load and remap GoEmotions ──────────────────────────────────────────────────
+# ── Load and remap GoEmotions ────────────────────────────────────────────────
 print("Loading GoEmotions dataset...")
 raw = datasets.load_dataset(
     "google-research-datasets/go_emotions",
@@ -117,6 +124,12 @@ train_ds = build_split("train")
 val_ds   = build_split("validation")
 test_ds  = build_split("test")
 
+# In test mode, use only first N examples
+if TEST_MODE:
+    train_ds = train_ds.select(range(min(2000, len(train_ds))))
+    val_ds = val_ds.select(range(min(500, len(val_ds))))
+    test_ds = test_ds.select(range(min(500, len(test_ds))))
+
 print(f"Train: {len(train_ds)} | Val: {len(val_ds)} | Test: {len(test_ds)}")
 
 label_counts = Counter(train_ds["label"])
@@ -125,7 +138,7 @@ for i, name in enumerate(TARGET_LABELS):
     n = label_counts.get(i, 0)
     print(f"  {name:12s}: {n:5d}")
 
-# ── Tokenize ──────────────────────────────────────────────────────────────────
+# ── Tokenize ────────────────────────────────────────────────────────────────
 tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, cache_dir="./hf_cache")
 
 def tokenize(batch):
@@ -145,7 +158,7 @@ train_ds.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 val_ds.set_format("torch",   columns=["input_ids", "attention_mask", "label"])
 test_ds.set_format("torch",  columns=["input_ids", "attention_mask", "label"])
 
-# ── Class weights ─────────────────────────────────────────────────────────────
+# ── Class weights ───────────────────────────────────────────────────────────
 all_labels = np.array(train_ds["label"])
 class_weights = compute_class_weight(
     class_weight="balanced",
@@ -155,7 +168,7 @@ class_weights = compute_class_weight(
 weights_tensor = torch.tensor(class_weights, dtype=torch.float)
 print(f"\nClass weights range: [{weights_tensor.min():.2f}, {weights_tensor.max():.2f}]")
 
-# ── Weighted Trainer ──────────────────────────────────────────────────────────
+# ── Weighted Trainer ────────────────────────────────────────────────────────
 class WeightedTrainer(Trainer):
     def __init__(self, class_weights, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -171,7 +184,7 @@ class WeightedTrainer(Trainer):
         )
         return (loss, outputs) if return_outputs else loss
 
-# ── Metrics ───────────────────────────────────────────────────────────────────
+# ── Metrics ──────────────────────────────────────────────────────────────────
 f1_metric = evaluate.load("f1")
 
 def compute_metrics(eval_pred):
@@ -181,7 +194,7 @@ def compute_metrics(eval_pred):
     result["accuracy"] = (preds == labels).mean()
     return result
 
-# ── Training args ─────────────────────────────────────────────────────────────
+# ── Training args ───────────────────────────────────────────────────────────
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 training_args = TrainingArguments(
@@ -222,7 +235,7 @@ trainer = WeightedTrainer(
 print("\nStarting training...")
 trainer.train()
 
-# ── Test evaluation ───────────────────────────────────────────────────────────
+# ── Test evaluation ──────────────────────────────────────────────────────────
 print("\nEvaluating on test set...")
 test_results = trainer.predict(test_ds)
 test_preds   = np.argmax(test_results.predictions, axis=-1)
@@ -240,7 +253,10 @@ Path("results").mkdir(exist_ok=True)
 with open("results/emotion_report.txt", "w") as f:
     f.write(f"Base model: {BASE_MODEL}\n")
     f.write(f"Device: {device}\n")
-    f.write(f"Epochs: {EPOCHS}\n\n")
+    f.write(f"Epochs: {EPOCHS}\n")
+    if TEST_MODE:
+        f.write(f"(TEST MODE — limited data)\n")
+    f.write(f"\n")
     f.write(report)
     f.write("\nConfusion matrix:\n")
     f.write(str(confusion_matrix(test_labels, test_preds)))

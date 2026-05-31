@@ -8,23 +8,27 @@ Time: ~10 min (RTX 2070) | ~45 min (M1 MPS) | ~3h (CPU)
 Pitfall refs: 09_AI_PITFALLS.md — Pitfall 7.4 (pooling mismatch)
 """
 
-import os
 import json
 from pathlib import Path
 
 import torch
-import datasets
-from sentence_transformers import SentenceTransformer, InputExample, losses
-from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
-from torch.utils.data import DataLoader
+import datasets as hf_datasets
+from datasets import Dataset as HFDataset
+from sentence_transformers import (
+    SentenceTransformer,
+    SentenceTransformerTrainer,
+    SentenceTransformerTrainingArguments,
+)
+from sentence_transformers.sentence_transformer.losses import CoSENTLoss
+from sentence_transformers.sentence_transformer.modules import Transformer, Pooling
+from sentence_transformers.sentence_transformer.evaluation import EmbeddingSimilarityEvaluator
 
-# ── Config ──────────────────────────────────────────────────────────────────
-BASE_MODEL   = "google/mobilebert-uncased"
-OUTPUT_DIR   = Path("models/mobilebert-stsb")
-BATCH_SIZE   = 16 if torch.cuda.is_available() else 8
-EPOCHS       = 4
-MAX_LENGTH   = 128
-WARMUP_STEPS = 100
+# ── Config ───────────────────────────────────────────────────────────────────
+BASE_MODEL = "google/mobilebert-uncased"
+OUTPUT_DIR = Path("models/mobilebert-stsb")
+BATCH_SIZE = 16 if torch.cuda.is_available() else 8
+EPOCHS     = 4
+MAX_LENGTH = 128
 
 device = (
     "cuda" if torch.cuda.is_available() else
@@ -35,31 +39,38 @@ print(f"Device: {device}")
 print(f"Base model: {BASE_MODEL}")
 print(f"Output: {OUTPUT_DIR}")
 
-# ── Load STS-B ───────────────────────────────────────────────────────────────
+# ── Load STS-B ────────────────────────────────────────────────────────────────
 print("\nLoading STS-B dataset...")
-stsb = datasets.load_dataset("glue", "stsb", cache_dir="./hf_cache")
+stsb = hf_datasets.load_dataset("glue", "stsb", cache_dir="./hf_cache")
 
-def to_examples(split):
-    return [
-        InputExample(
-            texts=[row["sentence1"], row["sentence2"]],
-            label=float(row["label"]) / 5.0,  # normalize 0-5 → 0-1
-        )
-        for row in stsb[split]
-    ]
+def to_hf_dataset(split):
+    rows = stsb[split]
+    return HFDataset.from_dict({
+        "sentence1": [r["sentence1"] for r in rows],
+        "sentence2": [r["sentence2"] for r in rows],
+        "label":     [float(r["label"]) / 5.0 for r in rows],
+    })
 
-train_examples = to_examples("train")
-val_examples   = to_examples("validation")
+train_dataset = to_hf_dataset("train")
+val_dataset   = to_hf_dataset("validation")
+print(f"Train: {len(train_dataset)} pairs | Val: {len(val_dataset)} pairs")
 
-print(f"Train: {len(train_examples)} pairs | Val: {len(val_examples)} pairs")
+# ── Model: explicit Transformer + mean pooling ────────────────────────────────
+word_embedding_model = Transformer(BASE_MODEL, max_seq_length=MAX_LENGTH)
+pooling_model = Pooling(
+    word_embedding_model.get_embedding_dimension(),
+    pooling_mode="mean",
+)
+model = SentenceTransformer(modules=[word_embedding_model, pooling_model], device=device)
 
-# ── Model + Loss + Evaluator ──────────────────────────────────────────────────
-model = SentenceTransformer(BASE_MODEL, device=device)
-train_dl = DataLoader(train_examples, shuffle=True, batch_size=BATCH_SIZE)
-train_loss = losses.CosineSimilarityLoss(model)
+# CoSENTLoss (ranking loss) — prevents the representation collapse that
+# CosineSimilarityLoss causes (all cos_sims converge to ~0.9, Spearman → 0).
+train_loss = CoSENTLoss(model)
 
-evaluator = EmbeddingSimilarityEvaluator.from_input_examples(
-    val_examples,
+evaluator = EmbeddingSimilarityEvaluator(
+    sentences1=[r["sentence1"] for r in stsb["validation"]],
+    sentences2=[r["sentence2"] for r in stsb["validation"]],
+    scores=[float(r["label"]) / 5.0 for r in stsb["validation"]],
     name="stsb-val",
 )
 
@@ -67,50 +78,70 @@ evaluator = EmbeddingSimilarityEvaluator.from_input_examples(
 print("\nStarting training...")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-model.fit(
-    train_objectives=[(train_dl, train_loss)],
-    evaluator=evaluator,
-    epochs=EPOCHS,
-    warmup_steps=WARMUP_STEPS,
-    output_path=str(OUTPUT_DIR),
-    save_best_model=True,
-    show_progress_bar=True,
+training_args = SentenceTransformerTrainingArguments(
+    output_dir=str(OUTPUT_DIR),
+    num_train_epochs=EPOCHS,
+    per_device_train_batch_size=BATCH_SIZE,
+    warmup_steps=0.1,
+    fp16=torch.cuda.is_available(),
+    eval_strategy="epoch",
+    save_strategy="epoch",
+    load_best_model_at_end=True,
+    metric_for_best_model="stsb-val_spearman_cosine",
+    greater_is_better=True,
+    save_total_limit=1,
 )
+
+trainer = SentenceTransformerTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=val_dataset,
+    loss=train_loss,
+    evaluator=evaluator,
+)
+trainer.train()
+
+# Save the best model explicitly to the expected path
+model.save(str(OUTPUT_DIR))
 
 # ── Verify pooling mode ───────────────────────────────────────────────────────
 pooling_cfg = OUTPUT_DIR / "1_Pooling" / "config.json"
 if pooling_cfg.exists():
     with open(pooling_cfg) as f:
         cfg = json.load(f)
-    mean_pooling = cfg.get("pooling_mode_mean_tokens", False)
-    cls_pooling  = cfg.get("pooling_mode_cls_token", False)
-    print(f"\nPooling check — mean: {mean_pooling} | CLS: {cls_pooling}")
-    if not mean_pooling:
-        print("WARNING: Model is NOT using mean pooling. Swift must match this.")
+    # ST 5.x: {"pooling_mode": "mean"}  |  ST 3.x: {"pooling_mode_mean_tokens": true}
+    mode = cfg.get("pooling_mode", "")
+    old_mode = cfg.get("pooling_mode_mean_tokens", False)
+    is_mean = (mode == "mean") or old_mode
+    print(f"\nPooling check — mode: {mode or ('mean' if old_mode else '?')}")
+    if not is_mean:
+        print("WARNING: Model is NOT using mean pooling. Swift tokenizer must match.")
     else:
-        print("OK: Mean pooling confirmed. Swift CoreMLEmbeddingService must also use mean pooling.")
+        print("OK: Mean pooling confirmed.")
+else:
+    print("WARNING: Pooling config not found — model may not have saved correctly.")
 
 # ── Final evaluation ──────────────────────────────────────────────────────────
-test_examples = to_examples("validation")
-test_evaluator = EmbeddingSimilarityEvaluator.from_input_examples(
-    test_examples,
-    name="stsb-final",
-)
 final_model = SentenceTransformer(str(OUTPUT_DIR), device=device)
-score = test_evaluator(final_model)
+score_raw = evaluator(final_model)
 
-results_dir = Path("results")
-results_dir.mkdir(exist_ok=True)
-with open(results_dir / "mobilebert_stsb.txt", "w") as f:
+if isinstance(score_raw, dict):
+    spearman = score_raw.get("spearman_cosine", next(iter(score_raw.values())))
+else:
+    spearman = float(score_raw)
+
+Path("results").mkdir(exist_ok=True)
+with open("results/mobilebert_stsb.txt", "w") as f:
     f.write(f"Model: {BASE_MODEL}\n")
     f.write(f"Device: {device}\n")
     f.write(f"Epochs: {EPOCHS}\n")
-    f.write(f"STS-B Spearman correlation: {score:.4f}\n")
+    f.write(f"STS-B Spearman correlation: {spearman:.4f}\n")
 
-print(f"\nFinal STS-B Spearman: {score:.4f}")
+print(f"\nFinal STS-B Spearman: {spearman:.4f}")
 print(f"Target: > 0.75")
-if score > 0.75:
-    print("PASS")
+if spearman > 0.75:
+    print("PASS ✓")
 else:
-    print("FAIL — consider more epochs or switching to MultipleNegativesRankingLoss")
+    print("FAIL ✗ — consider more epochs or switching models")
 print(f"\nModel saved to: {OUTPUT_DIR}")

@@ -21,7 +21,7 @@ pip install "coremltools>=7.2" --quiet
 pip install torch torchvision --quiet
 
 # NLP / training
-pip install "sentence-transformers==3.0.0" --quiet
+pip install "sentence-transformers>=5.5.0" --quiet
 pip install "transformers>=4.40.0" --quiet
 pip install "datasets>=2.19.0" --quiet
 pip install "accelerate>=0.30.0" --quiet
