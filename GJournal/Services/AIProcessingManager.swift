@@ -27,7 +27,7 @@ final class AIProcessingManager: ObservableObject {
     private var needsInitialCalibration = true
     private var entriesSinceLastCalibration = 0
     private let calibrationInterval = 10
-    private var lastCalibrationResult: CalibrationResult?
+    private(set) var lastCalibrationResult: CalibrationResult?
     private var pendingClusterTask: Task<Void, Never>?
 
     init(services: ServiceContainer) {

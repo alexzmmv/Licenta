@@ -33,7 +33,7 @@ final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
         }
 
         let config = MLModelConfiguration()
-        config.computeUnits = .all
+        config.computeUnits = .cpuAndGPU
         model = try MLModel(contentsOf: modelURL, configuration: config)
 
         if let url = Bundle.main.url(forResource: "vocab_emotion", withExtension: "txt") {

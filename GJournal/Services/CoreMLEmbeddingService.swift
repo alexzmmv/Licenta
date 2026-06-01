@@ -33,9 +33,15 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
             throw AIServiceError.modelNotLoaded
         }
 
-        let config = MLModelConfiguration()
-        config.computeUnits = .all
-        model = try MLModel(contentsOf: modelURL, configuration: config)
+        let allConfig = MLModelConfiguration()
+        allConfig.computeUnits = .all
+        if let loaded = try? MLModel(contentsOf: modelURL, configuration: allConfig) {
+            model = loaded
+        } else {
+            let fallback = MLModelConfiguration()
+            fallback.computeUnits = .cpuAndGPU
+            model = try MLModel(contentsOf: modelURL, configuration: fallback)
+        }
 
         let vocabName = "vocab_\(modelName.lowercased().replacingOccurrences(of: "-", with: "_"))"
         if let url = Bundle.main.url(forResource: vocabName, withExtension: "txt") {

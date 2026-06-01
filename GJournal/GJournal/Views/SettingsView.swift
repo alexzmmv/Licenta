@@ -636,6 +636,20 @@ struct SettingsView: View {
             ])
         }
 
+        // Build calibration diagnostics (if available)
+        var calibrationJSON: [String: Any] = [:]
+        if let cal = (repository as? LocalJournalRepository)?.aiProcessingManager?.lastCalibrationResult {
+            calibrationJSON = [
+                "epsilon": cal.epsilon,
+                "minPoints": cal.minPoints,
+                "clusterCount": cal.clusterCount,
+                "noiseCount": cal.noiseCount,
+                "totalPoints": cal.totalPoints,
+                "noiseFraction": cal.noiseFraction,
+                "silhouetteScore": cal.silhouetteScore
+            ]
+        }
+
         let payload: [String: Any] = [
             "exportedAt": iso.string(from: Date()),
             "config": [
@@ -645,6 +659,7 @@ struct SettingsView: View {
                 "clusteringStrategyDisplayName": strategy.displayName,
                 "embeddingDimension": model == .nomicMRL ? 256 : 384
             ],
+            "calibration": calibrationJSON,
             "summary": [
                 "totalBits": repository.bits.count,
                 "bitsWithEmbeddings": repository.bits.filter { $0.hasBeenProcessed }.count,

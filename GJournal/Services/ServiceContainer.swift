@@ -55,6 +55,8 @@ final class ServiceContainer: ObservableObject {
         switch embeddingModel {
         case .miniLM:
             embeddingService = CoreMLEmbeddingService(modelName: "GJournalEmbeddingMiniLM", poolingMode: .mean)
+        case .nomicFull:
+            embeddingService = NomicEmbeddingService(truncateDim: 768)
         case .nomicMRL:
             embeddingService = NomicEmbeddingService(truncateDim: 256)
         case .appleNLP:
