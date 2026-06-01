@@ -26,7 +26,7 @@ struct GJournalApp: App {
 
         func tryCreate() throws -> ModelContainer {
             let container = try ModelContainer(
-                for: Bit.self, Cluster.self, EmotionConfiguration.self,
+                for: Bit.self, Cluster.self,
                 configurations: config
             )
             // Encrypt the store file at rest

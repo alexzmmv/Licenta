@@ -18,11 +18,6 @@ final class Bit {
     var event: String
     var action: String
 
-    // Individual emotions for each field
-    var feelEmotionRawValue: String
-    var eventEmotionRawValue: String
-    var actionEmotionRawValue: String
-
     var intensity: Int // 1-4
     var lastModified: Date
     var createdAt: Date
@@ -68,7 +63,7 @@ final class Bit {
     
     /// Backward compatibility for clustering logic
     var clusterID: Int? {
-        cluster?.id
+        cluster?.index
     }
 
     /// Combined text used for embedding generation
@@ -90,23 +85,6 @@ final class Bit {
 
     /// Cached Y position in the knowledge graph
     var graphY: Double?
-
-    // MARK: - Typed Wrappers for Per-Field Emotion Raw Values
-
-    var feelEmotion: Emotion {
-        get { Emotion(rawValue: feelEmotionRawValue) ?? .joy }
-        set { feelEmotionRawValue = newValue.rawValue }
-    }
-
-    var eventEmotion: Emotion {
-        get { Emotion(rawValue: eventEmotionRawValue) ?? .joy }
-        set { eventEmotionRawValue = newValue.rawValue }
-    }
-
-    var actionEmotion: Emotion {
-        get { Emotion(rawValue: actionEmotionRawValue) ?? .joy }
-        set { actionEmotionRawValue = newValue.rawValue }
-    }
 
     // MARK: - Computed Properties for AI Data
 
@@ -151,20 +129,12 @@ final class Bit {
 
     // MARK: - Initializer
 
-    init(id: UUID = UUID(), title: String? = nil, feel: String = "", event: String = "", action: String = "", feelEmotion: Emotion = .joy, eventEmotion: Emotion = .joy, actionEmotion: Emotion = .joy, intensity: Int = 1, lastModified: Date = Date(), createdAt: Date = Date(), isHidden: Bool = false) {
+    init(id: UUID = UUID(), title: String? = nil, feel: String = "", event: String = "", action: String = "", intensity: Int = 1, lastModified: Date = Date(), createdAt: Date = Date(), isHidden: Bool = false) {
         self.id = id
         self.title = title
-
-        // Micro-journaling fields
         self.feel = feel
         self.event = event
         self.action = action
-
-        // Individual emotions
-        self.feelEmotionRawValue = feelEmotion.rawValue
-        self.eventEmotionRawValue = eventEmotion.rawValue
-        self.actionEmotionRawValue = actionEmotion.rawValue
-
         self.intensity = min(max(intensity, 1), 4) // Clamp between 1-4
         self.lastModified = lastModified
         self.createdAt = createdAt

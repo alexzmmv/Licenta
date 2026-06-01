@@ -33,7 +33,7 @@ class LocalJournalRepository: BaseJournalRepository {
     
     // MARK: - CRUD Operations
 
-    override func createBit(title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
+    override func createBit(title: String?, feel: String, event: String, action: String, intensity: Int) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
             return
@@ -45,9 +45,6 @@ class LocalJournalRepository: BaseJournalRepository {
             feel: feel,
             event: event,
             action: action,
-            feelEmotion: feelEmotion,
-            eventEmotion: eventEmotion,
-            actionEmotion: actionEmotion,
             intensity: intensity,
             lastModified: Date(),
             createdAt: Date(),
@@ -69,7 +66,7 @@ class LocalJournalRepository: BaseJournalRepository {
         }
     }
 
-    override func updateBit(id: UUID, title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
+    override func updateBit(id: UUID, title: String?, feel: String, event: String, action: String, intensity: Int) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
             return
@@ -80,19 +77,17 @@ class LocalJournalRepository: BaseJournalRepository {
             bits[index].feel = feel
             bits[index].event = event
             bits[index].action = action
-            bits[index].feelEmotion = feelEmotion
-            bits[index].eventEmotion = eventEmotion
-            bits[index].actionEmotion = actionEmotion
             bits[index].intensity = intensity
             bits[index].lastModified = Date()
 
             do {
+                let updatedBit = bits[index]
                 try modelContext.save()
                 loadBitsFromContext()
                 print("[LocalRepository] Updated micro-journal bit: \(id)")
 
-                // Re-trigger AI processing for updated content
-                aiProcessingManager?.processBit(bits[index])
+                // Re-trigger AI processing for updated content (capture before reload)
+                aiProcessingManager?.processBit(updatedBit)
             } catch {
                 errorMessage = "Failed to update micro-journal bit: \(error.localizedDescription)"
                 print("[LocalRepository] Failed to update micro-journal bit: \(error)")
@@ -196,87 +191,60 @@ class LocalJournalRepository: BaseJournalRepository {
 // MARK: - Seed Data Generation
 
 struct SeedDataManager {
-    
-    /// Generates seed data for testing
+
+    // MARK: - JSON model
+
+    private struct SeedFile: Decodable {
+        let entries: [SeedEntry]
+    }
+
+    private struct SeedEntry: Decodable {
+        let title: String
+        let feel: String
+        let event: String
+        let action: String
+        let intensity: Int
+        let daysAgo: Int
+    }
+
+    // MARK: - Loading
+
     @MainActor
     static func generateSeedData(context: ModelContext) {
+        guard let url = Bundle.main.url(forResource: "seed_data", withExtension: "json") else {
+            print("[SeedData] seed_data.json not found in bundle.")
+            return
+        }
+        guard let data = try? Data(contentsOf: url),
+              let file = try? JSONDecoder().decode(SeedFile.self, from: data) else {
+            print("[SeedData] Failed to decode seed_data.json.")
+            return
+        }
+
         let now = Date()
         let calendar = Calendar.current
-        
-        // Define some realistic-looking journal entries
-        let seedEntries: [(title: String, feel: String, event: String, action: String, emotion: Emotion, intensity: Int, daysAgo: Int, clusterID: Int?)] = [
-            // Cluster 0: Work/Productivity
-            ("Productive Day", "Felt really accomplished today", "Finished the big project", "Treated myself to coffee", .joy, 3, 0, 0),
-            ("Flow State", "Was super focused", "Coding for 4 hours straight", "Took a short walk", .excitement, 4, 1, 0),
-            ("Getting things done", "Productive but tiring", "Cleared my inbox", "Went to bed early", .hope, 2, 3, 0),
-            
-            // Cluster 1: Social/Friends
-            ("Catching up", "Happy to see old friends", "Met Sarah for lunch", "Talked for hours", .joy, 4, 2, 1),
-            ("Party", "A bit overwhelmed but fun", "Went to Dave's birthday", "Danced a lot", .excitement, 3, 5, 1),
-            ("Coffee date", "Felt connected", "Deep conversation", "Agreed to meet again", .love, 3, 6, 1),
-            
-            // Cluster 2: Stress/Anxiety
-            ("Anxious morning", "Woke up feeling tight in my chest", "Thinking about deadlines", "Did breathing exercises", .anxiety, 4, 4, 2),
-            ("Overwhelmed", "Too much to do", "Struggled to focus", "Took a break", .fear, 3, 7, 2),
-            ("Stressful meeting", "Frustrated and tense", "Client was difficult", "Vented to a coworker", .anger, 3, 8, 2),
-            
-            // Unclustered / Noise
-            ("Quiet evening", "Peaceful and calm", "Read a book", "Made tea", .gratitude, 2, 1, -1),
-            ("Random thoughts", "Feeling okay", "Just doing chores", "Cleaned the house", .joy, 1, 3, -1),
-            ("Sad movie", "Felt a bit melancholic", "Watched a drama", "Cried a little", .sadness, 2, 5, -1),
-            ("Surprise gift", "Very surprised!", "Got a package", "Called to say thanks", .surprise, 4, 9, -1)
-        ]
-        
-        for entry in seedEntries {
+
+        for entry in file.entries {
             let entryDate = calendar.date(byAdding: .day, value: -entry.daysAgo, to: now) ?? now
-            
             let bit = Bit(
                 id: UUID(),
                 title: entry.title,
                 feel: entry.feel,
                 event: entry.event,
                 action: entry.action,
-                feelEmotion: entry.emotion,
-                eventEmotion: entry.emotion,
-                actionEmotion: entry.emotion,
-                intensity: entry.intensity,
+                intensity: min(max(entry.intensity, 1), 4),
                 lastModified: entryDate,
                 createdAt: entryDate,
                 isHidden: false
             )
-            
-            // Assign mock AI data directly for testing the graph
-            if let cid = entry.clusterID, cid != -1 {
-                // Find or create the cluster object
-                let cluster: Cluster
-                let fetchDescriptor = FetchDescriptor<Cluster>(predicate: #Predicate { $0.id == cid })
-                if let existing = try? context.fetch(fetchDescriptor).first {
-                    cluster = existing
-                } else {
-                    let name: String
-                    switch cid {
-                    case 0: name = "Work & Productivity"
-                    case 1: name = "Social Life"
-                    case 2: name = "Personal Growth"
-                    default: name = "Cluster \(cid)"
-                    }
-                    cluster = Cluster(id: cid, name: name, createdAt: entryDate)
-                    context.insert(cluster)
-                }
-                bit.cluster = cluster
-            }
-            
-            bit.clusterAssignedAt = entryDate
-            // No embedding — NLEmbeddingService will generate one on first AI run
-            
             context.insert(bit)
         }
-        
+
         do {
             try context.save()
-            print("[SeedData] Generated \(seedEntries.count) seed bits with relational clusters.")
+            print("[SeedData] Inserted \(file.entries.count) unclustered entries.")
         } catch {
-            print("[SeedData] Failed to save seed data: \(error)")
+            print("[SeedData] Failed to save: \(error)")
         }
     }
 }

@@ -19,7 +19,7 @@ final class NLEmbeddingService: EmbeddingServiceProtocol {
                 throw AIServiceError.embeddingGenerationFailed
             }
             let floats = vector.map { Float($0) }
-            return NLEmbeddingService.l2Normalize(floats)
+            return await NLEmbeddingService.l2Normalize(floats)
         }.value
     }
 

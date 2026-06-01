@@ -6,9 +6,9 @@ coremltools cannot load or validate models on Linux/WSL (libcoremlpython is
 macOS-only), and torch >2.7 on the PC is ahead of what coremltools supports.
 
 Converts:
-  1. GJournalEmbeddingMobileBERT.mlpackage  (from models/mobilebert-stsb/, all-MiniLM-L6-v2, mean pooling)
-  2. GJournalEmbeddingDistilBERT.mlpackage  (from models/distilbert-stsb/, bge-small-en-v1.5, CLS pooling)
-  3. GJournalEmotionClassifier.mlpackage    (from models/emotion-classifier/checkpoint-*/)
+  1. GJournalEmbeddingMiniLM.mlpackage   (from models/minilm-stsb/, all-MiniLM-L6-v2, mean pooling)
+  2. GJournalEmbeddingNomic.mlpackage    (from models/nomic-mrl/, nomic-embed-text-v1, mean pooling, MRL)
+  3. GJournalEmotionClassifier.mlpackage (from models/emotion-classifier/checkpoint-*/)
 
 Pooling is done in Swift, NOT baked into the graph — each embedding model
 exports the raw transformer's last_hidden_state.
@@ -50,11 +50,31 @@ class EmbeddingWrapper(torch.nn.Module):
 
     def forward(self, input_ids, attention_mask):
         token_type_ids = torch.zeros_like(input_ids)
+        # Explicit position_ids avoids the self.position_ids[:, :seq] buffer-slice
+        # that emits an 'int' op coremltools cannot fold (same class as token_type_ids fix).
+        position_ids = torch.arange(MAX_LENGTH, dtype=torch.long).unsqueeze(0)
         out = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            position_ids=position_ids,
         )
+        return out.last_hidden_state
+
+
+class NomicEmbeddingWrapper(torch.nn.Module):
+    """
+    Minimal wrapper for nomic-embed-text-v1.5.
+    Calls the model with positional args (required for clean tracing) and returns
+    the raw last_hidden_state [1, seq, 768]. Mean pooling and MRL truncation are
+    handled in Swift at inference time.
+    """
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, input_ids, attention_mask):
+        out = self.model(input_ids, attention_mask)
         return out.last_hidden_state
 
 
@@ -65,10 +85,12 @@ class ClassifierWrapper(torch.nn.Module):
 
     def forward(self, input_ids, attention_mask):
         token_type_ids = torch.zeros_like(input_ids)
+        position_ids = torch.arange(MAX_LENGTH, dtype=torch.long).unsqueeze(0)
         out = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            position_ids=position_ids,
         )
         return out.logits
 
@@ -96,10 +118,16 @@ def export_vocab(tokenizer, dest: Path):
     print(f"  Vocab exported → {dest.name} ({len(ordered)} tokens)")
 
 
-def convert_with_fallbacks(wrapper, example_inputs, input_names, output_name, save_path):
+def convert_with_fallbacks(wrapper, example_inputs, input_names, output_name, save_path,
+                           warmup: bool = False):
     """Trace the wrapper and try conversion paths; return saved path or None."""
     try:
-        traced = torch.jit.trace(wrapper, example_inputs)
+        if warmup:
+            # Pre-run to initialise lazy buffers (e.g. RoPE sin/cos caches) so the
+            # graph is deterministic across trace invocations.
+            with torch.no_grad():
+                wrapper(*example_inputs)
+        traced = torch.jit.trace(wrapper, example_inputs, check_trace=False)
     except Exception as e:
         print(f"  Trace failed: {e}")
         return None
@@ -166,7 +194,144 @@ def convert_embedding(model_dir: Path, model_name: str, output_name: str):
         save_path=save_path,
     )
 
+    # If conversion failed, reuse a previously converted package under the legacy name.
+    # GJournalEmbeddingMobileBERT.mlpackage is the same all-MiniLM-L6-v2 model converted
+    # on the Windows PC — identical weights, just an older output name.
+    if result is None:
+        legacy = OUTPUT_DIR / "GJournalEmbeddingMobileBERT.mlpackage"
+        if legacy.exists():
+            import shutil
+            shutil.copytree(str(legacy), str(save_path), dirs_exist_ok=True)
+            print(f"  ✓ Reused legacy GJournalEmbeddingMobileBERT.mlpackage → {save_path.name}")
+            result = save_path
+
     export_vocab(tokenizer, OUTPUT_DIR / f"vocab_{output_name.lower()}.txt")
+    return result
+
+
+# ── 2. Nomic MRL embedding ────────────────────────────────────────────────────
+
+def convert_nomic():
+    """
+    Convert nomic-embed-text-v1 (MRL) to Core ML.
+    The full 768-dim last_hidden_state is exported; Swift truncates to the
+    desired MRL dim at inference time (NomicEmbeddingService.truncateDim).
+
+    Nomic uses RoPE attention, so we use NomicEmbeddingWrapper (no position_ids).
+    If torch.jit.trace fails on the RoPE ops, the ONNX fallback path is used.
+    """
+    print(f"\n{'─'*60}")
+    print("Converting nomic-embed-text-v1.5 (MRL)")
+    save_path = OUTPUT_DIR / "GJournalEmbeddingNomic.mlpackage"
+    NOMIC_ID = "nomic-ai/nomic-embed-text-v1.5"
+
+    # Load from HF model ID (uses local cache) — avoids _IncompatibleKeys from save/load cycle
+    tokenizer = AutoTokenizer.from_pretrained(NOMIC_ID, cache_dir="./hf_cache",
+                                              trust_remote_code=True)
+
+    # Load inner transformer — nomic-embed-text-v1.5 requires trust_remote_code
+    inner_model = AutoModel.from_pretrained(
+        NOMIC_ID,
+        cache_dir="./hf_cache",
+        trust_remote_code=True,
+        attn_implementation="eager",
+    )
+    inner_model.eval().cpu()
+    # Raw last_hidden_state [1, seq, 768] — mean pooling and MRL truncation done in Swift.
+    wrapper = NomicEmbeddingWrapper(inner_model).eval()
+
+    ids, mask = dummy_inputs(tokenizer)
+
+    # Warmup: initialises RoPE sin/cos buffers so the trace is stable across invocations
+    with torch.no_grad():
+        wrapper(ids, mask)
+
+    # Trace once; freeze folds all module state (including RoPE sin/cos buffers and
+    # the torch.arange call that produces them) into graph constants so coremltools
+    # never sees an 'int' op at the encoder/attn nodes.
+    traced = torch.jit.trace(wrapper, (ids, mask), check_trace=False)
+    traced_frozen = torch.jit.freeze(traced.eval())
+
+    # Path A — frozen trace, no deployment target (most permissive op set)
+    try:
+        print("  Path A: mlprogram (frozen trace, no deployment target)...")
+        mlmodel = ct.convert(
+            traced_frozen,
+            inputs=[
+                ct.TensorType(name="input_ids",      shape=(1, MAX_LENGTH), dtype=np.int32),
+                ct.TensorType(name="attention_mask", shape=(1, MAX_LENGTH), dtype=np.int32),
+            ],
+            outputs=[ct.TensorType(name="last_hidden_state")],
+            compute_units=ct.ComputeUnit.ALL,
+        )
+        mlmodel.save(str(save_path))
+        print(f"  ✓ Saved: {save_path}")
+        result = save_path
+    except Exception as e:
+        print(f"  Path A failed: {e}")
+        result = None
+
+    if result is None:
+        # Path B — frozen trace, iOS17 target
+        try:
+            print("  Path B: mlprogram (frozen trace, iOS17)...")
+            mlmodel = ct.convert(
+                traced_frozen,
+                inputs=[
+                    ct.TensorType(name="input_ids",      shape=(1, MAX_LENGTH), dtype=np.int32),
+                    ct.TensorType(name="attention_mask", shape=(1, MAX_LENGTH), dtype=np.int32),
+                ],
+                outputs=[ct.TensorType(name="last_hidden_state")],
+                compute_precision=ct.precision.FLOAT16,
+                minimum_deployment_target=ct.target.iOS17,
+                compute_units=ct.ComputeUnit.ALL,
+            )
+            mlmodel.save(str(save_path))
+            print(f"  ✓ Saved: {save_path}")
+            result = save_path
+        except Exception as e:
+            print(f"  Path B failed: {e}")
+            result = None
+
+    if result is None:
+        # Path C — ONNX intermediate (fallback for RoPE ops coremltools can't fold directly)
+        # Uses ct.convert(onnx_path) — the modern API (ct.converters.onnx is deprecated).
+        print("  Path C: ONNX → CoreML...")
+        onnx_path = OUTPUT_DIR / "nomic_temp.onnx"
+        try:
+            import onnx as onnx_lib
+            torch.onnx.export(
+                wrapper, (ids, mask),
+                str(onnx_path),
+                input_names=["input_ids", "attention_mask"],
+                output_names=["last_hidden_state"],
+                dynamic_axes=None,
+                opset_version=17,  # LayerNorm requires opset>=17
+            )
+            onnx_model_proto = onnx_lib.load(str(onnx_path))
+            mlmodel = ct.convert(
+                onnx_model_proto,
+                source="onnx",  # required: ct.convert can't infer framework from a proto object
+                inputs=[
+                    ct.TensorType(name="input_ids",      shape=(1, MAX_LENGTH), dtype=np.int32),
+                    ct.TensorType(name="attention_mask", shape=(1, MAX_LENGTH), dtype=np.int32),
+                ],
+                outputs=[ct.TensorType(name="last_hidden_state")],
+                compute_precision=ct.precision.FLOAT16,
+                minimum_deployment_target=ct.target.iOS17,
+                compute_units=ct.ComputeUnit.ALL,
+            )
+            mlmodel.save(str(save_path))
+            onnx_path.unlink(missing_ok=True)
+            print(f"  ✓ Saved via ONNX: {save_path}")
+            result = save_path
+        except Exception as e:
+            print(f"  Path C failed: {e}")
+            if onnx_path.exists():
+                onnx_path.unlink()
+            print("  See 09_AI_PITFALLS.md §8 for RoPE conversion workarounds.")
+
+    export_vocab(tokenizer, OUTPUT_DIR / "vocab_nomic.txt")
     return result
 
 
@@ -210,6 +375,11 @@ def convert_emotion_classifier():
         save_path=save_path,
     )
 
+    # Emotion classifier was already converted on Windows — reuse it if conversion failed
+    if result is None and save_path.exists():
+        print(f"  ✓ Existing GJournalEmotionClassifier.mlpackage retained (converted on Windows)")
+        result = save_path
+
     # Save label ordering so Swift can map index → Emotion
     cfg_path = src / "config.json"
     if cfg_path.exists():
@@ -241,12 +411,12 @@ if __name__ == "__main__":
     print(f"Output directory: {OUTPUT_DIR.resolve()}")
 
     results = {}
-    results["mobilebert"] = convert_embedding(
-        Path("models/mobilebert-stsb"), "MiniLM-L6 (SLOT 1)", "GJournalEmbeddingMobileBERT",
+    # Try new name first, fall back to legacy name from Windows training run
+    minilm_dir = Path("models/minilm-stsb") if Path("models/minilm-stsb").exists() else Path("models/mobilebert-stsb")
+    results["minilm"] = convert_embedding(
+        minilm_dir, "all-MiniLM-L6-v2 (mean pooling)", "GJournalEmbeddingMiniLM",
     )
-    results["distilbert"] = convert_embedding(
-        Path("models/distilbert-stsb"), "BGE-small (SLOT 2)", "GJournalEmbeddingDistilBERT",
-    )
+    results["nomic"] = convert_nomic()
     results["emotion"] = convert_emotion_classifier()
 
     report_sizes()
@@ -255,6 +425,8 @@ if __name__ == "__main__":
     print("Summary:")
     for name, path in results.items():
         status = f"✓ {path}" if path else "✗ failed — see 09_AI_PITFALLS.md §8"
-        print(f"  {name:<15s}: {status}")
+        print(f"  {name:<10s}: {status}")
 
     print("\nNext: copy *.mlpackage + vocab_*.txt + emotion_labels.json into the Xcode bundle.")
+    print("Note: GJournalEmbeddingNomic exports full 768-dim last_hidden_state.")
+    print("      MRL truncation (e.g. 256-dim) is applied in NomicEmbeddingService.swift.")

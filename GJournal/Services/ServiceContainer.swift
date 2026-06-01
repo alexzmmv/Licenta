@@ -9,13 +9,6 @@
 import Foundation
 import Combine
 
-/// Central DI container for all AI and processing services.
-///
-/// Usage:
-/// ```swift
-/// let services = ServiceContainer.makeMock()
-/// let manager = AIProcessingManager(services: services)
-/// ```
 final class ServiceContainer: ObservableObject {
     let embeddingService: EmbeddingServiceProtocol
     let emotionService: EmotionDetectionServiceProtocol
@@ -34,47 +27,54 @@ final class ServiceContainer: ObservableObject {
         self.safetyFilter = safetyFilter
     }
 
-    /// Create a container with mock services for development and testing.
     static func makeMock() -> ServiceContainer {
-        return ServiceContainer(
+        ServiceContainer(
             embeddingService: MockEmbeddingService(),
             emotionService: MockEmotionDetectionService(),
             clusteringService: MockClusteringService(),
-            safetyFilter: SafetyFilter()  // Safety filter is real (keyword-based)
+            safetyFilter: SafetyFilter()
         )
     }
 
-    /// Create a container wired to real Core ML services.
-    /// Automatically picks the best available embedding model:
-    ///   MobileBERT (primary) → DistilBERT (backup A) → NLEmbedding (backup C)
-    /// Falls back to MockEmotionDetectionService if the classifier .mlpackage is missing.
     static func makeProduction() -> ServiceContainer {
-        let embeddingService: EmbeddingServiceProtocol = {
-            // SLOT 1: all-MiniLM-L6-v2 — mean pooling (primary)
-            if Bundle.main.url(forResource: "GJournalEmbeddingMobileBERT", withExtension: "mlpackage") != nil {
-                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingMobileBERT", poolingMode: .mean)
-            // SLOT 2: BAAI/bge-small-en-v1.5 — CLS pooling (backup)
-            } else if Bundle.main.url(forResource: "GJournalEmbeddingDistilBERT", withExtension: "mlpackage") != nil {
-                return CoreMLEmbeddingService(modelName: "GJournalEmbeddingDistilBERT", poolingMode: .cls)
-            } else {
-                print("[ServiceContainer] No embedding .mlpackage found — using NLEmbedding fallback")
-                return NLEmbeddingService()
-            }
-        }()
+        makeProduction(
+            embeddingModel: EmbeddingModelChoice.current,
+            clusteringStrategy: ClusteringStrategyChoice.current
+        )
+    }
 
-        let emotionService: EmotionDetectionServiceProtocol = {
-            if Bundle.main.url(forResource: "GJournalEmotionClassifier", withExtension: "mlpackage") != nil {
-                return CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
-            } else {
-                print("[ServiceContainer] No emotion .mlpackage found — using MockEmotionDetectionService")
-                return MockEmotionDetectionService()
-            }
-        }()
+    static func makeProduction(
+        embeddingModel: EmbeddingModelChoice,
+        clusteringStrategy: ClusteringStrategyChoice
+    ) -> ServiceContainer {
+        let embeddingService: EmbeddingServiceProtocol
+        let embeddingDim: Int
+
+        switch embeddingModel {
+        case .miniLM:
+            embeddingService = CoreMLEmbeddingService(modelName: "GJournalEmbeddingMiniLM", poolingMode: .mean)
+            embeddingDim = 384
+
+        case .nomicMRL:
+            embeddingService = NomicEmbeddingService(truncateDim: 256)
+            embeddingDim = 256
+
+        case .appleNLP:
+            embeddingService = NLEmbeddingService()
+            embeddingDim = 512
+        }
+
+        let clusteringService = DBSCANClusterer(
+            epsilon: 0.3,
+            minPoints: 3,
+            embeddingDim: embeddingDim,
+            strategy: clusteringStrategy
+        )
 
         return ServiceContainer(
             embeddingService: embeddingService,
-            emotionService: emotionService,
-            clusteringService: DBSCANClusterer(epsilon: 0.3, minPoints: 3),
+            emotionService: CoreMLEmotionService(modelName: "GJournalEmotionClassifier"),
+            clusteringService: clusteringService,
             safetyFilter: SafetyFilter()
         )
     }

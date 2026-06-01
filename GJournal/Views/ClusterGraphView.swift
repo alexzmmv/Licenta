@@ -35,6 +35,7 @@ struct GraphEdge: Identifiable {
     let sourceID: UUID
     let targetID: UUID
     let clusterID: Int
+    var similarity: Float = 1.0
 }
 
 // MARK: - Force-Directed Layout Engine
@@ -47,7 +48,7 @@ class ForceDirectedLayout: ObservableObject {
     @Published var clusterNames: [Int: String] = [:]
     @Published var isSimulating = false
 
-    func buildGraph(from bits: [Bit], in size: CGSize) {
+    func buildGraph(from bits: [Bit], in size: CGSize, similarityEdges: Bool = false) {
         guard !bits.isEmpty else {
             nodes = []; edges = []; clusterNames = [:]
             return
@@ -112,10 +113,34 @@ class ForceDirectedLayout: ObservableObject {
                 newClusterNames[clusterID] = ClusterNamer.generateName(for: clusterBits, fallbackID: clusterID)
             }
 
-            if clusterNodes.count > 1 {
-                let hub = clusterNodes[0]
-                for i in 1..<clusterNodes.count {
-                    newEdges.append(GraphEdge(sourceID: hub.id, targetID: clusterNodes[i].id, clusterID: clusterID))
+            if similarityEdges {
+                // All-pairs edges weighted by cosine similarity — only above threshold
+                let threshold: Float = 0.65
+                for i in 0..<clusterNodes.count {
+                    for j in (i + 1)..<clusterNodes.count {
+                        let bitA = bits.first { $0.id == clusterNodes[i].id }
+                        let bitB = bits.first { $0.id == clusterNodes[j].id }
+                        if let nA = SemanticUtils.normalised(bitA?.embedding),
+                           let nB = SemanticUtils.normalised(bitB?.embedding) {
+                            let sim = SemanticUtils.cosineSimilarity(nA, nB)
+                            if sim >= threshold {
+                                newEdges.append(GraphEdge(
+                                    sourceID: clusterNodes[i].id,
+                                    targetID: clusterNodes[j].id,
+                                    clusterID: clusterID,
+                                    similarity: sim
+                                ))
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Hub-spoke for the full graph (no embedding lookups needed)
+                if clusterNodes.count > 1 {
+                    let hub = clusterNodes[0]
+                    for i in 1..<clusterNodes.count {
+                        newEdges.append(GraphEdge(sourceID: hub.id, targetID: clusterNodes[i].id, clusterID: clusterID))
+                    }
                 }
             }
         }
@@ -242,6 +267,7 @@ class ForceDirectedLayout: ObservableObject {
 
 struct ClusterGraphView: View {
     @ObservedObject var repository: BaseJournalRepository
+    var filterClusterID: Int? = nil
     @StateObject private var layout = ForceDirectedLayout()
 
     @Environment(\.modelContext) private var modelContext
@@ -295,7 +321,8 @@ struct ClusterGraphView: View {
                         var path = Path()
                         path.move(to: src.position)
                         path.addLine(to: dst.position)
-                        context.stroke(path, with: .color(colorForCluster(edge.clusterID).opacity(0.3)), lineWidth: 1)
+                        let edgeOpacity = Double(max(0.2, min(0.9, edge.similarity))) * 0.6
+                        context.stroke(path, with: .color(colorForCluster(edge.clusterID).opacity(edgeOpacity)), lineWidth: 1)
                     }
 
                     // Nodes
@@ -362,7 +389,8 @@ struct ClusterGraphView: View {
                 )
                 .onAppear {
                     graphSize = geometry.size
-                    layout.buildGraph(from: repository.bits, in: geometry.size)
+                    let bits = filterClusterID.map { id in repository.bits.filter { $0.clusterID == id } } ?? repository.bits
+                    layout.buildGraph(from: bits, in: geometry.size, similarityEdges: filterClusterID != nil)
                     withAnimation(.easeOut(duration: 0.6)) { isLoading = false }
                 }
             }
@@ -375,7 +403,7 @@ struct ClusterGraphView: View {
                     nodeDetailCard(node)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                legendView
+                if filterClusterID == nil { legendView }
             }
             .opacity(isLoading ? 0 : 1)
 
@@ -407,7 +435,8 @@ struct ClusterGraphView: View {
         }
         .onChange(of: repository.bits) {
             guard !graphSize.width.isZero else { return }
-            layout.buildGraph(from: repository.bits, in: graphSize)
+            let bits = filterClusterID.map { id in repository.bits.filter { $0.clusterID == id } } ?? repository.bits
+            layout.buildGraph(from: bits, in: graphSize, similarityEdges: filterClusterID != nil)
         }
         .onChange(of: layout.isSimulating) { _, isNowSimulating in
             guard !isNowSimulating else { return }
@@ -456,15 +485,19 @@ struct ClusterGraphView: View {
             Spacer()
 
             VStack(spacing: 2) {
-                Text("Knowledge Graph").font(.title3).fontWeight(.bold).foregroundColor(.white)
-                Text("\(layout.nodes.count) entries • \(clusterCount) clusters")
+                Text(filterClusterID.flatMap { layout.clusterNames[$0] } ?? "Knowledge Graph")
+                    .font(.title3).fontWeight(.bold).foregroundColor(.white)
+                Text(filterClusterID != nil
+                     ? "\(layout.nodes.count) entries"
+                     : "\(layout.nodes.count) entries • \(clusterCount) clusters")
                     .font(.caption).foregroundColor(.gray)
             }
 
             Spacer()
 
             Button {
-                withAnimation { layout.buildGraph(from: repository.bits, in: graphSize) }
+                let bits = filterClusterID.map { id in repository.bits.filter { $0.clusterID == id } } ?? repository.bits
+                withAnimation { layout.buildGraph(from: bits, in: graphSize, similarityEdges: filterClusterID != nil) }
             } label: {
                 Image(systemName: "arrow.clockwise")
                     .font(.title3).foregroundColor(.white)

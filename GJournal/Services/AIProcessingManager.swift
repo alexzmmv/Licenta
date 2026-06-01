@@ -40,6 +40,12 @@ final class AIProcessingManager: ObservableObject {
     // Epsilon recalibration — recalculate every 10 new processed entries
     private var entriesSinceLastCalibration = 0
     private let calibrationInterval = 10
+    // Persisted calibrated epsilon — reused across non-calibration runs to avoid
+    // falling back to the hardcoded ε=0.3 that produces excessive noise
+    private var lastCalibratedEpsilon: Double?
+
+    // Debounce clustering — cancel pending run and restart timer on each new entry
+    private var pendingClusterTask: Task<Void, Never>?
 
     init(services: ServiceContainer) {
         self.services = services
@@ -116,16 +122,33 @@ final class AIProcessingManager: ObservableObject {
             }
         }
 
-        // Step 6: Trigger re-clustering; recalibrate epsilon every 10 entries
-        await MainActor.run { self.entriesSinceLastCalibration += 1 }
-        try await runClustering()
+        // Step 6: Schedule re-clustering — debounced so it fires once after all in-flight entries finish
+        await MainActor.run {
+            self.entriesSinceLastCalibration += 1
+            self.scheduleReclustering()
+        }
+    }
+
+    private func scheduleReclustering() {
+        pendingClusterTask?.cancel()
+        pendingClusterTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(3))
+            } catch {
+                return // cancelled — a newer entry is still processing
+            }
+            guard let self else { return }
+            try? await self.runClustering()
+        }
     }
 
     // MARK: - Batch Clustering
 
     /// Run DBSCAN clustering on all entries that have embeddings.
     /// Called after processing a new entry or as a periodic batch job.
-    func runClustering() async throws {
+    /// - Parameter forceRecalibrate: When true, always recalculate epsilon from the current embeddings.
+    ///   Use after switching embedding models or when manually reclustering.
+    func runClustering(forceRecalibrate: Bool = false) async throws {
         guard let modelContext = modelContext else {
             print("[AIProcessingManager] ModelContext not configured for clustering")
             return
@@ -169,23 +192,37 @@ final class AIProcessingManager: ObservableObject {
 
         print("[AIProcessingManager] Step 6 — Clustering \(clusterableEntries.count) entries...")
 
-        // Recalibrate epsilon every calibrationInterval new entries
-        let shouldCalibrate = await MainActor.run {
+        // Recalibrate epsilon if forced or after calibrationInterval new entries.
+        // Read both flags and the cached epsilon atomically on the MainActor.
+        let (shouldCalibrate, storedEpsilon): (Bool, Double?) = await MainActor.run {
+            var needsCalibration = forceRecalibrate
             if self.entriesSinceLastCalibration >= self.calibrationInterval {
                 self.entriesSinceLastCalibration = 0
-                return true
+                needsCalibration = true
             }
-            return false
+            return (needsCalibration, self.lastCalibratedEpsilon)
         }
 
-        var clusterer = services.clusteringService as? DBSCANClusterer
-        if shouldCalibrate, let c = clusterer {
+        let activeClusterer: ClusteringServiceProtocol
+        if shouldCalibrate, let dbscan = services.clusteringService as? DBSCANClusterer {
             let embeddings = clusterableEntries.map { $0.embedding }
-            let newEpsilon = DBSCANClusterer.estimateEpsilon(from: embeddings, minPoints: c.minPoints)
-            clusterer = DBSCANClusterer(epsilon: newEpsilon, minPoints: c.minPoints)
-            print("[AIProcessingManager] Recalibrated epsilon → \(String(format: "%.3f", newEpsilon))")
+            let n = embeddings.count
+            let minPts = DBSCANClusterer.adaptiveMinPoints(for: n)
+            let target = DBSCANClusterer.targetClusterRange(for: n)
+            let newEpsilon = DBSCANClusterer.calibrateEpsilon(
+                from: embeddings, minPoints: minPts, targetRange: target
+            )
+            await MainActor.run { self.lastCalibratedEpsilon = newEpsilon }
+            activeClusterer = DBSCANClusterer(epsilon: newEpsilon, minPoints: minPts)
+            print("[AIProcessingManager] Recalibrated ε=\(String(format: "%.3f", newEpsilon)) minPts=\(minPts) target=\(target.lowerBound)–\(target.upperBound) for N=\(n)")
+        } else if let epsilon = storedEpsilon, let dbscan = services.clusteringService as? DBSCANClusterer {
+            // Reuse the last empirically derived epsilon instead of falling back to the
+            // hardcoded 0.3 (or the mrlAdapted scaling), which produces excessive noise
+            let minPts = DBSCANClusterer.adaptiveMinPoints(for: clusterableEntries.count)
+            activeClusterer = DBSCANClusterer(epsilon: epsilon, minPoints: minPts)
+        } else {
+            activeClusterer = services.clusteringService
         }
-        let activeClusterer = clusterer ?? services.clusteringService
 
         // Run DBSCAN off-actor
         let assignments = try await activeClusterer.clusterEntries(clusterableEntries)
@@ -219,10 +256,10 @@ final class AIProcessingManager: ObservableObject {
                     } else {
                         // Real Cluster: Find or Create
                         let cluster: Cluster
-                        if let existing = existingClusters.first(where: { $0.id == clusterID }) {
+                        if let existing = existingClusters.first(where: { $0.index == clusterID }) {
                             cluster = existing
                         } else {
-                            cluster = Cluster(id: clusterID, name: "Cluster \(clusterID)")
+                            cluster = Cluster(index: clusterID, name: "Cluster \(clusterID)")
                             modelContext.insert(cluster)
                         }
                         
@@ -236,6 +273,12 @@ final class AIProcessingManager: ObservableObject {
                     }
                 }
                 
+                // Remove Cluster objects from previous runs that no longer exist
+                let activeClusterIDs = Set(groupedAssignments.keys.filter { $0 != -1 })
+                for cluster in existingClusters where !activeClusterIDs.contains(cluster.index) {
+                    modelContext.delete(cluster)
+                }
+
                 try modelContext.save()
                 let clusterCount = Set(assignments.map { $0.clusterID }).filter { $0 != -1 }.count
                 let noiseCount = assignments.filter { $0.isNoise }.count

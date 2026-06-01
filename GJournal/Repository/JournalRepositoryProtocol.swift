@@ -29,9 +29,6 @@ protocol JournalRepositoryProtocol: ObservableObject {
         feel: String,
         event: String,
         action: String,
-        feelEmotion: Emotion,
-        eventEmotion: Emotion,
-        actionEmotion: Emotion,
         intensity: Int
     )
 
@@ -41,9 +38,6 @@ protocol JournalRepositoryProtocol: ObservableObject {
         feel: String,
         event: String,
         action: String,
-        feelEmotion: Emotion,
-        eventEmotion: Emotion,
-        actionEmotion: Emotion,
         intensity: Int
     )
 

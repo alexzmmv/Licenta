@@ -192,14 +192,12 @@ struct AddEditBitView: View {
             repository.updateBit(
                 id: bit.id, title: titleToSave,
                 feel: feel, event: event, action: action,
-                feelEmotion: .joy, eventEmotion: .joy, actionEmotion: .joy,
                 intensity: Int(intensity)
             )
         } else {
             repository.createBit(
                 title: titleToSave,
                 feel: feel, event: event, action: action,
-                feelEmotion: .joy, eventEmotion: .joy, actionEmotion: .joy,
                 intensity: Int(intensity)
             )
         }

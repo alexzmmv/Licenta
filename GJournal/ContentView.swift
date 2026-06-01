@@ -250,7 +250,7 @@ struct ContentView: View {
                 AddEditBitView(repository: repository, bitToEdit: nil, date: Date())
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView()
+                SettingsView(repository: repository)
             }
             .sheet(item: $bitToEdit) { bit in
                 AddEditBitView(repository: repository, bitToEdit: bit, date: bit.createdAt)

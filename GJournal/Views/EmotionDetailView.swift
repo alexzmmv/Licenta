@@ -14,7 +14,7 @@ struct EmotionDetailView: View {
         let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         self.bits = repository.bits.filter { bit in
             // Check if the emotion appears in any of the emotion fields
-            (bit.feelEmotion == emotion || bit.eventEmotion == emotion || bit.actionEmotion == emotion) &&
+            bit.emotion == emotion &&
             bit.createdAt >= thirtyDaysAgo &&
             !bit.isHidden
         }

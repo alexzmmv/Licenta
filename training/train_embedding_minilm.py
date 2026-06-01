@@ -33,7 +33,7 @@ print(f"Model: {BASE_MODEL}")
 print(f"Output: {OUTPUT_DIR}")
 
 print("\nLoading STS-B dataset...")
-stsb = hf_datasets.load_dataset("glue", "stsb", cache_dir="./hf_cache")
+stsb = hf_datasets.load_dataset("nyu-mll/glue", "stsb", cache_dir="./hf_cache")
 print(f"Val: {len(stsb['validation'])} pairs")
 
 print(f"\nDownloading {BASE_MODEL}...")

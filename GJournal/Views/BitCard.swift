@@ -70,34 +70,14 @@ struct BitCard: View {
 
                 // Micro-journaling sections: Feel, Event, Action
                 VStack(alignment: .leading, spacing: 16) {
-                    // Feel section
                     if !bit.feel.isEmpty {
-                        MicroJournalSection(
-                            title: "Feel",
-                            text: bit.feel,
-                            emotion: bit.feelEmotion,
-                            isHidden: bit.isHidden
-                        )
+                        MicroJournalSection(title: "Feel", text: bit.feel, isHidden: bit.isHidden)
                     }
-
-                    // Event section
                     if !bit.event.isEmpty {
-                        MicroJournalSection(
-                            title: "Event",
-                            text: bit.event,
-                            emotion: bit.eventEmotion,
-                            isHidden: bit.isHidden
-                        )
+                        MicroJournalSection(title: "Event", text: bit.event, isHidden: bit.isHidden)
                     }
-
-                    // Action section
                     if !bit.action.isEmpty {
-                        MicroJournalSection(
-                            title: "Action",
-                            text: bit.action,
-                            emotion: bit.actionEmotion,
-                            isHidden: bit.isHidden
-                        )
+                        MicroJournalSection(title: "Action", text: bit.action, isHidden: bit.isHidden)
                     }
                 }
             }
@@ -152,93 +132,57 @@ struct BitCard: View {
 
 #Preview {
     VStack(spacing: 16) {
-        // Card with title
         BitCard(
             bit: Bit(
-                id: UUID(),
                 title: "Amazing Day at the Beach",
                 feel: "I felt so peaceful watching the waves",
                 event: "Went to the beach and watched a breathtaking sunset",
                 action: "I want to go back next weekend with friends",
-                feelEmotion: .joy,
-                eventEmotion: .surprise,
-                actionEmotion: .excitement,
                 intensity: 4,
-                lastModified: Date(),
-                isHidden: false
+                lastModified: Date()
             ),
-            canEdit: true,
-            onEdit: {},
-            onDelete: {},
-            onToggleHide: {}
+            canEdit: true, onEdit: {}, onDelete: {}, onToggleHide: {}
         )
-
-        // Card without title
         BitCard(
             bit: Bit(
-                id: UUID(),
-                title: nil,
                 feel: "Grateful for all the love around me",
                 event: "Had dinner with family",
                 action: "Plan to call my grandmother this week",
-                feelEmotion: .gratitude,
-                eventEmotion: .joy,
-                actionEmotion: .love,
                 intensity: 3,
-                lastModified: Date(),
-                isHidden: false
+                lastModified: Date()
             ),
-            canEdit: true,
-            onEdit: {},
-            onDelete: {},
-            onToggleHide: {}
+            canEdit: true, onEdit: {}, onDelete: {}, onToggleHide: {}
         )
-
-        // Hidden card
         BitCard(
             bit: Bit(
-                id: UUID(),
                 title: "Tough Conversation",
                 feel: "Conflicted and sad about the situation",
                 event: "Had a difficult talk with a friend",
                 action: "Need to give them space and think",
-                feelEmotion: .sadness,
-                eventEmotion: .anxiety,
-                actionEmotion: .hope,
                 intensity: 2,
                 lastModified: Date(),
                 isHidden: true
             ),
-            canEdit: false,
-            onEdit: {},
-            onDelete: {},
-            onToggleHide: {}
+            canEdit: false, onEdit: {}, onDelete: {}, onToggleHide: {}
         )
     }
     .padding()
-    .background(Color(uiColor: .systemGroupedBackground))
+    .background(Color.black)
 }
 
 struct MicroJournalSection: View {
     let title: String
     let text: String
-    let emotion: Emotion
     let isHidden: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Emotion indicator
-            VStack(spacing: 4) {
-                Text(emotion.emoji)
-                    .font(.title2)
-                Text(title)
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundColor(.secondary)
-            }
-            .frame(width: 60)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+                .tracking(0.8)
 
-            // Content
             Text(text)
                 .font(.body)
                 .foregroundColor(isHidden ? .secondary : .primary)
@@ -250,10 +194,10 @@ struct MicroJournalSection: View {
         .padding(.horizontal, 12)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(emotion.color.opacity(0.12))
+                .fill(Color.white.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(emotion.color.opacity(0.25), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
     }
@@ -268,9 +212,26 @@ struct MicroJournalSection: View {
 import SwiftUI
 
 struct BitDetailView: View {
-    let bit: Bit
+    @State private var currentBit: Bit
     var clusterName: String?
     @Environment(\.dismiss) var dismiss
+
+    init(bit: Bit, clusterName: String? = nil) {
+        _currentBit = State(initialValue: bit)
+        self.clusterName = clusterName
+    }
+
+    private var clusterSpanLabel: String? {
+        guard let cluster = currentBit.cluster else { return nil }
+        let dates = cluster.bits.filter { !$0.isDeleted }.map { $0.createdAt }
+        guard let lo = dates.min(), let hi = dates.max() else { return nil }
+        let days = Calendar.current.dateComponents([.day], from: lo, to: hi).day ?? 0
+        guard days > 1 else { return nil }
+        if days < 30 { return "\(days) days" }
+        let months = Int(round(Double(days) / 30.0))
+        let f = DateFormatter(); f.dateFormat = "MMM yyyy"
+        return "\(f.string(from: lo)) – \(f.string(from: hi)) (\(months) months)"
+    }
 
     var body: some View {
         NavigationView {
@@ -278,7 +239,7 @@ struct BitDetailView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     // Header Section
                     VStack(alignment: .leading, spacing: 8) {
-                        if let title = bit.title, !title.isEmpty {
+                        if let title = currentBit.title, !title.isEmpty {
                             Text(title)
                                 .font(.title)
                                 .fontWeight(.bold)
@@ -286,16 +247,16 @@ struct BitDetailView: View {
                         }
 
                         HStack(spacing: 12) {
-                            Text(bit.feelEmotion.emoji)
+                            Text(currentBit.emotion.emoji)
                                 .font(.title2)
-                            
-                            Text(bit.feelEmotion.rawValue)
+
+                            Text(currentBit.emotion.rawValue)
                                 .font(.headline)
-                                .foregroundColor(bit.feelEmotion.color)
+                                .foregroundColor(currentBit.emotion.color)
 
                             Spacer()
 
-                            Text(formatDate(bit.createdAt))
+                            Text(formatDate(currentBit.createdAt))
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                         }
@@ -304,14 +265,14 @@ struct BitDetailView: View {
 
                     // Content Sections
                     VStack(alignment: .leading, spacing: 20) {
-                        detailSection(title: "How you felt", content: bit.feel)
-                        
-                        if !bit.event.isEmpty {
-                            detailSection(title: "What happened", content: bit.event)
+                        detailSection(title: "How you felt", content: currentBit.feel)
+
+                        if !currentBit.event.isEmpty {
+                            detailSection(title: "What happened", content: currentBit.event)
                         }
-                        
-                        if !bit.action.isEmpty {
-                            detailSection(title: "What you did", content: bit.action)
+
+                        if !currentBit.action.isEmpty {
+                            detailSection(title: "What you did", content: currentBit.action)
                         }
                     }
 
@@ -325,21 +286,55 @@ struct BitDetailView: View {
                             .font(.headline)
                             .foregroundColor(.white)
 
-                        metadataRow(title: "Intensity", value: String(repeating: "🔥", count: bit.intensity))
-                        
-                        if let clusterID = bit.clusterID, clusterID >= 0 {
+                        metadataRow(title: "Intensity", value: String(repeating: "🔥", count: currentBit.intensity))
+
+                        if let clusterID = currentBit.clusterID, clusterID >= 0 {
                             if let name = clusterName {
                                 metadataRow(title: "Cluster", value: name)
                             } else {
                                 metadataRow(title: "Cluster", value: "Cluster \(clusterID)")
                             }
                         }
-                        
-                        metadataRow(title: "Last Modified", value: formatDateTime(bit.lastModified))
+
+                        if let spanLabel = clusterSpanLabel {
+                            metadataRow(title: "Cluster span", value: spanLabel)
+                        }
+
+                        metadataRow(title: "Last Modified", value: formatDateTime(currentBit.lastModified))
                     }
                     .padding(.top, 8)
+
+                    // Connected Moments Section
+                    let connected = SemanticUtils.relatedBits(
+                        to: currentBit,
+                        in: currentBit.cluster?.bits.filter { !$0.isDeleted && $0.id != currentBit.id } ?? []
+                    )
+                    if !connected.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Divider()
+                                .background(Color.gray.opacity(0.3))
+                                .padding(.vertical, 8)
+
+                            Text("Connected moments")
+                                .font(.headline)
+                                .foregroundColor(.white)
+
+                            ForEach(connected, id: \.bit.id) { item in
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        currentBit = item.bit
+                                    }
+                                } label: {
+                                    ConnectedMomentRow(bit: item.bit, similarity: item.similarity)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
                 }
                 .padding(20)
+                .id(currentBit.id)
             }
             .background(Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
@@ -398,5 +393,58 @@ struct BitDetailView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - Connected Moment Row
+
+struct ConnectedMomentRow: View {
+    let bit: Bit
+    let similarity: Float
+
+    private var dateLabel: String {
+        let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"
+        return f.string(from: bit.createdAt)
+    }
+
+    private var similarityDots: Int {
+        switch similarity {
+        case 0.85...: return 3
+        case 0.72...: return 2
+        default:      return 1
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(bit.emotion.emoji).font(.title3)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(bit.feel.isEmpty ? bit.event : bit.feel)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                Text(dateLabel)
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+
+            Spacer()
+
+            HStack(spacing: 3) {
+                ForEach(1...3, id: \.self) { i in
+                    Circle()
+                        .fill(i <= similarityDots ? bit.emotion.color : Color.white.opacity(0.12))
+                        .frame(width: 6, height: 6)
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundColor(.gray)
+        }
+        .padding(12)
+        .background(Color(red: 0.10, green: 0.10, blue: 0.12))
+        .cornerRadius(10)
     }
 }

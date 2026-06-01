@@ -48,11 +48,11 @@ open class BaseJournalRepository: ObservableObject {
 
     // MARK: - CRUD operations (override in subclasses)
 
-    func createBit(title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
+    func createBit(title: String?, feel: String, event: String, action: String, intensity: Int) {
         // Override in subclass
     }
 
-    func updateBit(id: UUID, title: String?, feel: String, event: String, action: String, feelEmotion: Emotion, eventEmotion: Emotion, actionEmotion: Emotion, intensity: Int) {
+    func updateBit(id: UUID, title: String?, feel: String, event: String, action: String, intensity: Int) {
         // Override in subclass
     }
 
@@ -106,18 +106,13 @@ open class BaseJournalRepository: ObservableObject {
 
         for bit in recentBits {
             let day = calendar.startOfDay(for: bit.createdAt)
-
-            // Count each emotion type (feel, event, action) separately
-            let emotions = [bit.feelEmotion, bit.eventEmotion, bit.actionEmotion]
-
-            for emotion in emotions {
-                if var data = emotionData[emotion] {
-                    data.dates.insert(day)
-                    data.totalIntensity += bit.intensity
-                    emotionData[emotion] = data
-                } else {
-                    emotionData[emotion] = (dates: [day], totalIntensity: bit.intensity)
-                }
+            let emotion = bit.emotion
+            if var data = emotionData[emotion] {
+                data.dates.insert(day)
+                data.totalIntensity += bit.intensity
+                emotionData[emotion] = data
+            } else {
+                emotionData[emotion] = (dates: [day], totalIntensity: bit.intensity)
             }
         }
 
@@ -165,13 +160,8 @@ open class BaseJournalRepository: ObservableObject {
             }
         }
 
-        // Emotion filter — match if any of the three emotion fields matches
         if let emotions = emotions, !emotions.isEmpty {
-            results = results.filter { bit in
-                emotions.contains(bit.feelEmotion) ||
-                emotions.contains(bit.eventEmotion) ||
-                emotions.contains(bit.actionEmotion)
-            }
+            results = results.filter { emotions.contains($0.emotion) }
         }
 
         // Date range filter

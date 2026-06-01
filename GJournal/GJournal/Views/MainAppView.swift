@@ -10,7 +10,6 @@ import SwiftUI
 struct MainAppView: View {
     @EnvironmentObject var authManager: AuthManager
 
-    /// Repository with AI processing manager — single production ServiceContainer instance
     @StateObject private var repository: LocalJournalRepository = {
         let repo = LocalJournalRepository()
         let services = ServiceContainer.makeProduction()
@@ -21,5 +20,24 @@ struct MainAppView: View {
     var body: some View {
         ContentView(repository: repository)
             .environmentObject(authManager)
+            .onReceive(NotificationCenter.default.publisher(for: .embeddingModelDidChange)) { _ in
+                rebuildServices()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .clusteringStrategyDidChange)) { _ in
+                rebuildServices()
+            }
+    }
+
+    private func rebuildServices() {
+        let services = ServiceContainer.makeProduction()
+        let manager = AIProcessingManager(services: services)
+        if let ctx = repository.modelContext {
+            manager.configure(with: ctx)
+        }
+        manager.onClusteringComplete = { [weak repository] in
+            DispatchQueue.main.async { repository?.loadBitsFromContext() }
+        }
+        repository.aiProcessingManager = manager
+        print("[MainAppView] Services rebuilt — \(EmbeddingModelChoice.current.displayName) + \(ClusteringStrategyChoice.current.displayName)")
     }
 }

@@ -54,7 +54,7 @@ struct ClusterNamer {
         }
         
         // If NLP fails to find a good noun, fall back to the most common emotion
-        let emotionCounts = Dictionary(grouping: bits, by: { $0.feelEmotion }).mapValues { $0.count }
+        let emotionCounts = Dictionary(grouping: bits, by: { $0.emotion }).mapValues { $0.count }
         if let topEmotion = emotionCounts.max(by: { $0.value < $1.value })?.key {
             return "\(topEmotion.emoji) \(topEmotion.rawValue)"
         }

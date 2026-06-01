@@ -52,11 +52,11 @@ final class WordPieceTokenizer {
         var tokenIDs: [Int] = [clsID]
 
         let lowercased = text.lowercased()
-        let words = lowercased.components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
+        // Basic tokenization: split on whitespace and punctuation
+        let tokens = basicTokenize(lowercased)
 
-        for word in words {
-            let wordTokens = wordPieceTokenize(word)
+        for token in tokens {
+            let wordTokens = wordPieceTokenize(token)
             let remaining = Self.maxLength - 2 - tokenIDs.count + 1  // -2 for CLS+SEP
             if remaining <= 0 { break }
             tokenIDs.append(contentsOf: wordTokens.prefix(remaining))
@@ -80,11 +80,50 @@ final class WordPieceTokenizer {
         )
     }
 
+    // MARK: - Basic tokenization
+    
+    private func basicTokenize(_ text: String) -> [String] {
+        var tokens: [String] = []
+        var current = ""
+        
+        for char in text {
+            if isWhitespace(char) {
+                if !current.isEmpty {
+                    tokens.append(current)
+                    current = ""
+                }
+            } else if isPunctuation(char) {
+                if !current.isEmpty {
+                    tokens.append(current)
+                    current = ""
+                }
+                tokens.append(String(char))
+            } else {
+                current.append(char)
+            }
+        }
+        
+        if !current.isEmpty {
+            tokens.append(current)
+        }
+        
+        return tokens
+    }
+    
+    private func isWhitespace(_ char: Character) -> Bool {
+        char.isWhitespace
+    }
+    
+    private func isPunctuation(_ char: Character) -> Bool {
+        // BERT considers these as punctuation boundaries:
+        // ASCII: !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+        let punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+        return punctuation.contains(char)
+    }
+
     // MARK: - WordPiece core
 
     private func wordPieceTokenize(_ word: String) -> [Int] {
-        // Strip leading/trailing punctuation into separate tokens
-        var chars = Array(word)
         var result: [Int] = []
         var remaining = word
 
@@ -108,9 +147,10 @@ final class WordPieceTokenizer {
                 result.append(vocab[match]!)
                 remaining = String(remaining.dropFirst(longestLen))
             } else {
-                // Whole word unknown — emit [UNK] and move on
+                // No match found — emit [UNK] for single character and continue
+                // (this handles truly unknown characters that aren't in vocab)
                 result.append(unkID)
-                break
+                remaining = String(remaining.dropFirst(1))
             }
         }
 

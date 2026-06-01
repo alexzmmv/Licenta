@@ -1,1 +1,63 @@
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+.build/
+xcuserdata/
+*.xcarchive
+.swiftpm/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+
+# Caches and large files
+hf_cache/
+OptimizationProfiles/
+.cache/
+training/checkpoints/
+training/coreml_models/
+training/models/
+training/results/
+training/backup/
+training/out.txt
+GJournal/MLModels/*.mlpackage/
+GJournal/MLModels/hf_cache/
+
+# Copilot / IDE configuration
+.claude/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Environment variables
+.env
+.env.local

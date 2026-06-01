@@ -12,29 +12,23 @@
 import Foundation
 import Accelerate
 
-/// DBSCAN clustering algorithm for grouping journal entries by semantic similarity.
-///
-/// Parameters:
-/// - `epsilon`: Maximum distance threshold for two points to be neighbors (0.0–2.0 for cosine distance)
-/// - `minPoints`: Minimum number of points required to form a dense region (cluster)
-///
-/// The algorithm:
-/// 1. For each unvisited point, find its neighbors within epsilon distance
-/// 2. If neighbors >= minPoints, start a new cluster and expand it
-/// 3. Points not reachable from any cluster are marked as noise (clusterID = -1)
 final class DBSCANClusterer: ClusteringServiceProtocol {
 
-    /// Maximum cosine distance for two points to be considered neighbors.
-    /// Lower values = tighter clusters. Default 0.3 works well for normalized embeddings.
     let epsilon: Double
-
-    /// Minimum number of points to form a cluster.
-    /// Default 3 per documentation §3.9.
     let minPoints: Int
+    private let effectiveEpsilon: Double
 
-    init(epsilon: Double = 0.3, minPoints: Int = 3) {
+    init(epsilon: Double = 0.3, minPoints: Int = 3, embeddingDim: Int = 384,
+         strategy: ClusteringStrategyChoice = .classic) {
         self.epsilon = epsilon
         self.minPoints = minPoints
+        switch strategy {
+        case .classic:
+            self.effectiveEpsilon = epsilon
+        case .mrlAdapted:
+            // Cosine distances shrink as dimensionality decreases — scale epsilon accordingly.
+            self.effectiveEpsilon = epsilon * sqrt(Double(embeddingDim) / 768.0)
+        }
     }
 
     // MARK: - ClusteringServiceProtocol
@@ -58,7 +52,7 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
     /// Run DBSCAN on a set of embedding vectors.
     /// - Parameter points: Array of embedding vectors (each is [Float])
     /// - Returns: Array of cluster labels (-1 = noise, 0+ = cluster ID)
-    private func dbscan(points: [[Float]]) -> [Int] {
+    func dbscan(points: [[Float]]) -> [Int] {
         let n = points.count
         var labels = Array(repeating: -1, count: n) // -1 = unvisited/noise
         var visited = Array(repeating: false, count: n)
@@ -115,6 +109,21 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
 
     // MARK: - Adaptive Epsilon
 
+    /// minPoints appropriate for a dataset of `n` entries.
+    /// Formula: max(2, min(5, ⌊ln(n)⌋)) — the standard DBSCAN heuristic from the literature.
+    /// Grows logarithmically: N=10→2, N=40→3, N=60→4, N=150→5.
+    static func adaptiveMinPoints(for n: Int) -> Int {
+        max(2, min(5, Int(log(Double(max(2, n))))))
+    }
+
+    /// Target cluster count range for `n` entries.
+    /// Keeps the Clusters view useful: not too few (useless), not too many (overwhelming).
+    static func targetClusterRange(for n: Int) -> ClosedRange<Int> {
+        let lo = max(2, n / 12)
+        let hi = max(lo + 1, n / 5)
+        return lo...hi
+    }
+
     /// Estimate a good epsilon using the k-distance heuristic (90th percentile of k-NN distances).
     /// Call this periodically — recalibrate every 10 new entries (see AIProcessingManager).
     static func estimateEpsilon(from points: [[Float]], minPoints: Int) -> Double {
@@ -135,6 +144,56 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
         kDistances.sort()
         let idx = Int(Double(kDistances.count) * 0.9)
         return kDistances[min(idx, kDistances.count - 1)]
+    }
+
+    /// Binary-search epsilon to land cluster count inside `targetRange`.
+    /// Starts from the k-distance estimate and brackets with up to `maxIterations` DBSCAN runs.
+    /// Falls back to the k-distance estimate if the target is unreachable.
+    static func calibrateEpsilon(
+        from points: [[Float]],
+        minPoints: Int,
+        targetRange: ClosedRange<Int>,
+        maxIterations: Int = 8
+    ) -> Double {
+        let baseEpsilon = estimateEpsilon(from: points, minPoints: minPoints)
+        guard points.count >= minPoints else { return baseEpsilon }
+
+        let baseCount = clusterCount(points: points, epsilon: baseEpsilon, minPoints: minPoints)
+        if targetRange.contains(baseCount) { return baseEpsilon }
+
+        // Determine search direction:
+        // Too few clusters (or 1 giant cluster) → decrease epsilon to split things apart.
+        // Too many clusters (or all noise) → increase epsilon to merge neighbors.
+        var lo: Double = 0.05
+        var hi: Double = 0.95
+        var bestEpsilon = baseEpsilon
+
+        for _ in 0..<maxIterations {
+            let mid = (lo + hi) / 2
+            let count = clusterCount(points: points, epsilon: mid, minPoints: minPoints)
+            if targetRange.contains(count) {
+                return mid
+            }
+            if count == 0 {
+                // All noise — epsilon too small, no core points form
+                lo = mid
+            } else if count < targetRange.lowerBound {
+                // Too few clusters (1 giant cluster) — epsilon too large, tighten it
+                hi = mid
+            } else {
+                // Too many clusters — epsilon too small, loosen it
+                lo = mid
+            }
+            bestEpsilon = mid
+        }
+        return bestEpsilon
+    }
+
+    /// Run DBSCAN and return the number of non-noise clusters.
+    private static func clusterCount(points: [[Float]], epsilon: Double, minPoints: Int) -> Int {
+        let tmp = DBSCANClusterer(epsilon: epsilon, minPoints: minPoints)
+        let labels = tmp.dbscan(points: points)
+        return Set(labels.filter { $0 >= 0 }).count
     }
 
     /// Silhouette score for evaluating cluster quality (range −1…1; higher is better).
@@ -174,7 +233,7 @@ final class DBSCANClusterer: ClusteringServiceProtocol {
     private func regionQuery(index: Int, distances: [[Double]]) -> [Int] {
         let row = distances[index]
         var neighbors: [Int] = []
-        for j in 0..<row.count where j != index && row[j] <= epsilon {
+        for j in 0..<row.count where j != index && row[j] <= effectiveEpsilon {
             neighbors.append(j)
         }
         return neighbors

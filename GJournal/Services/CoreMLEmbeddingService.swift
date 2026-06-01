@@ -29,7 +29,7 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
     private func loadIfNeeded() throws {
         guard model == nil else { return }
 
-        guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlpackage") else {
+        guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlmodelc") else {
             throw AIServiceError.modelNotLoaded
         }
 
@@ -47,13 +47,13 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
 
     func generateEmbedding(for text: String) async throws -> [Float] {
         return try await Task.detached(priority: .utility) { [self] in
-            try self.loadIfNeeded()
-            guard let model = self.model, let tokenizer = self.tokenizer else {
+            try await self.loadIfNeeded()
+            guard let model = await self.model, let tokenizer = await self.tokenizer else {
                 throw AIServiceError.modelNotLoaded
             }
 
-            let tokens = tokenizer.tokenize(text)
-            let maxLen = WordPieceTokenizer.maxLength
+            let tokens = await tokenizer.tokenize(text)
+            let maxLen = await WordPieceTokenizer.maxLength
 
             let inputIDs      = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
             let attentionMask = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
@@ -68,7 +68,7 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
                 "attention_mask": MLFeatureValue(multiArray: attentionMask),
             ])
 
-            let output = try model.prediction(from: input)
+            let output = try await model.prediction(from: input)
 
             guard let hiddenState = output.featureValue(for: "last_hidden_state")?.multiArrayValue else {
                 throw AIServiceError.embeddingGenerationFailed
@@ -77,6 +77,10 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
             let embeddingDim = hiddenState.shape[2].intValue
             var embedding: [Float]
 
+            let strides = hiddenState.strides
+            let seqStride = strides[1].intValue
+            let dimStride = strides[2].intValue
+
             switch self.poolingMode {
             case .mean:
                 // Average over all real (non-padding) token positions
@@ -84,17 +88,17 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
                 var sum = [Double](repeating: 0, count: embeddingDim)
                 for pos in 0..<realLen {
                     for dim in 0..<embeddingDim {
-                        sum[dim] += hiddenState[pos * embeddingDim + dim].doubleValue
+                        sum[dim] += hiddenState[pos * seqStride + dim * dimStride].doubleValue
                     }
                 }
                 embedding = sum.map { Float($0 / Double(realLen)) }
 
             case .cls:
                 // Take the [CLS] token at position 0 — required for BGE contrastive models
-                embedding = (0..<embeddingDim).map { Float(hiddenState[$0].doubleValue) }
+                embedding = (0..<embeddingDim).map { Float(hiddenState[$0 * dimStride].doubleValue) }
             }
 
-            return CoreMLEmbeddingService.l2Normalize(embedding)
+            return await CoreMLEmbeddingService.l2Normalize(embedding)
         }.value
     }
 

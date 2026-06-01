@@ -28,7 +28,7 @@ final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
     private func loadIfNeeded() throws {
         guard model == nil else { return }
 
-        guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlpackage") else {
+        guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlmodelc") else {
             throw AIServiceError.modelNotLoaded
         }
 
@@ -45,13 +45,13 @@ final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
 
     func detectEmotions(for text: String) async throws -> [EmotionProbability] {
         return try await Task.detached(priority: .utility) { [self] in
-            try self.loadIfNeeded()
-            guard let model = self.model, let tokenizer = self.tokenizer else {
+            try await self.loadIfNeeded()
+            guard let model = await self.model, let tokenizer = await self.tokenizer else {
                 throw AIServiceError.modelNotLoaded
             }
 
-            let tokens = tokenizer.tokenize(text)
-            let maxLen = WordPieceTokenizer.maxLength
+            let tokens = await tokenizer.tokenize(text)
+            let maxLen = await WordPieceTokenizer.maxLength
 
             let inputIDs     = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
             let attentionMask = try MLMultiArray(shape: [1, NSNumber(value: maxLen)], dataType: .int32)
@@ -66,17 +66,17 @@ final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
                 "attention_mask": MLFeatureValue(multiArray: attentionMask),
             ])
 
-            let output = try model.prediction(from: input)
+            let output = try await model.prediction(from: input)
 
             guard let logitsArray = output.featureValue(for: "logits")?.multiArrayValue else {
                 throw AIServiceError.emotionDetectionFailed
             }
 
-            let numLabels = Self.targetLabels.count
-            var logits = (0..<numLabels).map { logitsArray[$0].doubleValue }
-            let probs = CoreMLEmotionService.softmax(logits)
+            let numLabels = await Self.targetLabels.count
+            let logits = (0..<numLabels).map { logitsArray[$0].doubleValue }
+            let probs = await CoreMLEmotionService.softmax(logits)
 
-            let results: [EmotionProbability] = Self.targetLabels.enumerated().map { idx, label in
+            let results: [EmotionProbability] = await Self.targetLabels.enumerated().map { idx, label in
                 EmotionProbability(emotion: label, probability: Float(probs[idx]))
             }
 

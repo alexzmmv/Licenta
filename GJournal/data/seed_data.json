@@ -1,0 +1,324 @@
+{
+  "entries": [
+    {
+      "title": "Midnight Deploy",
+      "feel": "I felt completely hollowed out, like the job had reached inside and turned off a switch.",
+      "event": "Pushed an emergency hotfix at 1am after a production incident that was partly my fault.",
+      "action": "Wrote an honest post-mortem and sent it before anyone asked. Then closed the laptop and refused to reopen it.",
+      "intensity": 4,
+      "daysAgo": 2
+    },
+    {
+      "title": "Invisible in the Standup",
+      "feel": "That specific tiredness of being talked over — not once, twice, three times.",
+      "event": "Raised the same architectural concern I raised two weeks ago. Same senior engineer interrupted me again before I could finish the sentence.",
+      "action": "Wrote it up in a Notion doc with evidence and sent it to my manager. Not sure she read it.",
+      "intensity": 3,
+      "daysAgo": 6
+    },
+    {
+      "title": "The Quarter Review",
+      "feel": "Pride mixed with something defensive — like I had to justify being good at my job.",
+      "event": "Performance review. Got 'meets expectations' despite shipping three major features solo.",
+      "action": "Scheduled a 1:1 to ask what 'exceeds' actually looks like. Determined to get a real answer this time.",
+      "intensity": 3,
+      "daysAgo": 14
+    },
+    {
+      "title": "Eight Hours of Flow",
+      "feel": "Rare and almost euphoric — the kind of focus you can't manufacture.",
+      "event": "Solved the concurrency bug that had been blocking the team for a week. Just me, a whiteboard, and enough coffee.",
+      "action": "Documented the root cause thoroughly. Felt good enough to leave at 5pm without guilt.",
+      "intensity": 4,
+      "daysAgo": 21
+    },
+    {
+      "title": "Deadline Again",
+      "feel": "Numb. I've stopped feeling the urgency and that worries me more than the urgency itself.",
+      "event": "Third sprint in a row where scope expanded on the last day. No one acknowledged it.",
+      "action": "Blocked two hours tomorrow morning — no Slack, no meetings — just to think about whether this is sustainable.",
+      "intensity": 4,
+      "daysAgo": 29
+    },
+    {
+      "title": "Shipped It",
+      "feel": "Quiet satisfaction, the kind that doesn't need an audience.",
+      "event": "Feature went live with zero bugs reported in the first 24 hours.",
+      "action": "Told no one at work. Went home and cooked a proper dinner for the first time in two weeks.",
+      "intensity": 3,
+      "daysAgo": 41
+    },
+    {
+      "title": "The Exit Interview Thought",
+      "feel": "Scared of how calm I felt imagining leaving.",
+      "event": "A recruiter reached out on LinkedIn. I didn't delete the message.",
+      "action": "Wrote out a list of what I'd need to stay. Kept it to myself for now.",
+      "intensity": 3,
+      "daysAgo": 57
+    },
+    {
+      "title": "First Run in the Rain",
+      "feel": "Uncomfortable at first then something opened up — like I was finally outside my own head.",
+      "event": "Set out at 6am despite the weather. Ran 5k. Didn't stop once.",
+      "action": "Left my shoes by the door so I'd have no excuse tomorrow.",
+      "intensity": 3,
+      "daysAgo": 3
+    },
+    {
+      "title": "The Wall",
+      "feel": "My legs felt like wet concrete and I genuinely hated every person I saw enjoying themselves.",
+      "event": "Attempted a 10k. Hit the wall at 7km. Walked the rest.",
+      "action": "Ate a banana, looked up what hitting the wall actually means physiologically. Felt better once I understood it.",
+      "intensity": 2,
+      "daysAgo": 10
+    },
+    {
+      "title": "Yoga Breakthrough",
+      "feel": "Something physical released in my chest that I didn't know was held.",
+      "event": "Pigeon pose. I've been avoiding it for months. Today I stayed in it for two minutes.",
+      "action": "Booked three more yoga classes for this month.",
+      "intensity": 3,
+      "daysAgo": 18
+    },
+    {
+      "title": "Knee Scare",
+      "feel": "That specific fear of the body betraying you before you've finished with it.",
+      "event": "Sharp pain in my left knee mid-run. Stopped immediately.",
+      "action": "Iced it, booked a physio appointment. Resisted the urge to self-diagnose on Reddit.",
+      "intensity": 3,
+      "daysAgo": 31
+    },
+    {
+      "title": "Personal Best",
+      "feel": "Disbelief first, then a kind of animal joy.",
+      "event": "5k in 22:14. Two months ago I couldn't run a kilometre without stopping.",
+      "action": "Texted my brother. He said 'that's genuinely impressive' and I believed him.",
+      "intensity": 4,
+      "daysAgo": 47
+    },
+    {
+      "title": "Rest Day Guilt",
+      "feel": "The irrationality of feeling bad for doing something my body needed.",
+      "event": "Took a full rest day. Didn't run, didn't stretch, didn't do anything athletic.",
+      "action": "Wrote out what recovery actually does physiologically. Read it twice. Started to believe it.",
+      "intensity": 2,
+      "daysAgo": 63
+    },
+    {
+      "title": "The Conversation About Distance",
+      "feel": "Braced the whole time, like waiting for something to break.",
+      "event": "We talked about the fact that we've been less present with each other lately. Neither of us blamed the other.",
+      "action": "Suggested we have dinner without phones on Thursday. She said yes.",
+      "intensity": 4,
+      "daysAgo": 1
+    },
+    {
+      "title": "Thursday Dinner",
+      "feel": "Reminded me why I chose this person. It was that simple.",
+      "event": "We cooked together and talked for three hours. No phones. No agenda.",
+      "action": "Told her I'd been scared she was pulling away. She said she'd felt the same about me.",
+      "intensity": 4,
+      "daysAgo": 4
+    },
+    {
+      "title": "She Cried and I Froze",
+      "feel": "A cold wave of helplessness. I wanted to fix it and knew I couldn't.",
+      "event": "She got difficult news about her mother. I sat next to her and didn't know what to say.",
+      "action": "I said 'I don't know what to say but I'm here.' She leaned into me. That was enough.",
+      "intensity": 3,
+      "daysAgo": 12
+    },
+    {
+      "title": "Laughing Until We Couldn't",
+      "feel": "Weightless. Like nothing difficult had happened or would happen.",
+      "event": "We watched old home videos from her childhood and she kept explaining why each outfit was actually fine.",
+      "action": "Saved the best one to rewatch when things feel heavy.",
+      "intensity": 4,
+      "daysAgo": 22
+    },
+    {
+      "title": "Different Futures",
+      "feel": "A kind of quiet dread I've been pretending isn't there.",
+      "event": "She mentioned wanting to move cities in two years. Casually, like it wasn't a grenade.",
+      "action": "Didn't react in the moment. Wrote this instead. Need to actually talk about it.",
+      "intensity": 4,
+      "daysAgo": 36
+    },
+    {
+      "title": "How She Sees Me",
+      "feel": "Something between gratitude and discomfort — like I'd been caught being more than I pretend to be.",
+      "event": "She described me to her friend on the phone without knowing I could hear. She said I was thoughtful and that I notice things.",
+      "action": "Told her later that I'd heard. She didn't seem embarrassed at all.",
+      "intensity": 3,
+      "daysAgo": 51
+    },
+    {
+      "title": "The Anniversary Fight",
+      "feel": "That specific shame of knowing I'm wrong mid-argument and continuing anyway.",
+      "event": "We argued on our anniversary about something that had nothing to do with the real issue.",
+      "action": "Apologised properly the next morning. Told her the real issue. She had been waiting for me to say it.",
+      "intensity": 4,
+      "daysAgo": 72
+    },
+    {
+      "title": "The Canvas I Couldn't Finish",
+      "feel": "Frustration that felt like it was about the painting but was really about everything else.",
+      "event": "Worked on the large canvas for three hours. Painted over the whole thing at the end.",
+      "action": "Left it white. Decided the white canvas is finished. Put it on the wall.",
+      "intensity": 3,
+      "daysAgo": 5
+    },
+    {
+      "title": "Song at 2am",
+      "feel": "That strange combination of being drained and completely alive.",
+      "event": "Finished writing a song I'd been stuck on for weeks. The bridge came out of nowhere.",
+      "action": "Recorded a rough voice memo. Resisted the urge to perfect it immediately.",
+      "intensity": 4,
+      "daysAgo": 16
+    },
+    {
+      "title": "Showing the Work",
+      "feel": "Naked. Genuinely unsure if I'd made something real or something I'd just told myself was real.",
+      "event": "Showed my sketchbook to a friend who's a proper artist. She turned each page slowly.",
+      "action": "She said 'you have a specific eye.' I wrote that down exactly.",
+      "intensity": 3,
+      "daysAgo": 27
+    },
+    {
+      "title": "Nothing for Weeks",
+      "feel": "That specific creative paralysis that feels like emptiness but is really too full.",
+      "event": "Hadn't made anything in three weeks. Kept opening notebooks and closing them.",
+      "action": "Bought new pencils. Sometimes the ritual is enough to start.",
+      "intensity": 2,
+      "daysAgo": 44
+    },
+    {
+      "title": "Someone Else Painted My Idea",
+      "feel": "Irrational irritation followed by something harder to name — maybe the grief of a path not taken.",
+      "event": "Saw a painting at a gallery that was almost exactly the concept I'd had in my head for months.",
+      "action": "Bought a small print of it. Put it above my desk. Made peace with it.",
+      "intensity": 3,
+      "daysAgo": 68
+    },
+    {
+      "title": "Mum Called Twice",
+      "feel": "Guilt with a texture — not sharp, more like something wearing down.",
+      "event": "Missed her calls on Tuesday. Called back Thursday. She said it was fine. It wasn't fine.",
+      "action": "Set a recurring Sunday call in my calendar. Not negotiable.",
+      "intensity": 3,
+      "daysAgo": 7
+    },
+    {
+      "title": "Dad's Advice",
+      "feel": "An unexpected softness — the kind that only comes from being known a long time.",
+      "event": "Told my dad about the work situation. He listened for twenty minutes without interrupting.",
+      "action": "He said 'you've always figured it out.' I didn't argue. That was new.",
+      "intensity": 3,
+      "daysAgo": 19
+    },
+    {
+      "title": "The Old Argument",
+      "feel": "The exhaustion of a pattern you can see coming and still can't stop.",
+      "event": "Family dinner. Same dynamic as always — my older brother talks, I retreat, Mum mediates.",
+      "action": "Left early. Texted my sister about it. She said she'd noticed it for years.",
+      "intensity": 3,
+      "daysAgo": 33
+    },
+    {
+      "title": "Hometown for the Weekend",
+      "feel": "Nostalgia as a physical sensation — warm and slightly suffocating.",
+      "event": "Visited my parents for the first time in four months. Walked the same streets I walked at fifteen.",
+      "action": "Told my mum she looked well. She lit up. I should say things like that more often.",
+      "intensity": 3,
+      "daysAgo": 55
+    },
+    {
+      "title": "My Brother's News",
+      "feel": "Genuine joy followed by an honest flicker of envy I'm not proud of.",
+      "event": "My brother announced his engagement. Everyone cried. It was a good moment.",
+      "action": "Called him separately to congratulate him properly, without an audience.",
+      "intensity": 4,
+      "daysAgo": 79
+    },
+    {
+      "title": "A Good Walk",
+      "feel": "Simple and uncomplicated. That's worth writing down.",
+      "event": "Walked for an hour with no destination. Listened to one album all the way through.",
+      "action": "Nothing. That was the point.",
+      "intensity": 2,
+      "daysAgo": 2
+    },
+    {
+      "title": "The 3am Thought",
+      "feel": "That specific 3am clarity that will be completely gone by morning.",
+      "event": "Couldn't sleep. Started thinking about what I actually want my life to look like in five years.",
+      "action": "Wrote three lines. Read them at 9am. Still meant something.",
+      "intensity": 3,
+      "daysAgo": 9
+    },
+    {
+      "title": "Overheard Kindness",
+      "feel": "An unexpected warmth, like finding something you forgot you'd lost.",
+      "event": "On the bus, a teenager gave up their seat without being asked. Nobody acknowledged it.",
+      "action": "Smiled at them when they sat down near me. They looked confused. I didn't explain.",
+      "intensity": 2,
+      "daysAgo": 24
+    },
+    {
+      "title": "The Book I Couldn't Finish",
+      "feel": "Something between boredom and responsibility — like I owed it to the author.",
+      "event": "Tried for the third time to finish a novel I bought eight months ago. Got to page 200. Stopped.",
+      "action": "Put it in the charity bag. Let it go.",
+      "intensity": 1,
+      "daysAgo": 38
+    },
+    {
+      "title": "Wrong Coffee Order",
+      "feel": "An outsized irritation that I knew, even then, was not about the coffee.",
+      "event": "Got the wrong order at the café. Didn't say anything. Sat with it.",
+      "action": "Tried to figure out what I was actually upset about. Still not sure.",
+      "intensity": 1,
+      "daysAgo": 61
+    },
+    {
+      "title": "Deadlines Feel Different Now",
+      "feel": "The same pressure as before, but now it feels like it's happening to someone else.",
+      "event": "Three deadlines this week. I handled them all. I'm not sure that's a good sign.",
+      "action": "Booked a day off next week. Something I've never done mid-sprint before.",
+      "intensity": 3,
+      "daysAgo": 75
+    },
+    {
+      "title": "Running in the Dark",
+      "feel": "Slightly afraid, mostly alive. The city is a different place at 5am.",
+      "event": "Alarm failed, went out at 5am instead of 6. The streets were empty.",
+      "action": "Decided 5am is better. Set the alarm for 5 tomorrow.",
+      "intensity": 3,
+      "daysAgo": 82
+    },
+    {
+      "title": "Missing Her When She's There",
+      "feel": "A pre-emptive grief that doesn't make sense but also makes complete sense.",
+      "event": "We were in the same room reading. I looked up and felt sad that this moment would end.",
+      "action": "Told her. She put down her book and looked at me for a long time.",
+      "intensity": 3,
+      "daysAgo": 88
+    },
+    {
+      "title": "Drawing from Memory",
+      "feel": "Strangely intimate — like accessing a part of myself I'd been ignoring.",
+      "event": "Drew my grandmother from memory. No reference. Spent two hours on it.",
+      "action": "Photographed it and sent it to my mum. She called immediately.",
+      "intensity": 4,
+      "daysAgo": 95
+    },
+    {
+      "title": "Sibling Silence Broken",
+      "feel": "Tentative hope, like testing ice you're not sure will hold.",
+      "event": "My sister texted out of nowhere after three months of no contact. Just 'how are you?'",
+      "action": "Replied honestly. Said it had been hard. She said 'me too.' We talked for an hour.",
+      "intensity": 4,
+      "daysAgo": 103
+    }
+  ]
+}
