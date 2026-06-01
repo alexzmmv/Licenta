@@ -74,8 +74,10 @@ class ForceDirectedLayout: ObservableObject {
 
             for (bitIndex, bit) in clusterBits.enumerated() {
                 let position: CGPoint
-                if let gx = bit.graphX, let gy = bit.graphY {
-                    // Restore cached position — simulation will converge in very few steps
+                if let gx = bit.graphX, let gy = bit.graphY, !similarityEdges {
+                    // Restore cached position for the full graph only.
+                    // Filtered (single-cluster) views skip this: cached positions are from the
+                    // full-graph canvas and would place nodes off-center in the filtered view.
                     position = CGPoint(x: CGFloat(gx), y: CGFloat(gy))
                 } else {
                     let bitAngle = (CGFloat(bitIndex) / CGFloat(max(1, clusterBits.count))) * 2 * .pi
@@ -440,14 +442,33 @@ struct ClusterGraphView: View {
         }
         .onChange(of: layout.isSimulating) { _, isNowSimulating in
             guard !isNowSimulating else { return }
-            // Persist node positions so the next open skips most of the simulation
-            for node in layout.nodes {
-                if let bit = repository.bits.first(where: { $0.id == node.id }) {
-                    bit.graphX = Double(node.position.x)
-                    bit.graphY = Double(node.position.y)
+            if filterClusterID == nil {
+                // Persist positions only for the full graph — filtered views rebuild fresh each time
+                for node in layout.nodes {
+                    if let bit = repository.bits.first(where: { $0.id == node.id }) {
+                        bit.graphX = Double(node.position.x)
+                        bit.graphY = Double(node.position.y)
+                    }
                 }
+                try? modelContext.save()
+            } else {
+                // Auto-center camera on the cluster after simulation settles
+                centerOnNodes()
             }
-            try? modelContext.save()
+        }
+    }
+
+    // MARK: - Camera
+
+    /// Pan so the centroid of all nodes sits at the screen centre.
+    private func centerOnNodes() {
+        guard !layout.nodes.isEmpty, !graphSize.width.isZero else { return }
+        let cx = graphSize.width / 2
+        let cy = graphSize.height / 2
+        let avgX = layout.nodes.reduce(0.0) { $0 + $1.position.x } / CGFloat(layout.nodes.count)
+        let avgY = layout.nodes.reduce(0.0) { $0 + $1.position.y } / CGFloat(layout.nodes.count)
+        withAnimation(.easeOut(duration: 0.45)) {
+            offset = CGSize(width: scale * (cx - avgX), height: scale * (cy - avgY))
         }
     }
 
@@ -522,7 +543,7 @@ struct ClusterGraphView: View {
                     HStack(spacing: 8) {
                         Text(node.emotion.rawValue).font(.caption).foregroundColor(node.emotion.color)
                         Text("•").foregroundColor(.gray)
-                        Text(formatDate(node.createdAt)).font(.caption).foregroundColor(.gray)
+                        Text(node.createdAt.dayMonth).font(.caption).foregroundColor(.gray)
 
                         if let clusterID = node.clusterID, clusterID >= 0 {
                             Text("•").foregroundColor(.gray)
@@ -615,9 +636,4 @@ struct ClusterGraphView: View {
         }
     }
 
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
-    }
 }

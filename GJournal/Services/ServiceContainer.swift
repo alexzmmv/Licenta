@@ -14,17 +14,20 @@ final class ServiceContainer: ObservableObject {
     let emotionService: EmotionDetectionServiceProtocol
     let clusteringService: ClusteringServiceProtocol
     let safetyFilter: SafetyFilterServiceProtocol
+    let clusteringStrategy: ClusteringStrategyChoice
 
     init(
         embeddingService: EmbeddingServiceProtocol,
         emotionService: EmotionDetectionServiceProtocol,
         clusteringService: ClusteringServiceProtocol,
-        safetyFilter: SafetyFilterServiceProtocol
+        safetyFilter: SafetyFilterServiceProtocol,
+        clusteringStrategy: ClusteringStrategyChoice = .classic
     ) {
         self.embeddingService = embeddingService
         self.emotionService = emotionService
         self.clusteringService = clusteringService
         self.safetyFilter = safetyFilter
+        self.clusteringStrategy = clusteringStrategy
     }
 
     static func makeMock() -> ServiceContainer {
@@ -48,34 +51,24 @@ final class ServiceContainer: ObservableObject {
         clusteringStrategy: ClusteringStrategyChoice
     ) -> ServiceContainer {
         let embeddingService: EmbeddingServiceProtocol
-        let embeddingDim: Int
 
         switch embeddingModel {
         case .miniLM:
             embeddingService = CoreMLEmbeddingService(modelName: "GJournalEmbeddingMiniLM", poolingMode: .mean)
-            embeddingDim = 384
-
         case .nomicMRL:
             embeddingService = NomicEmbeddingService(truncateDim: 256)
-            embeddingDim = 256
-
         case .appleNLP:
             embeddingService = NLEmbeddingService()
-            embeddingDim = 512
         }
 
-        let clusteringService = DBSCANClusterer(
-            epsilon: 0.3,
-            minPoints: 3,
-            embeddingDim: embeddingDim,
-            strategy: clusteringStrategy
-        )
+        let clusteringService = DBSCANClusterer()
 
         return ServiceContainer(
             embeddingService: embeddingService,
             emotionService: CoreMLEmotionService(modelName: "GJournalEmotionClassifier"),
             clusteringService: clusteringService,
-            safetyFilter: SafetyFilter()
+            safetyFilter: SafetyFilter(),
+            clusteringStrategy: clusteringStrategy
         )
     }
 }

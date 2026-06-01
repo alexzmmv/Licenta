@@ -29,10 +29,6 @@ struct BitsListView: View {
     enum ViewMode { case list, clusters }
     @State private var viewMode: ViewMode = .list
 
-    // Divergence detection
-    @State private var divergentPairs: [(Bit, Bit)] = []
-    @State private var showingDivergentPairs = false
-
     enum SortOrder: String, CaseIterable {
         case newestFirst = "Newest First"
         case oldestFirst = "Oldest First"
@@ -75,10 +71,6 @@ struct BitsListView: View {
             .sorted { $0.date > $1.date }
     }
 
-    private func recomputeDivergentPairs() {
-        divergentPairs = SemanticUtils.divergentPairs(in: repository.bits)
-    }
-
     private var activeFilterCount: Int {
         var count = 0
         if !selectedEmotions.isEmpty { count += 1 }
@@ -114,13 +106,6 @@ struct BitsListView: View {
                         activeFiltersView
                     }
 
-                    // Divergence card
-                    if !divergentPairs.isEmpty {
-                        DivergenceCard { showingDivergentPairs = true }
-                            .padding(.horizontal, 16)
-                            .padding(.top, 8)
-                    }
-
                     // Content
                     if filteredBits.isEmpty {
                         emptyStateView
@@ -133,17 +118,8 @@ struct BitsListView: View {
             }
         }
         .navigationBarHidden(true)
-        .sheet(isPresented: $showingDivergentPairs) {
-            DivergentPairsSheet(pairs: divergentPairs)
-        }
-        .onAppear {
-            updateFilteredData()
-            recomputeDivergentPairs()
-        }
-        .onChange(of: repository.bits) {
-            updateFilteredData()
-            recomputeDivergentPairs()
-        }
+        .onAppear { updateFilteredData() }
+        .onChange(of: repository.bits) { updateFilteredData() }
         .onChange(of: searchText) { updateFilteredData() }
         .onChange(of: selectedEmotions) { updateFilteredData() }
         .onChange(of: sortOrder) { updateFilteredData() }
@@ -293,7 +269,7 @@ struct BitsListView: View {
                         Image(systemName: "circle.grid.hex")
                             .font(.caption2)
                             .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
-                        Text(clusterName(for: clusterID))
+                        Text(repository.bits.first(where: { $0.clusterID == clusterID })?.cluster?.displayName ?? "Cluster \(clusterID)")
                             .font(.caption)
                             .foregroundColor(.white)
 
@@ -326,15 +302,6 @@ struct BitsListView: View {
             .padding(.horizontal, 20)
         }
         .padding(.bottom, 8)
-    }
-
-    private func clusterName(for id: Int) -> String {
-        // Find the first bit in this cluster to get the persisted name from the Cluster model
-        if let bit = repository.bits.first(where: { $0.clusterID == id }),
-           let name = bit.cluster?.name {
-            return name
-        }
-        return "Cluster \(id)"
     }
 
     // MARK: - Empty State
@@ -397,7 +364,7 @@ struct BitsListView: View {
                 ForEach(groupedBits, id: \.date) { group in
                     // Date section header
                     HStack {
-                        Text(formatSectionDate(group.date))
+                        Text(group.date.sectionHeader)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.gray)
@@ -436,28 +403,8 @@ struct BitsListView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func formatSectionDate(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let formatter = DateFormatter()
-
-        if calendar.isDateInToday(date) {
-            return "Today"
-        } else if calendar.isDateInYesterday(date) {
-            return "Yesterday"
-        } else if calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
-            formatter.dateFormat = "EEEE"
-            return formatter.string(from: date)
-        } else if calendar.isDate(date, equalTo: Date(), toGranularity: .year) {
-            formatter.dateFormat = "MMMM d"
-            return formatter.string(from: date)
-        } else {
-            formatter.dateFormat = "MMMM d, yyyy"
-            return formatter.string(from: date)
-        }
-    }
 }
+
 
 // MARK: - Filter Sheet
 
@@ -475,15 +422,6 @@ struct FilterSheetView: View {
         return Array(ids).sorted()
     }
     
-    private func clusterName(for id: Int) -> String {
-        // Use the shared helper from the parent view
-        if let bit = repository.bits.first(where: { $0.clusterID == id }),
-           let name = bit.cluster?.name {
-            return name
-        }
-        return "Cluster \(id)"
-    }
-
     let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 4)
 
     var body: some View {
@@ -621,7 +559,7 @@ struct FilterSheetView: View {
                                                     selectedClusters.insert(clusterID)
                                                 }
                                             } label: {
-                                                Text(clusterName(for: clusterID))
+                                                Text(repository.bits.first(where: { $0.clusterID == clusterID })?.cluster?.displayName ?? "Cluster \(clusterID)")
                                                     .font(.subheadline)
                                                     .padding(.horizontal, 16)
                                                     .padding(.vertical, 8)
@@ -690,246 +628,6 @@ struct FilterSheetView: View {
         case 3: return "Strong"
         case 4: return "Intense"
         default: return ""
-        }
-    }
-}
-
-// MARK: - Divergence Card
-
-struct DivergenceCard: View {
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 14) {
-                Text("⚡")
-                    .font(.title2)
-                    .frame(width: 40, height: 40)
-                    .background(Color(red: 0.55, green: 0.3, blue: 0.9).opacity(0.2))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Contrast detected")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                    Text("You wrote about similar things with very different emotions.")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .lineLimit(2)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(red: 0.14, green: 0.10, blue: 0.20))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color(red: 0.55, green: 0.3, blue: 0.9).opacity(0.35), lineWidth: 1)
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Divergent Pairs Sheet
-
-struct DivergentPairsSheet: View {
-    let pairs: [(Bit, Bit)]
-    @Environment(\.dismiss) var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea()
-                List {
-                    Section {
-                        Text("Similar themes, very different emotions.")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                    }
-                    ForEach(Array(pairs.enumerated()), id: \.offset) { _, pair in
-                        NavigationLink(destination: DivergentPairDetailView(bitA: pair.0, bitB: pair.1)) {
-                            DivergentPairRow(bitA: pair.0, bitB: pair.1)
-                        }
-                        .listRowBackground(Color(red: 0.10, green: 0.08, blue: 0.14))
-                        .listRowSeparatorTint(Color.white.opacity(0.06))
-                    }
-                }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-            }
-            .navigationTitle("Contrasts")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
-                }
-            }
-        }
-        .preferredColorScheme(.dark)
-    }
-}
-
-private struct DivergentPairRow: View {
-    let bitA: Bit
-    let bitB: Bit
-
-    private func snippet(_ bit: Bit) -> String {
-        let text = [bit.feel, bit.event, bit.action].first { !$0.isEmpty } ?? ""
-        return String(text.prefix(50))
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Label(bitA.emotion.rawValue.capitalized, systemImage: "")
-                    .labelStyle(.titleOnly)
-                    .font(.caption)
-                    .foregroundColor(bitA.emotion.color)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(bitA.emotion.color.opacity(0.12))
-                    .clipShape(Capsule())
-
-                Text("↔")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-
-                Label(bitB.emotion.rawValue.capitalized, systemImage: "")
-                    .labelStyle(.titleOnly)
-                    .font(.caption)
-                    .foregroundColor(bitB.emotion.color)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(bitB.emotion.color.opacity(0.12))
-                    .clipShape(Capsule())
-            }
-
-            Text(snippet(bitA))
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
-                .lineLimit(1)
-        }
-        .padding(.vertical, 6)
-    }
-}
-
-// MARK: - Divergent Pair Detail View
-
-struct DivergentPairDetailView: View {
-    let bitA: Bit
-    let bitB: Bit
-
-    var body: some View {
-        ZStack {
-            Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 16) {
-                    Text("These two moments share similar themes but carry very different emotions.")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 4)
-
-                    PairEntryCard(bit: bitA)
-
-                    HStack {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.08))
-                            .frame(height: 1)
-                        Text("vs")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .padding(.horizontal, 8)
-                        Rectangle()
-                            .fill(Color.white.opacity(0.08))
-                            .frame(height: 1)
-                    }
-                    .padding(.horizontal, 20)
-
-                    PairEntryCard(bit: bitB)
-                }
-                .padding(.vertical, 16)
-            }
-        }
-        .navigationTitle("Contrast")
-        .navigationBarTitleDisplayMode(.inline)
-        .preferredColorScheme(.dark)
-    }
-}
-
-private struct PairEntryCard: View {
-    let bit: Bit
-
-    private func formatDate(_ date: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"
-        return f.string(from: date)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Text(bit.emotion.emoji).font(.title3)
-                Text(bit.emotion.rawValue.capitalized)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(bit.emotion.color)
-                Spacer()
-                Text(formatDate(bit.createdAt))
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-            }
-
-            Divider().overlay(Color.white.opacity(0.08))
-
-            if !bit.feel.isEmpty {
-                FieldRow(label: "Feel", text: bit.feel)
-            }
-            if !bit.event.isEmpty {
-                FieldRow(label: "Event", text: bit.event)
-            }
-            if !bit.action.isEmpty {
-                FieldRow(label: "Action", text: bit.action)
-            }
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(red: 0.12, green: 0.10, blue: 0.16))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(bit.emotion.color.opacity(0.25), lineWidth: 1)
-                )
-        )
-        .padding(.horizontal, 16)
-    }
-}
-
-private struct FieldRow: View {
-    let label: String
-    let text: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label.uppercased())
-                .font(.caption2)
-                .foregroundColor(.gray)
-                .kerning(0.5)
-            Text(text)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.9))
         }
     }
 }

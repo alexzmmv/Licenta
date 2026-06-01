@@ -38,39 +38,6 @@ enum SemanticUtils {
             .map { $0 }
     }
 
-    // MARK: - Divergent pairs
-
-    /// Pairs of entries that are semantically close (similarity ≥ threshold)
-    /// but have different dominant emotions — the "you wrote about the same thing
-    /// with very different feelings" insight.
-    nonisolated static func divergentPairs(
-        in bits: [Bit],
-        similarityThreshold: Float = 0.72
-    ) -> [(Bit, Bit)] {
-        let processed = bits.filter { $0.embedding != nil && $0.topDetectedEmotion != nil && !$0.isDeleted }
-        guard processed.count >= 2 else { return [] }
-
-        let normalised = processed.compactMap { bit -> (Bit, [Float])? in
-            guard let emb = Self.normalised(bit.embedding) else { return nil }
-            return (bit, emb)
-        }
-        guard normalised.count >= 2 else { return [] }
-        var pairs: [(Bit, Bit)] = []
-
-        for i in 0..<normalised.count {
-            for j in (i + 1)..<normalised.count {
-                let (bitA, embA) = normalised[i]
-                let (bitB, embB) = normalised[j]
-                guard embA.count == embB.count else { continue }
-                let sim = cosineSimilarity(embA, embB)
-                guard sim >= similarityThreshold else { continue }
-                guard bitA.topDetectedEmotion != bitB.topDetectedEmotion else { continue }
-                pairs.append((bitA, bitB))
-            }
-        }
-        return pairs
-    }
-
     // MARK: - Helpers
 
     nonisolated static func normalised(_ embedding: [Float]?) -> [Float]? {

@@ -39,9 +39,9 @@ open class BaseJournalRepository: ObservableObject {
         
         do {
             bits = try modelContext.fetch(descriptor)
-            print("[Repository] Loaded \(bits.count) active bits from SwiftData")
+            AppLogger.log("[Repository] Loaded \(bits.count) active bits")
         } catch {
-            print("[Repository] Failed to load bits: \(error)")
+            AppLogger.error("[Repository] Failed to load bits: \(error)")
             bits = []
         }
     }

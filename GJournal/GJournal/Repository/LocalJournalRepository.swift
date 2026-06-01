@@ -56,13 +56,13 @@ class LocalJournalRepository: BaseJournalRepository {
         do {
             try modelContext.save()
             loadBitsFromContext()
-            print("[LocalRepository] Created micro-journal bit: \(newBit.id)")
+            AppLogger.log("[LocalRepository] Created micro-journal bit: \(newBit.id)")
 
             // Trigger background AI processing
             aiProcessingManager?.processBit(newBit)
         } catch {
             errorMessage = "Failed to save micro-journal bit: \(error.localizedDescription)"
-            print("[LocalRepository] Failed to create micro-journal bit: \(error)")
+            AppLogger.log("[LocalRepository] Failed to create micro-journal bit: \(error)")
         }
     }
 
@@ -84,13 +84,13 @@ class LocalJournalRepository: BaseJournalRepository {
                 let updatedBit = bits[index]
                 try modelContext.save()
                 loadBitsFromContext()
-                print("[LocalRepository] Updated micro-journal bit: \(id)")
+                AppLogger.log("[LocalRepository] Updated micro-journal bit: \(id)")
 
                 // Re-trigger AI processing for updated content (capture before reload)
                 aiProcessingManager?.processBit(updatedBit)
             } catch {
                 errorMessage = "Failed to update micro-journal bit: \(error.localizedDescription)"
-                print("[LocalRepository] Failed to update micro-journal bit: \(error)")
+                AppLogger.log("[LocalRepository] Failed to update micro-journal bit: \(error)")
             }
         } else {
             errorMessage = "Bit not found"
@@ -112,10 +112,10 @@ class LocalJournalRepository: BaseJournalRepository {
             do {
                 try modelContext.save()
                 loadBitsFromContext()
-                print("[LocalRepository] Soft-deleted bit: \(id)")
+                AppLogger.log("[LocalRepository] Soft-deleted bit: \(id)")
             } catch {
                 errorMessage = "Failed to delete bit: \(error.localizedDescription)"
-                print("[LocalRepository] Failed to soft-delete bit: \(error)")
+                AppLogger.log("[LocalRepository] Failed to soft-delete bit: \(error)")
             }
         } else {
             errorMessage = "Bit not found"
@@ -136,10 +136,10 @@ class LocalJournalRepository: BaseJournalRepository {
             do {
                 try modelContext.save()
                 loadBitsFromContext()
-                print("[LocalRepository] Restored bit: \(id)")
+                AppLogger.log("[LocalRepository] Restored bit: \(id)")
             } catch {
                 errorMessage = "Failed to restore bit: \(error.localizedDescription)"
-                print("[LocalRepository] Failed to restore bit: \(error)")
+                AppLogger.log("[LocalRepository] Failed to restore bit: \(error)")
             }
         }
     }
@@ -158,9 +158,9 @@ class LocalJournalRepository: BaseJournalRepository {
         do {
             try modelContext.save()
             loadBitsFromContext()
-            print("[LocalRepository] Purged \(expiredBits.count) expired bits")
+            AppLogger.log("[LocalRepository] Purged \(expiredBits.count) expired bits")
         } catch {
-            print("[LocalRepository] Failed to purge expired bits: \(error)")
+            AppLogger.log("[LocalRepository] Failed to purge expired bits: \(error)")
         }
     }
     
@@ -177,10 +177,10 @@ class LocalJournalRepository: BaseJournalRepository {
             do {
                 try modelContext.save()
                 loadBitsFromContext()
-                print("[LocalRepository] Toggled hide for bit: \(id)")
+                AppLogger.log("[LocalRepository] Toggled hide for bit: \(id)")
             } catch {
                 errorMessage = "Failed to toggle bit: \(error.localizedDescription)"
-                print("[LocalRepository] Failed to toggle bit: \(error)")
+                AppLogger.log("[LocalRepository] Failed to toggle bit: \(error)")
             }
         } else {
             errorMessage = "Bit not found"
@@ -212,12 +212,12 @@ struct SeedDataManager {
     @MainActor
     static func generateSeedData(context: ModelContext) {
         guard let url = Bundle.main.url(forResource: "seed_data", withExtension: "json") else {
-            print("[SeedData] seed_data.json not found in bundle.")
+            AppLogger.log("[SeedData] seed_data.json not found in bundle.")
             return
         }
         guard let data = try? Data(contentsOf: url),
               let file = try? JSONDecoder().decode(SeedFile.self, from: data) else {
-            print("[SeedData] Failed to decode seed_data.json.")
+            AppLogger.log("[SeedData] Failed to decode seed_data.json.")
             return
         }
 
@@ -242,9 +242,9 @@ struct SeedDataManager {
 
         do {
             try context.save()
-            print("[SeedData] Inserted \(file.entries.count) unclustered entries.")
+            AppLogger.log("[SeedData] Inserted \(file.entries.count) unclustered entries.")
         } catch {
-            print("[SeedData] Failed to save: \(error)")
+            AppLogger.log("[SeedData] Failed to save: \(error)")
         }
     }
 }

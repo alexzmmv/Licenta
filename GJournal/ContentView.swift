@@ -47,13 +47,8 @@ struct ContentView: View {
 
     private var todayEmotion: Emotion? {
         let calendar = Calendar.current
-        let todayBits = repository.bits.filter {
-            !$0.isDeleted && calendar.isDateInToday($0.createdAt)
-        }
-        guard !todayBits.isEmpty else { return nil }
-        var counts: [Emotion: Int] = [:]
-        for bit in todayBits { counts[bit.emotion, default: 0] += 1 }
-        return counts.max(by: { $0.value < $1.value })?.key
+        let todayBits = repository.bits.filter { !$0.isDeleted && calendar.isDateInToday($0.createdAt) }
+        return todayBits.dominantEmotion
     }
 
     private var weekData: [(date: Date, emotion: Emotion?, intensity: Double)] {
@@ -66,9 +61,7 @@ struct ContentView: View {
             }
             let avgIntensity = dayBits.isEmpty ? 0.0 :
                 Double(dayBits.map(\.intensity).reduce(0, +)) / Double(dayBits.count)
-            var counts: [Emotion: Int] = [:]
-            for bit in dayBits { counts[bit.emotion, default: 0] += 1 }
-            return (date: date, emotion: counts.max(by: { $0.value < $1.value })?.key, intensity: avgIntensity)
+            return (date: date, emotion: dayBits.dominantEmotion, intensity: avgIntensity)
         }
     }
 
@@ -354,22 +347,15 @@ extension View {
 struct TodayMoodCard: View {
     let emotion: Emotion?
 
-    private var dayOfWeek: String {
-        let f = DateFormatter(); f.dateFormat = "EEEE"; return f.string(from: Date())
-    }
-    private var dateString: String {
-        let f = DateFormatter(); f.dateFormat = "MMMM d"; return f.string(from: Date())
-    }
-
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(dayOfWeek.uppercased())
+                Text(Date().weekdayName.uppercased())
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.white.opacity(0.6))
                     .tracking(1.5)
-                Text(dateString)
+                Text(Date().monthDay)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -444,16 +430,9 @@ struct WeekDayPill: View {
     let emotion: Emotion?
     let isToday: Bool
 
-    private var dayLetter: String {
-        let f = DateFormatter(); f.dateFormat = "EEEEE"; return f.string(from: date)
-    }
-    private var dayNumber: String {
-        let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: date)
-    }
-
     var body: some View {
         VStack(spacing: 6) {
-            Text(dayLetter)
+            Text(date.weekdayLetter)
                 .font(.system(size: 10, weight: .medium))
                 .foregroundColor(.gray)
 
@@ -480,7 +459,7 @@ struct WeekDayPill: View {
                 }
             }
 
-            Text(dayNumber)
+            Text(date.dayNumber)
                 .font(.system(size: 10, weight: isToday ? .bold : .regular))
                 .foregroundColor(isToday ? .white : .gray.opacity(0.6))
         }
@@ -523,7 +502,7 @@ struct RecentEntryRow: View {
 
                 // Date + intensity
                 VStack(alignment: .trailing, spacing: 5) {
-                    Text(formatDate(bit.createdAt))
+                    Text(bit.createdAt.shortRelative)
                         .font(.caption2)
                         .foregroundColor(.gray)
                     HStack(spacing: 3) {
@@ -544,13 +523,6 @@ struct RecentEntryRow: View {
         .buttonStyle(.plain)
     }
 
-    private func formatDate(_ date: Date) -> String {
-        let c = Calendar.current
-        if c.isDateInToday(date) { return "Today" }
-        if c.isDateInYesterday(date) { return "Yesterday" }
-        let f = DateFormatter(); f.dateFormat = "MMM d"
-        return f.string(from: date)
-    }
 }
 
 // MARK: - First-Time Welcome

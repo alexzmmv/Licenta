@@ -20,8 +20,8 @@ enum ClusteringStrategyChoice: String, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .classic:    return "Fixed ε = 0.3 for all embedding dimensions"
-        case .mrlAdapted: return "ε scaled by √(dim/768) — tuned for MRL truncations"
+        case .classic:    return "Auto-calibrated ε with silhouette validation"
+        case .mrlAdapted: return "Multi-minPts search — tuned for MRL truncations"
         }
     }
 

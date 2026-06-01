@@ -13,12 +13,6 @@ struct BitCard: View {
     let onDelete: () -> Void
     let onToggleHide: () -> Void
     
-    private func formattedTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: date)
-    }
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header with emoji and menu
@@ -86,7 +80,7 @@ struct BitCard: View {
             
             // Footer with time and intensity
             HStack {
-                Text(formattedTime(bit.lastModified))
+                Text(bit.lastModified.timeOfDay)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 

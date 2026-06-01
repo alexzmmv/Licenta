@@ -160,12 +160,6 @@ struct DayCell: View {
     let isSelected: Bool
     let isToday: Bool
 
-    private var dayNumber: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: date)
-    }
-
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
@@ -183,7 +177,7 @@ struct DayCell: View {
                         .frame(width: 36, height: 36)
                 }
 
-                Text(dayNumber)
+                Text(date.dayNumber)
                     .font(.system(size: 15, weight: isToday ? .bold : .regular))
                     .foregroundColor(.white)
             }

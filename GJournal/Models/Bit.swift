@@ -88,10 +88,11 @@ final class Bit {
 
     // MARK: - Computed Properties for AI Data
 
-    /// Typed access to the embedding vector — raw binary Float storage (see 04_UI_PERFORMANCE.md §3)
+    /// Typed access to the embedding vector — raw binary Float storage.
     var embedding: [Float]? {
         get {
-            guard let data = embeddingData else { return nil }
+            guard let data = embeddingData, !data.isEmpty else { return nil }
+            guard data.count % MemoryLayout<Float>.size == 0 else { return nil }
             return data.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
         }
         set {

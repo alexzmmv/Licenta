@@ -19,9 +19,13 @@ struct SettingsView: View {
     @State private var showingClearClustersAlert = false
     @State private var debugStatusMessage: String?
     @State private var isRunningDebugTask = false
+    @State private var exportFileURL: URL?
+    @State private var showingExportSheet = false
+    @State private var isExporting = false
 
     @AppStorage("embeddingModelChoice") private var embeddingModelRaw: String = EmbeddingModelChoice.nomicMRL.rawValue
     @AppStorage("clusteringStrategyChoice") private var clusteringStrategyRaw: String = ClusteringStrategyChoice.classic.rawValue
+    @AppStorage("debugLoggingEnabled") private var debugLoggingEnabled = false
 
     private var selectedModel: Binding<EmbeddingModelChoice> {
         Binding(
@@ -202,6 +206,14 @@ struct SettingsView: View {
                         }
                     }
 
+                    Toggle(isOn: $debugLoggingEnabled) {
+                        HStack {
+                            Image(systemName: "terminal")
+                                .foregroundColor(.orange)
+                            Text("Debug Logging")
+                        }
+                    }
+
                     // Recluster All
                     Button {
                         reclusterAll()
@@ -330,6 +342,20 @@ struct SettingsView: View {
                 
                 // Actions Section
                 Section {
+                    Button {
+                        Task { await generateExportFile() }
+                    } label: {
+                        HStack {
+                            if isExporting {
+                                ProgressView().scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                            Text(isExporting ? "Preparing export…" : "Export All Data")
+                        }
+                    }
+                    .disabled(isExporting)
+
                     Button(role: .destructive) {
                         showingDeleteAllAlert = true
                     } label: {
@@ -372,11 +398,13 @@ struct SettingsView: View {
                 Button("Delete Everything", role: .destructive) {
                     do {
                         try modelContext.delete(model: Bit.self)
+                        try modelContext.delete(model: Cluster.self)
                         try modelContext.save()
+                        (repository as? LocalJournalRepository)?.aiProcessingManager?.resetState()
                         (repository as? LocalJournalRepository)?.loadBitsFromContext()
-                        print("[Settings] Successfully deleted all data.")
+                        AppLogger.log("[Settings] Deleted all data.")
                     } catch {
-                        print("[Settings] Failed to delete all data: \(error)")
+                        AppLogger.error("[Settings] Failed to delete all data: \(error)")
                     }
                 }
             } message: {
@@ -397,6 +425,11 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("This will remove all cluster assignments and delete \(uniqueClusterCount) cluster objects. You can re-cluster afterwards.")
+            }
+            .sheet(isPresented: $showingExportSheet) {
+                if let url = exportFileURL {
+                    ActivityView(items: [url])
+                }
             }
         }
     }
@@ -521,10 +554,10 @@ struct SettingsView: View {
             try modelContext.save()
             (repository as? LocalJournalRepository)?.loadBitsFromContext()
             debugStatusMessage = "Cleared embeddings from \(cleared) entries"
-            print("[Settings] Cleared embeddings from \(cleared) entries")
+            AppLogger.log("[Settings] Cleared embeddings from \(cleared) entries")
         } catch {
             debugStatusMessage = "Failed to clear embeddings: \(error.localizedDescription)"
-            print("[Settings] Failed to clear embeddings: \(error)")
+            AppLogger.error("[Settings] Failed to clear embeddings: \(error)")
         }
     }
 
@@ -540,10 +573,105 @@ struct SettingsView: View {
             try modelContext.save()
             (repository as? LocalJournalRepository)?.loadBitsFromContext()
             debugStatusMessage = "Cleared all cluster assignments"
-            print("[Settings] Cleared all clusters")
+            AppLogger.log("[Settings] Cleared all clusters")
         } catch {
             debugStatusMessage = "Failed to clear clusters: \(error.localizedDescription)"
-            print("[Settings] Failed to clear clusters: \(error)")
+            AppLogger.error("[Settings] Failed to clear clusters: \(error)")
+        }
+    }
+
+    // MARK: - Export
+
+    @MainActor
+    private func generateExportFile() async {
+        isExporting = true
+        defer { isExporting = false }
+
+        let iso = ISO8601DateFormatter()
+        let model = EmbeddingModelChoice.current
+        let strategy = ClusteringStrategyChoice.current
+
+        // Build bits array
+        var bitsJSON: [[String: Any]] = []
+        for bit in repository.bits {
+            var entry: [String: Any] = [
+                "id": bit.id.uuidString,
+                "feel": bit.feel,
+                "event": bit.event,
+                "action": bit.action,
+                "intensity": bit.intensity,
+                "emotion": bit.emotion.rawValue,
+                "isHidden": bit.isHidden,
+                "isDeleted": bit.isDeleted,
+                "hasBeenProcessed": bit.hasBeenProcessed,
+                "createdAt": iso.string(from: bit.createdAt),
+                "lastModified": iso.string(from: bit.lastModified)
+            ]
+            if let title = bit.title { entry["title"] = title }
+            if let clusterIndex = bit.clusterID {
+                entry["clusterIndex"] = clusterIndex
+                entry["clusterName"] = bit.cluster?.name ?? ""
+            }
+            if let probs = bit.emotionProbabilities {
+                entry["emotionProbabilities"] = probs
+            }
+            if let emb = bit.embedding {
+                entry["embedding"] = emb
+                entry["embeddingDim"] = emb.count
+            }
+            if let t = bit.flattenedText { entry["flattenedText"] = t }
+            if let d = bit.embeddingGeneratedAt { entry["embeddingGeneratedAt"] = iso.string(from: d) }
+            bitsJSON.append(entry)
+        }
+
+        // Fetch clusters directly from context for complete picture
+        var clustersJSON: [[String: Any]] = []
+        let allClusters = (try? modelContext.fetch(FetchDescriptor<Cluster>())) ?? []
+        for c in allClusters {
+            clustersJSON.append([
+                "index": c.index,
+                "name": c.name,
+                "bitCount": c.bits.filter { !$0.isDeleted }.count,
+                "createdAt": iso.string(from: c.createdAt)
+            ])
+        }
+
+        let payload: [String: Any] = [
+            "exportedAt": iso.string(from: Date()),
+            "config": [
+                "embeddingModel": model.rawValue,
+                "embeddingModelDisplayName": model.displayName,
+                "clusteringStrategy": strategy.rawValue,
+                "clusteringStrategyDisplayName": strategy.displayName,
+                "embeddingDimension": model == .nomicMRL ? 256 : 384
+            ],
+            "summary": [
+                "totalBits": repository.bits.count,
+                "bitsWithEmbeddings": repository.bits.filter { $0.hasBeenProcessed }.count,
+                "clusterCount": clustersJSON.count
+            ],
+            "clusters": clustersJSON,
+            "bits": bitsJSON
+        ]
+
+        guard JSONSerialization.isValidJSONObject(payload),
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]) else {
+            AppLogger.error("[Settings] Export serialization failed")
+            return
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm"
+        let filename = "gjournal_export_\(formatter.string(from: Date())).json"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+
+        do {
+            try data.write(to: url)
+            exportFileURL = url
+            showingExportSheet = true
+            AppLogger.log("[Settings] Exported \(repository.bits.count) bits to \(filename)")
+        } catch {
+            AppLogger.error("[Settings] Export write failed: \(error)")
         }
     }
 
@@ -555,18 +683,32 @@ struct SettingsView: View {
             return
         }
         let preview = embedding.prefix(10).map { String(format: "%.4f", $0) }.joined(separator: ", ")
-        print("[Settings Debug] Entry: \(bit.title ?? bit.feel.prefix(40).description)")
-        print("[Settings Debug] Embedding (\(embedding.count)-dim): [\(preview), ...]")
-        print("[Settings Debug] Generated at: \(bit.embeddingGeneratedAt?.description ?? "unknown")")
-        print("[Settings Debug] Cluster: \(bit.cluster?.name ?? "none") (ID: \(bit.clusterID?.description ?? "nil"))")
+        AppLogger.log("[Settings] Entry: \(bit.title ?? bit.feel.prefix(40).description)")
+        AppLogger.log("[Settings] Embedding (\(embedding.count)-dim): [\(preview), ...]")
+        AppLogger.log("[Settings] Generated at: \(bit.embeddingGeneratedAt?.description ?? "unknown")")
+        AppLogger.log("[Settings] Cluster: \(bit.cluster?.name ?? "none") (ID: \(bit.clusterID?.description ?? "nil"))")
         if let probs = bit.emotionProbabilities {
             let sorted = probs.sorted { $0.value > $1.value }.prefix(3)
             let probStr = sorted.map { "\($0.key): \(String(format: "%.2f", $0.value))" }.joined(separator: ", ")
-            print("[Settings Debug] Top emotions: \(probStr)")
+            AppLogger.log("[Settings] Top emotions: \(probStr)")
         }
         debugStatusMessage = "Logged embedding to console"
     }
     #endif
+}
+
+// MARK: - Share Sheet wrapper
+
+import UIKit
+
+struct ActivityView: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

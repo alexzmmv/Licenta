@@ -38,6 +38,6 @@ struct MainAppView: View {
             DispatchQueue.main.async { repository?.loadBitsFromContext() }
         }
         repository.aiProcessingManager = manager
-        print("[MainAppView] Services rebuilt — \(EmbeddingModelChoice.current.displayName) + \(ClusteringStrategyChoice.current.displayName)")
+        AppLogger.log("[MainAppView] Services rebuilt — \(EmbeddingModelChoice.current.displayName) + \(ClusteringStrategyChoice.current.displayName)")
     }
 }

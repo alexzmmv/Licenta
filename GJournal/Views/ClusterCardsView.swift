@@ -78,11 +78,7 @@ private struct ClusterCard: View {
 
     private var activeBits: [Bit] { cluster.bits.filter { !$0.isDeleted } }
 
-    private var dominantEmotion: Emotion? {
-        var counts: [Emotion: Int] = [:]
-        activeBits.forEach { counts[$0.emotion, default: 0] += 1 }
-        return counts.max(by: { $0.value < $1.value })?.key
-    }
+    private var dominantEmotion: Emotion? { activeBits.dominantEmotion }
 
     private var uniqueEmotions: [Emotion] {
         Array(Set(activeBits.map { $0.emotion })).prefix(4).map { $0 }
@@ -97,7 +93,7 @@ private struct ClusterCard: View {
     private var spanLabel: String {
         guard let range = dateRange else { return "" }
         let days = Calendar.current.dateComponents([.day], from: range.min, to: range.max).day ?? 0
-        if days < 2 { return formatShort(range.min) }
+        if days < 2 { return range.min.dayMonth }
         if days < 30 { return "\(days)d span" }
         let months = Int(round(Double(days) / 30.0))
         return "\(months)mo span"
@@ -109,12 +105,6 @@ private struct ClusterCard: View {
         guard total > 0 else { return 1 }
         let span = range.max.timeIntervalSince(range.min)
         return CGFloat(min(1, span / total))
-    }
-
-    private func formatShort(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "MMM d"
-        return f.string(from: date)
     }
 
     var body: some View {
