@@ -119,7 +119,7 @@ def export_vocab(tokenizer, dest: Path):
 
 
 def convert_with_fallbacks(wrapper, example_inputs, input_names, output_name, save_path,
-                           warmup: bool = False):
+                           warmup: bool = False, precision=ct.precision.FLOAT16):
     """Trace the wrapper and try conversion paths; return saved path or None."""
     try:
         if warmup:
@@ -137,7 +137,7 @@ def convert_with_fallbacks(wrapper, example_inputs, input_names, output_name, sa
     base_kwargs = dict(
         inputs=inputs,
         outputs=outputs,
-        compute_precision=ct.precision.FLOAT16,
+        compute_precision=precision,
         minimum_deployment_target=ct.target.iOS17,
         compute_units=ct.ComputeUnit.ALL,
     )
@@ -373,6 +373,7 @@ def convert_emotion_classifier():
         input_names=["input_ids", "attention_mask"],
         output_name="logits",
         save_path=save_path,
+        precision=ct.precision.FLOAT32,
     )
 
     # Emotion classifier was already converted on Windows — reuse it if conversion failed

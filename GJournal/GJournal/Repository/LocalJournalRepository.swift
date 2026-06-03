@@ -123,24 +123,52 @@ class LocalJournalRepository: BaseJournalRepository {
     }
 
     /// Restore a soft-deleted bit
-    func restoreBit(id: UUID) {
+    override func restoreBit(id: UUID) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
             return
         }
 
-        if let index = bits.firstIndex(where: { $0.id == id }) {
-            bits[index].deletedAt = nil
-            bits[index].lastModified = Date()
-
-            do {
+        let predicate = #Predicate<Bit> { $0.id == id }
+        do {
+            if let bit = try modelContext.fetch(FetchDescriptor<Bit>(predicate: predicate)).first {
+                bit.deletedAt = nil
+                bit.lastModified = Date()
                 try modelContext.save()
                 loadBitsFromContext()
                 AppLogger.log("[LocalRepository] Restored bit: \(id)")
-            } catch {
-                errorMessage = "Failed to restore bit: \(error.localizedDescription)"
-                AppLogger.log("[LocalRepository] Failed to restore bit: \(error)")
+                
+                // Re-trigger background AI processing to re-integrate the restored entry
+                aiProcessingManager?.processBit(bit)
+            } else {
+                errorMessage = "Bit not found"
             }
+        } catch {
+            errorMessage = "Failed to restore bit: \(error.localizedDescription)"
+            AppLogger.log("[LocalRepository] Failed to restore bit: \(error)")
+        }
+    }
+
+    /// Permanently delete a single bit
+    override func permanentlyDeleteBit(id: UUID) {
+        guard let modelContext = modelContext else {
+            errorMessage = "Data context not available"
+            return
+        }
+
+        let predicate = #Predicate<Bit> { $0.id == id }
+        do {
+            if let bit = try modelContext.fetch(FetchDescriptor<Bit>(predicate: predicate)).first {
+                modelContext.delete(bit)
+                try modelContext.save()
+                loadBitsFromContext()
+                AppLogger.log("[LocalRepository] Permanently deleted bit: \(id)")
+            } else {
+                errorMessage = "Bit not found"
+            }
+        } catch {
+            errorMessage = "Failed to permanently delete bit: \(error.localizedDescription)"
+            AppLogger.log("[LocalRepository] Failed to permanently delete bit: \(error)")
         }
     }
 

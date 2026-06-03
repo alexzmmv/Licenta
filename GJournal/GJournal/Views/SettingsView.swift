@@ -340,6 +340,30 @@ struct SettingsView: View {
                     Text("These tools re-process entries using the currently selected embedding model.")
                 }
                 
+                // Trash Section
+                Section {
+                    NavigationLink(destination: RecentlyDeletedView(repository: repository)) {
+                        HStack {
+                            Image(systemName: "trash")
+                                .foregroundColor(.pink)
+                            Text("Recently Deleted")
+                            Spacer()
+                            if !repository.deletedBits.isEmpty {
+                                Text("\(repository.deletedBits.count)")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.pink.opacity(0.85))
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Data Management")
+                }
+
                 // Actions Section
                 Section {
                     Button {

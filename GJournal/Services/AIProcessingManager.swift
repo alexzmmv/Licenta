@@ -10,6 +10,7 @@
 import Foundation
 import SwiftData
 import Combine
+import UIKit
 
 /// Orchestrates the AI processing pipeline. Isolated to MainActor so all
 /// published state and SwiftData access are safe without explicit hops.
@@ -53,8 +54,20 @@ final class AIProcessingManager: ObservableObject {
         let flattenedText = TextFlattener.flatten(bit: bit)
         isProcessing = true
 
+        var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "AI-Pipeline-\(bitID.uuidString)") {
+            UIApplication.shared.endBackgroundTask(backgroundTaskID)
+            backgroundTaskID = .invalid
+        }
+
         Task {
-            defer { isProcessing = false }
+            defer {
+                isProcessing = false
+                if backgroundTaskID != .invalid {
+                    UIApplication.shared.endBackgroundTask(backgroundTaskID)
+                    backgroundTaskID = .invalid
+                }
+            }
             do {
                 try await runPipeline(for: bitID, flattenedText: flattenedText)
                 lastError = nil

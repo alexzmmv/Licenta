@@ -11,6 +11,7 @@ import SwiftData
 
 open class BaseJournalRepository: ObservableObject {
     @Published var bits: [Bit] = []
+    @Published var deletedBits: [Bit] = []
     @Published var errorMessage: String? = nil
     
     var modelContext: ModelContext?
@@ -27,22 +28,30 @@ open class BaseJournalRepository: ObservableObject {
     open func loadBitsFromContext() {
         guard let modelContext = modelContext else { return }
         
-        // Use SwiftData Predicate for maximum database query efficiency
-        let predicate = #Predicate<Bit> { bit in
+        let activePredicate = #Predicate<Bit> { bit in
             bit.deletedAt == nil
         }
-        
-        let descriptor = FetchDescriptor<Bit>(
-            predicate: predicate,
+        let activeDescriptor = FetchDescriptor<Bit>(
+            predicate: activePredicate,
             sortBy: [SortDescriptor(\.lastModified, order: .reverse)]
         )
         
+        let deletedPredicate = #Predicate<Bit> { bit in
+            bit.deletedAt != nil
+        }
+        let deletedDescriptor = FetchDescriptor<Bit>(
+            predicate: deletedPredicate,
+            sortBy: [SortDescriptor(\.deletedAt, order: .reverse)]
+        )
+        
         do {
-            bits = try modelContext.fetch(descriptor)
-            AppLogger.log("[Repository] Loaded \(bits.count) active bits")
+            bits = try modelContext.fetch(activeDescriptor)
+            deletedBits = try modelContext.fetch(deletedDescriptor)
+            AppLogger.log("[Repository] Loaded \(bits.count) active, \(deletedBits.count) deleted bits")
         } catch {
             AppLogger.error("[Repository] Failed to load bits: \(error)")
             bits = []
+            deletedBits = []
         }
     }
 
@@ -57,6 +66,14 @@ open class BaseJournalRepository: ObservableObject {
     }
 
     func deleteBit(id: UUID) {
+        // Override in subclass
+    }
+
+    func restoreBit(id: UUID) {
+        // Override in subclass
+    }
+
+    func permanentlyDeleteBit(id: UUID) {
         // Override in subclass
     }
 

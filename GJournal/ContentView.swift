@@ -130,15 +130,15 @@ struct ContentView: View {
             ZStack(alignment: .bottomTrailing) {
                 // Background: black + subtle purple glow at bottom
                 ZStack(alignment: .bottom) {
-                    Color.black.ignoresSafeArea()
+                    Color.black
                     LinearGradient(
                         colors: [Color.clear, Color(red: 0.18, green: 0.08, blue: 0.38).opacity(0.5)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                     .frame(height: 320)
-                    .ignoresSafeArea()
                 }
+                .ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 28) {

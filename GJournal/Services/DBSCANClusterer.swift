@@ -23,11 +23,11 @@ struct CalibrationResult: CustomStringConvertible {
     let totalPoints: Int
     let silhouetteScore: Double
 
-    var noiseFraction: Double {
+    nonisolated var noiseFraction: Double {
         totalPoints > 0 ? Double(noiseCount) / Double(totalPoints) : 0
     }
 
-    var description: String {
+    nonisolated var description: String {
         let nf = String(format: "%.1f%%", noiseFraction * 100)
         let sil = String(format: "%.4f", silhouetteScore)
         let eps = String(format: "%.4f", epsilon)
@@ -40,7 +40,7 @@ final class DBSCANClusterer: ClusteringServiceProtocol, Sendable {
     let epsilon: Double
     let minPoints: Int
 
-    init(epsilon: Double = 0.3, minPoints: Int = 3) {
+    nonisolated init(epsilon: Double = 0.3, minPoints: Int = 3) {
         self.epsilon = epsilon
         self.minPoints = minPoints
     }
@@ -426,7 +426,7 @@ final class DBSCANClusterer: ClusteringServiceProtocol, Sendable {
     }
 
     /// Pre-normalise all vectors once with vDSP — avoids re-computing norms per pair.
-    private static func preNormalize(_ points: [[Float]]) -> [[Float]] {
+    private nonisolated static func preNormalize(_ points: [[Float]]) -> [[Float]] {
         return points.map { v in
             var normSq: Float = 0
             vDSP_svesq(v, 1, &normSq, vDSP_Length(v.count))
@@ -440,7 +440,7 @@ final class DBSCANClusterer: ClusteringServiceProtocol, Sendable {
     }
 
     /// Cosine distance using vDSP dot product on pre-normalised vectors (O(D) per pair).
-    private static func cosineDistanceAccelerate(_ a: [Float], _ b: [Float]) -> Double {
+    private nonisolated static func cosineDistanceAccelerate(_ a: [Float], _ b: [Float]) -> Double {
         guard a.count == b.count, !a.isEmpty else { return 2.0 }
         var dot: Float = 0
         vDSP_dotpr(a, 1, b, 1, &dot, vDSP_Length(a.count))

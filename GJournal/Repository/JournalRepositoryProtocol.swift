@@ -14,6 +14,9 @@ protocol JournalRepositoryProtocol: ObservableObject {
     /// All loaded bits, sorted by last modified descending
     var bits: [Bit] { get }
 
+    /// All soft-deleted bits, sorted by deletion date descending
+    var deletedBits: [Bit] { get }
+
     /// Current error message, if any
     var errorMessage: String? { get set }
 
@@ -42,6 +45,8 @@ protocol JournalRepositoryProtocol: ObservableObject {
     )
 
     func deleteBit(id: UUID)
+    func restoreBit(id: UUID)
+    func permanentlyDeleteBit(id: UUID)
     func toggleHideBit(id: UUID)
 
     // MARK: - Query Operations
