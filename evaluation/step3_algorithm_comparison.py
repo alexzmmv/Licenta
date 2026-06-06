@@ -2,7 +2,7 @@
 step3_algorithm_comparison.py
 
 Compare 3 clustering algorithms (+ HDBSCAN bonus) on the
-TweetSentimentExtractionClustering benchmark using a FIXED embedding model
+TwentyNewsgroupsClustering benchmark using a FIXED embedding model
 (Nomic-768, full dimensionality, normalised).
 
 Algorithms:
@@ -29,7 +29,7 @@ import torch
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
-from sklearn.metrics import v_measure_score, adjusted_rand_score, normalized_mutual_info_score
+from sklearn.metrics import v_measure_score, adjusted_rand_score, homogeneity_score, completeness_score
 
 # ── adaptive_dbscan must be importable (sibling module or on sys.path) ───────
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -63,11 +63,12 @@ def compute_metrics(true_labels, pred_labels, embeddings):
     # Extrinsic metrics – exclude noise points from BOTH predictions and ground truth
     valid_mask = ~noise_mask
     if valid_mask.sum() == 0:
-        v_measure = ari = nmi = 0.0
+        v_measure = ari = homog = compl = 0.0
     else:
         v_measure = v_measure_score(true_labels[valid_mask], pred_labels[valid_mask])
         ari = adjusted_rand_score(true_labels[valid_mask], pred_labels[valid_mask])
-        nmi = normalized_mutual_info_score(true_labels[valid_mask], pred_labels[valid_mask])
+        homog = homogeneity_score(true_labels[valid_mask], pred_labels[valid_mask])
+        compl = completeness_score(true_labels[valid_mask], pred_labels[valid_mask])
 
     # DBCV (best-effort)
     dbcv = None
@@ -81,7 +82,8 @@ def compute_metrics(true_labels, pred_labels, embeddings):
     return {
         "V-measure": round(v_measure, 4),
         "ARI":       round(ari, 4),
-        "NMI":       round(nmi, 4),
+        "Homog":     round(homog, 4),
+        "Compl":     round(compl, 4),
         "Noise%":    round(noise_ratio * 100, 2),
         "DBCV":      round(dbcv, 4) if dbcv is not None else "N/A",
         "Clusters":  n_clusters,
@@ -89,10 +91,10 @@ def compute_metrics(true_labels, pred_labels, embeddings):
 
 
 def load_dataset():
-    """Load TweetSentimentExtractionClustering from mteb."""
+    """Load TwentyNewsgroupsClustering from mteb."""
     import mteb
 
-    task = mteb.get_tasks(tasks=["TweetSentimentExtractionClustering"])[0]
+    task = mteb.get_tasks(tasks=["TwentyNewsgroupsClustering"])[0]
     task.load_data()
 
     # Try primary access pattern
@@ -154,7 +156,7 @@ def embed_nomic_768(sentences):
 # ── main ─────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 70)
-    print("Step 3 – Algorithm Comparison on TweetSentimentExtractionClustering")
+    print("Step 3 – Algorithm Comparison on TwentyNewsgroupsClustering")
     print("=" * 70)
 
     # 1. Load data
@@ -181,8 +183,8 @@ def main():
     n = len(sentences)
     base_min_points = adaptive_min_points(n)
     calib = calibrate_epsilon(embeddings, base_min_points)
-    eps_classic = calib["epsilon"]
-    mp_classic = calib["min_points"]
+    eps_classic = calib.epsilon
+    mp_classic = calib.min_points
     print(f"\n  ▸ Classic Adaptive DBSCAN")
     print(f"    calibrated ε = {eps_classic:.4f},  minPoints = {mp_classic}")
     db_classic = DBSCAN(eps=eps_classic, min_samples=mp_classic, metric="cosine")
@@ -191,8 +193,8 @@ def main():
 
     # ── Variant 3: MRL-Adapted DBSCAN ──
     calib_mrl = calibrate_epsilon_mrl(embeddings, base_min_points)
-    eps_mrl = calib_mrl["epsilon"]
-    mp_mrl = calib_mrl["min_points"]
+    eps_mrl = calib_mrl.epsilon
+    mp_mrl = calib_mrl.min_points
     print(f"\n  ▸ MRL-Adapted DBSCAN")
     print(f"    calibrated ε = {eps_mrl:.4f},  minPoints = {mp_mrl}")
     db_mrl = DBSCAN(eps=eps_mrl, min_samples=mp_mrl, metric="cosine")
@@ -202,9 +204,11 @@ def main():
     # ── Variant 4: HDBSCAN (bonus) ──
     try:
         import hdbscan
+        from scipy.spatial.distance import cdist as _cdist
         print("\n  ▸ HDBSCAN (min_cluster_size=3, cosine)")
-        clusterer = hdbscan.HDBSCAN(min_cluster_size=3, metric="cosine")
-        hdb_labels = clusterer.fit_predict(embeddings)
+        dist_mat = _cdist(embeddings, embeddings, metric="cosine").astype(np.float64)
+        clusterer = hdbscan.HDBSCAN(min_cluster_size=3, metric="precomputed")
+        hdb_labels = clusterer.fit_predict(dist_mat)
         results["HDBSCAN"] = compute_metrics(labels, hdb_labels, embeddings)
     except ImportError:
         print("\n  ▸ HDBSCAN — skipped (hdbscan not installed)")
@@ -214,7 +218,7 @@ def main():
     print("RESULTS")
     print("=" * 70)
 
-    metric_keys = ["V-measure", "ARI", "NMI", "Noise%", "DBCV", "Clusters"]
+    metric_keys = ["V-measure", "ARI", "Homog", "Compl", "Noise%", "DBCV", "Clusters"]
     header = f"{'Algorithm':<22}" + "".join(f"{k:>12}" for k in metric_keys)
     separator = "-" * len(header)
     print(header)
@@ -243,7 +247,7 @@ def main():
     # TXT
     txt_path = out_dir / "step3_algorithm_comparison.txt"
     with open(txt_path, "w") as f:
-        f.write("Step 3 – Algorithm Comparison on TweetSentimentExtractionClustering\n")
+        f.write("Step 3 – Algorithm Comparison on TwentyNewsgroupsClustering\n")
         f.write("Embedding model: Nomic-768 (full dimensionality, normalised)\n")
         f.write("=" * 70 + "\n\n")
         f.write(header + "\n")

@@ -1,8 +1,11 @@
 """
-Step 2 — Clustering Quality (V-measure / ARI / NMI on TweetSentimentExtractionClustering)
+Step 2 — Clustering Quality (V-measure / ARI / Homogeneity / Completeness on TwentyNewsgroupsClustering)
 
-Embed tweets with each model, run DBSCAN (eps=0.3, min_samples=3, cosine),
+Embed with each model, run **Adaptive DBSCAN** (calibrate_epsilon per model),
 then measure extrinsic clustering metrics — excluding noise points (label=-1).
+
+Each model gets its own calibrated ε and minPoints so the comparison is fair
+across different cosine-distance distributions.
 
 Models compared:
   1. all-MiniLM-L6-v2          (384-dim, mean pooling)
@@ -14,6 +17,7 @@ Run:  python step2_clustering_quality.py
 """
 
 import json
+import sys
 from pathlib import Path
 
 import mteb
@@ -23,9 +27,14 @@ from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import (
     adjusted_rand_score,
-    normalized_mutual_info_score,
+    completeness_score,
+    homogeneity_score,
     v_measure_score,
 )
+
+# ── adaptive_dbscan (Python port of Swift DBSCANClusterer) ────────────────────
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from adaptive_dbscan import calibrate_epsilon, adaptive_min_points
 
 # ── Device detection ──────────────────────────────────────────────────────────
 device = (
@@ -35,9 +44,9 @@ device = (
 )
 print(f"Device: {device}")
 
-# ── Load TweetSentimentExtractionClustering ───────────────────────────────────
-print("Loading TweetSentimentExtractionClustering...")
-task = mteb.get_tasks(tasks=["TweetSentimentExtractionClustering"])[0]
+# ── Load TwentyNewsgroupsClustering ───────────────────────────────────────────
+print("Loading TwentyNewsgroupsClustering...")
+task = mteb.get_tasks(tasks=["TwentyNewsgroupsClustering"])[0]
 task.load_data()
 
 # Navigate the dataset structure with fallbacks
@@ -75,32 +84,48 @@ labels = np.array(labels)
 print(f"  {len(sentences)} sentences, {len(np.unique(labels))} unique labels.\n")
 
 
-# ── Clustering + metrics helper ───────────────────────────────────────────────
+# ── Adaptive clustering + metrics helper ──────────────────────────────────────
 
 def cluster_and_score(embeddings: np.ndarray, true_labels: np.ndarray) -> dict:
-    """Run DBSCAN and compute extrinsic metrics (noise points excluded)."""
-    predictions = DBSCAN(eps=0.3, min_samples=3, metric="cosine").fit_predict(embeddings)
+    """Run Adaptive DBSCAN and compute extrinsic metrics (noise points excluded)."""
+    n = len(embeddings)
+    base_mp = adaptive_min_points(n)
+    calib = calibrate_epsilon(embeddings, base_mp)
+
+    eps = calib.epsilon
+    mp = calib.min_points
+
+    predictions = DBSCAN(eps=eps, min_samples=mp, metric="cosine").fit_predict(embeddings)
 
     noise_ratio = float(np.sum(predictions == -1)) / len(predictions)
+    n_clusters = len(set(predictions) - {-1})
 
     # Exclude noise points from extrinsic metrics
     mask = predictions != -1
     if mask.sum() == 0:
         return {
-            "v_measure":   0.0,
-            "ari":         0.0,
-            "nmi":         0.0,
-            "noise_ratio": noise_ratio,
+            "v_measure":      0.0,
+            "ari":            0.0,
+            "homogeneity":    0.0,
+            "completeness":   0.0,
+            "noise_ratio":    noise_ratio,
+            "epsilon":        eps,
+            "min_points":     mp,
+            "clusters":       n_clusters,
         }
 
     gt_filtered   = true_labels[mask]
     pred_filtered = predictions[mask]
 
     return {
-        "v_measure":   v_measure_score(gt_filtered, pred_filtered),
-        "ari":         adjusted_rand_score(gt_filtered, pred_filtered),
-        "nmi":         normalized_mutual_info_score(gt_filtered, pred_filtered),
-        "noise_ratio": noise_ratio,
+        "v_measure":      v_measure_score(gt_filtered, pred_filtered),
+        "ari":            adjusted_rand_score(gt_filtered, pred_filtered),
+        "homogeneity":    homogeneity_score(gt_filtered, pred_filtered),
+        "completeness":   completeness_score(gt_filtered, pred_filtered),
+        "noise_ratio":    noise_ratio,
+        "epsilon":        eps,
+        "min_points":     mp,
+        "clusters":       n_clusters,
     }
 
 
@@ -115,8 +140,9 @@ def evaluate_minilm() -> dict:
     )
     embs = model.encode(sentences, show_progress_bar=True, normalize_embeddings=True)
     scores = cluster_and_score(embs, labels)
+    print(f"  ε={scores['epsilon']:.4f}  minPts={scores['min_points']}  clusters={scores['clusters']}")
     print(f"  V-measure: {scores['v_measure']:.4f}  ARI: {scores['ari']:.4f}  "
-          f"NMI: {scores['nmi']:.4f}  Noise: {scores['noise_ratio']:.2%}\n")
+          f"Homog: {scores['homogeneity']:.4f}  Compl: {scores['completeness']:.4f}  Noise: {scores['noise_ratio']:.2%}\n")
     return {"model": "MiniLM-L6-v2", "dim": 384, **scores}
 
 
@@ -137,8 +163,9 @@ def evaluate_nomic(dim: int) -> dict:
     embs = embs / (np.linalg.norm(embs, axis=1, keepdims=True) + 1e-9)
 
     scores = cluster_and_score(embs, labels)
+    print(f"  ε={scores['epsilon']:.4f}  minPts={scores['min_points']}  clusters={scores['clusters']}")
     print(f"  V-measure: {scores['v_measure']:.4f}  ARI: {scores['ari']:.4f}  "
-          f"NMI: {scores['nmi']:.4f}  Noise: {scores['noise_ratio']:.2%}\n")
+          f"Homog: {scores['homogeneity']:.4f}  Compl: {scores['completeness']:.4f}  Noise: {scores['noise_ratio']:.2%}\n")
     return {"model": "Nomic-v1.5", "dim": dim, **scores}
 
 
@@ -164,8 +191,9 @@ def evaluate_apple() -> dict | None:
     dim = embs.shape[1]
     scores = cluster_and_score(embs, labels)
     print(f"  Dimension: {dim}")
+    print(f"  ε={scores['epsilon']:.4f}  minPts={scores['min_points']}  clusters={scores['clusters']}")
     print(f"  V-measure: {scores['v_measure']:.4f}  ARI: {scores['ari']:.4f}  "
-          f"NMI: {scores['nmi']:.4f}  Noise: {scores['noise_ratio']:.2%}\n")
+          f"Homog: {scores['homogeneity']:.4f}  Compl: {scores['completeness']:.4f}  Noise: {scores['noise_ratio']:.2%}\n")
     return {"model": "Apple NLEmbedding", "dim": dim, **scores}
 
 
@@ -185,15 +213,16 @@ if __name__ == "__main__":
 
     # ── Pretty-print table ────────────────────────────────────────────────
     header = (f"{'Model':<22}  {'Dim':>5}  {'V-measure':>10}  "
-              f"{'ARI':>8}  {'NMI':>8}  {'Noise %':>8}")
+              f"{'ARI':>8}  {'Homog':>8}  {'Compl':>8}  {'Noise %':>8}  "
+              f"{'Epsilon':>8}  {'MinPts':>7}  {'Clusters':>8}")
     sep    = "-" * len(header)
 
     table_lines = [
-        "Step 2 — Clustering Quality (TweetSentimentExtractionClustering)",
+        "Step 2 — Clustering Quality (TwentyNewsgroupsClustering)",
         "=" * len(header),
-        f"Device:    {device}",
-        f"Sentences: {len(sentences)}",
-        f"DBSCAN:    eps=0.3, min_samples=3, metric=cosine",
+        f"Device:     {device}",
+        f"Sentences:  {len(sentences)}",
+        f"Clustering: Adaptive DBSCAN (calibrate_epsilon per model)",
         "",
         header,
         sep,
@@ -201,7 +230,8 @@ if __name__ == "__main__":
     for r in rows:
         table_lines.append(
             f"{r['model']:<22}  {r['dim']:>5}  {r['v_measure']:>10.4f}  "
-            f"{r['ari']:>8.4f}  {r['nmi']:>8.4f}  {r['noise_ratio']:>7.2%}"
+            f"{r['ari']:>8.4f}  {r['homogeneity']:>8.4f}  {r['completeness']:>8.4f}  {r['noise_ratio']:>7.2%}  "
+            f"{r['epsilon']:>8.4f}  {r['min_points']:>7}  {r['clusters']:>8}"
         )
     table_lines.append(sep)
 
@@ -211,11 +241,13 @@ if __name__ == "__main__":
     # ── Save CSV ──────────────────────────────────────────────────────────
     csv_path = Path("results/step2_clustering_quality.csv")
     with open(csv_path, "w") as f:
-        f.write("model,dim,v_measure,ari,nmi,noise_ratio\n")
+        f.write("model,dim,v_measure,ari,homogeneity,completeness,noise_ratio,epsilon,min_points,clusters\n")
         for r in rows:
             f.write(f"{r['model']},{r['dim']},"
                     f"{r['v_measure']:.6f},{r['ari']:.6f},"
-                    f"{r['nmi']:.6f},{r['noise_ratio']:.6f}\n")
+                    f"{r['homogeneity']:.6f},{r['completeness']:.6f},"
+                    f"{r['noise_ratio']:.6f},"
+                    f"{r['epsilon']:.6f},{r['min_points']},{r['clusters']}\n")
     print(f"\nCSV  saved → {csv_path}")
 
     # ── Save TXT ──────────────────────────────────────────────────────────

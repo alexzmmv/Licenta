@@ -1,0 +1,4 @@
+model,dim,spearman
+MiniLM-L6-v2,384,0.867163
+Nomic-v1.5,256,0.840269
+Nomic-v1.5,768,0.844734

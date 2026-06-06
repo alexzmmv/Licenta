@@ -30,7 +30,7 @@ import torch
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
-from sklearn.metrics import v_measure_score, adjusted_rand_score, normalized_mutual_info_score
+from sklearn.metrics import v_measure_score, adjusted_rand_score, homogeneity_score, completeness_score
 
 # ── adaptive_dbscan must be importable (sibling module or on sys.path) ───────
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -62,16 +62,18 @@ def compute_metrics(true_labels, pred_labels):
 
     valid_mask = ~noise_mask
     if valid_mask.sum() == 0:
-        v_measure = ari = nmi = 0.0
+        v_measure = ari = homog = compl = 0.0
     else:
         v_measure = v_measure_score(true_labels[valid_mask], pred_labels[valid_mask])
         ari = adjusted_rand_score(true_labels[valid_mask], pred_labels[valid_mask])
-        nmi = normalized_mutual_info_score(true_labels[valid_mask], pred_labels[valid_mask])
+        homog = homogeneity_score(true_labels[valid_mask], pred_labels[valid_mask])
+        compl = completeness_score(true_labels[valid_mask], pred_labels[valid_mask])
 
     return {
         "V-measure": round(v_measure, 4),
         "ARI":       round(ari, 4),
-        "NMI":       round(nmi, 4),
+        "Homog":     round(homog, 4),
+        "Compl":     round(compl, 4),
         "Noise%":    round(noise_ratio * 100, 2),
         "Clusters":  n_clusters,
     }
@@ -98,8 +100,8 @@ def run_adaptive_dbscan(embeddings):
     base_min_points = adaptive_min_points(n)
     calib = calibrate_epsilon(embeddings, base_min_points)
 
-    eps = calib["epsilon"]
-    mp = calib["min_points"]
+    eps = calib.epsilon
+    mp = calib.min_points
 
     db = DBSCAN(eps=eps, min_samples=mp, metric="cosine")
     pred = db.fit_predict(embeddings)
@@ -213,7 +215,7 @@ def main():
     print("RESULTS")
     print("=" * 70)
 
-    metric_keys = ["V-measure", "ARI", "NMI", "Noise%", "Epsilon", "MinPts", "Clusters"]
+    metric_keys = ["V-measure", "ARI", "Homog", "Compl", "Noise%", "Epsilon", "MinPts", "Clusters"]
     header = f"{'Model':<16}" + "".join(f"{k:>12}" for k in metric_keys)
     separator = "-" * len(header)
     print(header)
