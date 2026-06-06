@@ -1,0 +1,10 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+Personal journaling has evolved from simple note-taking into a practice supported by digital tools that encourage self-reflection and emotional awareness. Recent advances in mobile hardware and on-device machine learning make it possible to analyze personal text privately, without relying on cloud services. This thesis explores how such capabilities can be used to support individuals who journal regularly or who seek to better understand their thoughts, emotions, and behavioral patterns.
+
+The project proposes a mobile microjournaling system that processes short user entries directly on the device using compact language models, emotion detection techniques, and clustering algorithms. By extracting semantic representations of journal entries and grouping them based on similarity, the system aims to reveal recurring themes and emotional trends that may otherwise remain unnoticed. Running all computation locally ensures that sensitive personal data remains private while still enabling meaningful insights.
+
+The methodology builds on prior work in emotion recognition on edge devices \cite{Pandelea2021EmotionEdge}, efficient clustering for mobile processors \cite{awad2022improved}, and NLP-assisted journaling systems \cite{10351450}. In addition, recent developments in lightweight transformer architectures such as MobileBERT \cite{sun2020mobilebert}, DistilBERT \cite{sanh2019distilbert}, and TinyBERT \cite{jiao2020tinybert} demonstrate that high-quality language understanding can be achieved with significantly reduced computational cost, making them suitable for modern smartphone NPUs.
+
+The goal of this bachelor thesis is to provide a technical contribution to the design and implementation of an on-device AI system for personal reflection. The chapters that follow present the theoretical foundations, the rationale behind the chosen models and algorithms, the system architecture, and the practical implementation of the mobile application.

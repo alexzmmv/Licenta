@@ -1,0 +1,51 @@
+%\documentclass[12pt]{scrreprt}
+\documentclass[12pt]{report}
+
+\specialization{INFORMATICA}
+\title{AI-Based Microjournaling for Self-Reflection using Emotion Detection and Clustering}
+\author{Dumitrascu Constantin-Alexandru}
+\supervisor{Professor, Lect. Horea Muresan}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\newpage
+
+\pagenumbering{roman}
+
+\cleardoublepage
+\begin{center}
+\textbf{ABSTRACT}
+\end{center}
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+\begin{abstract}
+This thesis presents the design and implementation of a personal mobile application for on-device reflective journaling, developed with a strong focus on privacy, efficiency, and modern mobile hardware capabilities. Chapter~\ref{ch:introduction} introduces the motivation for reflective journaling and the need for privacy-preserving natural language processing on personal devices. Chapter~\ref{ch:requirements} reviews the theoretical foundations, including transformer-based language models, semantic embeddings, emotion detection, and clustering techniques relevant to short-form personal text.
+
+Chapter~\ref{ch:implementation} details the proposed system architecture and the practical requirements of the application. The system employs compact neural networks to extract semantic embeddings and detect emotions directly on the device using quantized transformer models. These embeddings are further processed through an on-device clustering algorithm, enabling the application to generate meaningful insights and visualizations, such as calendars, lists, and graph-based representations of user experiences. All computation is performed locally using the Neural Processing Units available on iOS, iPadOS, and macOS devices, ensuring that no personal data leaves the device.
+
+The main contributions of this thesis include: (1) the design of a fully on-device NLP pipeline for reflective journaling, (2) the integration of quantized transformer models optimized for mobile hardware, (3) an incremental clustering approach tailored for short personal entries, and (4) a privacy-first architecture that eliminates the need for cloud processing. The results demonstrate the feasibility and originality of combining lightweight NLP models with modern mobile hardware to support secure, real-time personal reflection.
+\end{abstract}
+
+\cleardoublepage
+\tableofcontents
+\cleardoublepage
+
+\pagenumbering{arabic}
+
+\input{chapters/chapter1_introduction}
+\input{chapters/chapter2}
+\input{chapters/chapter3}
+\input{chapters/chapter4}
+\input{chapters/chapter6_conclusions}
+
+\nocite{*}
+\bibliography{references}
+
+\end{document}

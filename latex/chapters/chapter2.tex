@@ -1,0 +1,214 @@
+\chapter{System Requirements and Specification}
+\label{ch:requirements}
+
+This chapter defines the practical requirements, system specification, and design constraints for the on‑device microjournaling application. It translates user goals into functional and non‑functional requirements, describes the high‑level architecture and data flow, and lists acceptance criteria and test targets for the prototype implementation.
+
+\section{Scope and Objectives}
+The application targets iOS, iPadOS, and macOS and performs all natural language processing locally on the device. The primary objectives are:
+\begin{itemize}
+  \item Provide a secure micro‑journaling experience with short text entries.
+  \item Generate semantic embeddings and detect emotion for each entry on device.
+  \item Group entries into semantically coherent clusters and present them via list, calendar, and graph visualizations.
+  \item Preserve user privacy by avoiding cloud storage or remote inference.
+  \item Maintain acceptable interactive performance on devices from iPhone 11 and newer.
+\end{itemize}
+
+\section{Assumptions and Constraints}
+The following assumptions and constraints are used throughout the specification:
+\begin{itemize}
+  \item Target platforms: iOS, iPadOS, macOS.
+  \item All NLP inference and clustering run on device; cloud sync is not supported.
+  \item Entry length is limited to approximately 500--600 characters.
+  \item Minimum supported device class: iPhone 11 or equivalent NPU capability.
+  \item Development stack: Swift + SwiftUI, Core ML for inference, SwiftData for local persistence, Python (RTX2070) for model fine‑tuning and conversion.
+  \item Models will be quantized and converted to Core ML format to reduce size and improve inference speed.
+  \item Where user input is incomplete, reasonable defaults are chosen and documented in this chapter.
+\end{itemize}
+
+\section{Functional Requirements}
+Each functional requirement is identified by an ID for traceability.
+
+\subsection{Core Functionality}
+\begin{description}
+  \item[FR1] \textbf{User authentication and local security.} The app must support biometric authentication (Face ID / Touch ID) and a fallback PIN to protect access to journal content.
+  \item[FR2] \textbf{Create micro‑journal entry.} The user can create a short text entry. The entry editor opens a focused input screen that "takes the story" from the user.
+  \item[FR3] \textbf{Entry views.} The user can view entries in a calendar view, a chronological list view, and a graph view that visualizes clusters and relationships.
+  \item[FR4] \textbf{On‑device analysis.} Immediately after saving an entry, the system generates a semantic embedding and runs an emotion classifier locally.
+  \item[FR5] \textbf{Clustering.} The system groups entries into clusters using an on‑device clustering algorithm. Clustering runs incrementally on new entries and can be re‑computed in batch.
+  \item[FR6] \textbf{Search and filtering.} The user can search entries by text and filter by date, detected emotion, and cluster membership.
+  \item[FR7] \textbf{Local storage and export.} All data is stored locally. The user can export an encrypted local backup file to the device file system.
+  \item[FR8] \textbf{Notifications (optional).} The app may send optional local notifications to prompt reflection when the system detects a need for review.
+\end{description}
+
+\subsection{Editing and Deletion Policies}
+\begin{description}
+  \item[FR9] \textbf{Edit policy.} The user may edit entries created on the same calendar day. Edits update embeddings and cluster assignments.
+  \item[FR10] \textbf{Deletion policy.} The user may delete entries. Deleted entries are soft‑deleted and retained for a configurable grace period (default three days) before permanent removal.
+\end{description}
+
+\section{Non‑Functional Requirements}
+\begin{description}
+  \item[NFR1] \textbf{Privacy.} No user text or embeddings leave the device. No cloud services are used for inference or storage.
+  \item[NFR2] \textbf{Security.} Local data at rest must be encrypted using platform APIs. Biometric/PIN gating is required for app access.
+  \item[NFR3] \textbf{Performance.} Interactive analysis latency should be under five seconds on the minimum target device for a single entry; background batch clustering may take longer.
+  \item[NFR4] \textbf{Model footprint.} Individual on‑device models should be quantized and kept as small as practical; a soft target is under 100 MB combined for core models.
+  \item[NFR5] \textbf{Battery and resource usage.} Background processing must be scheduled to minimize battery impact; heavy tasks should run when the device is idle or charging.
+  \item[NFR6] \textbf{Reliability.} The app must handle model failures gracefully and fall back to a degraded mode that preserves user data and basic UI functionality.
+  \item[NFR7] \textbf{Accessibility.} The UI must follow platform accessibility guidelines (dynamic type, VoiceOver support).
+\end{description}
+
+\section{System Architecture}
+This section describes the high‑level components and their responsibilities.
+
+\subsection{Components}
+\begin{itemize}
+  \item \textbf{UI Layer (SwiftUI).} Entry editor, calendar view, list view, graph view, settings, and authentication screens.
+  \item \textbf{Persistence Layer (SwiftData).} Local database for entries, embeddings, cluster metadata, and user settings. Data encryption at rest is applied here.
+  \item \textbf{Inference Engine (Core ML).} On‑device models for embedding generation and emotion classification. Models are loaded and executed via Core ML APIs.
+  \item \textbf{Clustering Engine.} Local implementation of a density‑aware clustering algorithm (DBSCAN or similar) optimized for small datasets and incremental updates.
+  \item \textbf{Scheduler / Background Worker.} Manages periodic batch clustering, model updates, and low‑priority maintenance tasks.
+  \item \textbf{Export / Backup Module.} Creates encrypted local backups and restores from backups.
+\end{itemize}
+
+\subsection{Architecture Diagram}
+Include a component diagram illustrating the UI, Persistence, Inference Engine, Clustering Engine, and Background Worker. Place the diagram file at \texttt{figures/architecture.pdf} and reference it here.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/architecture.pdf}
+  \caption{High‑level system architecture showing major components and data flow.}
+  \label{fig:architecture}
+\end{figure}
+
+\section{Data Flow and Processing Pipeline}
+The canonical data flow for a new entry is:
+
+\begin{enumerate}
+  \item User creates an entry in the editor and saves it.
+  \item The Persistence Layer stores the raw text and metadata.
+  \item The Inference Engine generates a semantic embedding and an emotion label for the entry.
+  \item The embedding and label are stored alongside the entry.
+  \item The Clustering Engine performs an incremental update to cluster assignments.
+  \item The UI updates calendar, list, and graph views to reflect the new entry and cluster membership.
+\end{enumerate}
+
+A periodic batch job re‑computes clusters and cluster summaries during idle time or when the device is charging.
+
+\section{Use Cases and User Flows}
+This section lists primary use cases and step‑by‑step flows.
+
+\subsection{Use Case UC1: Create Entry}
+\begin{itemize}
+  \item \textbf{Actor:} Authenticated user.
+  \item \textbf{Precondition:} App unlocked.
+  \item \textbf{Flow:} User opens editor, types entry (≤400, 150 per field), taps Save. System stores entry, runs inference, updates clusters, and refreshes views.
+  \item \textbf{Postcondition:} Entry visible in calendar/list/graph with detected emotion and cluster assignment.
+\end{itemize}
+
+\subsection{Use Case UC2: View Insights}
+\begin{itemize}
+  \item \textbf{Actor:} Authenticated user.
+  \item \textbf{Flow:} User opens Insights or Graph view. System displays clusters, representative entries, and emotion distribution. User can tap a cluster to see member entries.
+\end{itemize}
+
+\subsection{Use Case UC3: Edit Entry}
+\begin{itemize}
+  \item \textbf{Actor:} Authenticated user.
+  \item \textbf{Constraint:} Editing allowed only for entries created on the same calendar day.
+  \item \textbf{Flow:} User edits entry; system re‑computes embedding and updates cluster membership.
+\end{itemize}
+
+\subsection{Use Case UC4: Delete Entry}
+\begin{itemize}
+  \item \textbf{Actor:} Authenticated user.
+  \item \textbf{Flow:} User deletes entry. Entry is soft‑deleted and retained for a configurable grace period (default three days) before permanent removal.
+\end{itemize}
+
+\subsection{Use Case UC5: Notification for Reflection}
+\begin{itemize}
+  \item \textbf{Actor:} System (scheduler).
+  \item \textbf{Flow:} Scheduler evaluates cluster activity and user patterns; if conditions are met and notifications are enabled, a local notification prompts the user to review recent clusters or entries.
+\end{itemize}
+
+\section{Model Selection and Formats}
+Recommended model strategy for on‑device inference:
+\begin{itemize}
+  \item \textbf{Embedding model:} A compact sentence embedding model derived from a distilled transformer (MobileBERT or TinyBERT family) fine‑tuned for semantic similarity. Convert to Core ML and apply 8‑bit quantization where possible.
+  \item \textbf{Emotion classifier:} A lightweight classifier (distilled transformer or small CNN on top of embeddings) converted to Core ML and quantized.
+  \item \textbf{Training and conversion:} Fine‑tune models in Python on an RTX2070, then convert to Core ML using coremltools. Validate accuracy before deployment.
+\end{itemize}
+
+\section{Clustering Strategy}
+\begin{itemize}
+  \item Use a density‑based algorithm (DBSCAN or HDBSCAN variant) for robustness to noise and variable cluster sizes.
+  \item Maintain an index of embeddings in the local database to support incremental clustering.
+  \item Provide parameters exposed in settings (minimum samples, epsilon) with safe defaults tuned for short personal entries.
+  \item Support a nightly batch re‑clustering job to refine cluster boundaries and compute cluster summaries.
+\end{itemize}
+
+\section{Security and Privacy}
+\begin{itemize}
+  \item \textbf{Local encryption:} Use platform keychain and file encryption APIs to protect data at rest.
+  \item \textbf{Authentication:} Require biometric or PIN to unlock the app.
+  \item \textbf{No network transmission:} By default, the app must not transmit journal text, embeddings, or cluster metadata off device.
+  \item \textbf{Backup:} Exported backups must be encrypted and stored only in user‑controlled locations.
+\end{itemize}
+
+\section{Performance Targets and Testing}
+\begin{itemize}
+  \item \textbf{Interactive inference latency:} Target under 5 seconds on iPhone 11 for embedding + emotion classification.
+  \item \textbf{Incremental clustering latency:} Target under 2 seconds for updating cluster membership when adding a single entry.
+  \item \textbf{Batch clustering:} Acceptable to run for up to several minutes during idle/charging periods.
+  \item \textbf{Memory and storage:} Keep combined model size under 100 MB where possible; journal database should remain responsive under 200 MB of stored entries.
+  \item \textbf{Testing plan:} Measure latency, memory, and battery impact on representative devices (iPhone 11, iPhone 15, Macbook Pro M1). Evaluate clustering quality using internal metrics (silhouette, ARI) on synthetic and anonymized sample datasets.
+\end{itemize}
+
+\section{Acceptance Criteria}
+The prototype is acceptable when:
+\begin{itemize}
+  \item FR1–FR8 are implemented and demonstrable.
+  \item On‑device inference completes within the performance targets on the minimum device.
+  \item Data remains local and encrypted; biometric/PIN gating functions correctly.
+  \item Clustering produces coherent groups for a sample dataset and the graph view reflects cluster structure.
+  \item Export and restore of encrypted backups succeed without data loss.
+\end{itemize}
+
+\section{Implementation Plan and Milestones}
+\begin{enumerate}
+  \item \textbf{Step 1:} Project scaffolding, SwiftUI prototypes for editor, calendar, list, and graph views.
+  \item \textbf{Step 2:} Integrate persistence (SwiftData) and local security (biometric/PIN).
+  \item \textbf{Step 3:} Convert and integrate Core ML models for embedding and emotion detection; implement inference pipeline.
+  \item \textbf{Step 4:} Implement clustering engine, incremental updates, and graph visualization.
+  \item \textbf{Step 5:} Performance tuning, quantization, and device testing; prepare deliverables for Lab 4.
+\end{enumerate}
+
+\section{Traceability Matrix}
+Provide a table mapping functional requirements to implementation components and acceptance tests. Place this table in the appendix as Table~\ref{tab:traceability}.
+
+\begin{table}[h!]
+\centering
+\caption{Requirement traceability (excerpt).}
+\label{tab:traceability}
+\begin{tabular}{p{0.18\textwidth} p{0.32\textwidth} p{0.32\textwidth}}
+\hline
+\textbf{Requirement} & \textbf{Implementation Component} & \textbf{Acceptance Test} \\
+\hline
+FR1 Authentication & Platform biometric APIs, Keychain & Unlock app with Face ID / PIN \\
+FR2 Create entry & SwiftUI editor, SwiftData & Save entry and verify stored text \\
+FR4 On‑device analysis & Core ML models, inference pipeline & Embedding and emotion label present after save \\
+FR5 Clustering & Local clustering engine & New entry assigned to cluster within target latency \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Open Issues and Decisions}
+The following items require confirmation or further refinement:
+\begin{itemize}
+  \item Exact model size budget and acceptable quantization level.
+  \item Fine‑tuning dataset and privacy guarantees for training data.
+  \item Detailed notification rules for prompting reflection.
+  \item Retention policy and user controls for soft‑deleted entries.
+\end{itemize}
+
+\section{Summary}
+This chapter specified the functional and non‑functional requirements, the high‑level architecture, data flow, and acceptance criteria for the on‑device microjournaling system. The next chapter will describe the implementation details, model conversion steps, and the evaluation methodology used to validate the prototype.
