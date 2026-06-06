@@ -8,4 +8,5 @@ Model                     Dim   Spearman
 MiniLM-L6-v2              384     0.8672
 Nomic-v1.5                256     0.8403
 Nomic-v1.5                768     0.8447
+Apple NLEmbedding         512     0.7171
 ----------------------------------------

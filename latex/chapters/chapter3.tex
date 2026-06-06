@@ -1,17 +1,8 @@
 \chapter{Design, Implementation, and Testing}
 \label{ch:implementation}
 
-This chapter presents a concise, implementation‑focused version of the design, data model, AI pipeline, clustering, visualization, and the functional test (F1) for the GJournal prototype.
-
 \section{Scope and Objectives}
-The prototype targets iOS/iPadOS/macOS and performs all NLP on device. Objectives:
-\begin{itemize}
-  \item Secure, local micro‑journaling with short entries.
-  \item On‑device embedding and emotion detection per entry.
-  \item Semantic grouping (clusters) and presentation via list, calendar, and graph.
-  \item Preserve privacy: no cloud inference or storage.
-  \item Maintain interactive performance on devices from iPhone 11 onward.
-\end{itemize}
+The prototype targets iOS and performs all NLP on device, providing secure local micro‑journaling, on‑device embedding and emotion detection per entry, semantic clustering presented via list, calendar, and graph, with no cloud inference or storage, and interactive performance maintained from iPhone 14 onward.
 
 \section{High‑level Architecture}
 GJournal uses a four‑layer architecture: \textbf{UI (SwiftUI)}, \textbf{Repository}, \textbf{Service} (AIProcessingManager, DBSCANClusterer, SafetyFilter), and \textbf{Persistence (SwiftData)}. Services are injected via protocol interfaces so mock implementations can be replaced by Core ML models without changing higher layers.
@@ -53,61 +44,30 @@ The \texttt{AIProcessingManager} runs a six‑step pipeline on a background task
 The pipeline minimizes UI latency by running off the main thread and switching to the MainActor only for persistence.
 
 \section{Clustering}
-\begin{itemize}
-  \item \textbf{Algorithm:} DBSCAN chosen for no required cluster count and noise detection.
-  \item \textbf{Distance:} cosine distance \(d(a,b)=1-\frac{a\cdot b}{\|a\|\|b\|}\).
-  \item \textbf{Parameters:} adaptive epsilon calibrated per corpus via \texttt{calibrate\_epsilon} (10th percentile of pairwise distances); adaptive \texttt{minPoints} scaled by corpus size (minimum 3, maximum 11). For MRL-truncated embeddings, epsilon is further scaled by $\sqrt{d / 768}$ to compensate for the compressed distance range at lower dimensions.
-  \item \textbf{Naming:} NLP-based namer extracts frequent nouns/adjectives from cluster entries; fallback to dominant emotion.
-  \item \textbf{Complexity:} pairwise distance matrix \(O(N^2)\) acceptable for hundreds of entries; future optimizations (indexing/approximate NN) planned for scale.
-\end{itemize}
+DBSCAN is used because it requires no preset cluster count and handles noise naturally. Distance is cosine: \(d(a,b)=1-\frac{a\cdot b}{\|a\|\|b\|}\). Epsilon is calibrated per corpus via \texttt{calibrate\_epsilon} (10th percentile of pairwise distances), and \texttt{minPoints} scales with corpus size (minimum 3, maximum 11). For MRL-truncated embeddings epsilon is further scaled by $\sqrt{d / 768}$ to compensate for the compressed distance range at lower dimensions. Cluster names are derived by extracting frequent nouns and adjectives from member entries, with a fallback to the dominant emotion. The pairwise distance matrix runs in \(O(N^2)\) time, which is acceptable for hundreds of entries; approximate NN indexing is planned for future scale.
 
 \section{Knowledge Graph Visualization}
-\begin{itemize}
-  \item \textbf{Layout:} force‑directed simulation with global repulsion, intra‑cluster attraction (hub‑and‑spoke), and cluster gravity.
-  \item \textbf{Initialization:} cluster‑aware sector placement to speed convergence.
-  \item \textbf{Rendering:} hub‑and‑spoke edges to reduce edge count to \(O(N)\) per cluster.
-  \item \textbf{Interaction:} pan, pinch‑to‑zoom, draggable nodes, and detail cards; gesture layer attached to a fixed clear background to avoid dead zones.
-\end{itemize}
+The graph uses a force‑directed simulation with global repulsion, intra‑cluster attraction, and cluster gravity. Cluster‑aware sector placement initialises node positions to speed convergence. Edges follow a hub‑and‑spoke layout, keeping edge count at \(O(N)\) per cluster. Interactions include pan, pinch‑to‑zoom and detail cards; the gesture layer is attached to a fixed clear background to avoid dead zones.
 
 \section{User Interface}
-Key screens and features:
-\begin{itemize}
-  \item \textbf{Dashboard:} greeting, activity heatmap, top emotions, quick entry.
-  \item \textbf{Editor:} Feel–Event–Action fields, emotion wheel, intensity picker, auto‑save drafts.
-  \item \textbf{List and Calendar:} grouped entries, full‑text search, emotion and cluster filter chips, sorting.
-  \item \textbf{Graph:} interactive cluster graph with centroid labels and node detail cards.
-\end{itemize}
+The Dashboard shows a greeting, activity heatmap, top emotions, and a quick entry shortcut. The Editor offers Feel-Event-Action fields, an emotion wheel, an intensity picker, and auto‑saved drafts. The List and Calendar views provide grouped entries with full‑text search, emotion and cluster filter chips, and sorting. The Graph screen renders an interactive cluster graph with centroid labels and node detail cards.
 
 \section{Dependency Injection and Testability}
 All AI services are protocol‑based and provided by a \texttt{ServiceContainer} with three configurations: \texttt{makeMock()} (development), mixed device testing, and \texttt{makeProduction()} (Core ML models). This enables unit testing and device testing without changing application logic.
 
 \section{Functional Test F1}
-\textbf{Scope:} FR2 (create entry), FR4 (on‑device analysis), FR5 (clustering).  
-\textbf{Procedure:} create a Bit in the editor, save, observe console logs, and verify calendar, list filters, and graph.  
-\textbf{Expected / Observed:}
-\begin{itemize}
-  \item Entry persisted immediately and visible in calendar.
-  \item Pipeline logs show steps 1–6; mock embedding generated (200\,ms delay).
-  \item Clustering completed within seconds for small corpus; cluster name generated and filter chip appears.
-  \item Knowledge graph shows the new node after clustering.
-\end{itemize}
+This test covers FR1 (create entry), FR3 (on‑device analysis), and FR4 (clustering), run on device using the production Core ML models.
+
+A Bit was created in the editor across the Feel, Event, and Action fields, then saved. The entry appeared in the calendar immediately. The \texttt{AIProcessingManager} pipeline fired on a background task: console logs confirmed all six steps completed in order, embedding generation took approximately 120\,ms on the Neural Engine with all-MiniLM-L6-v2, and the emotion classifier returned a probability distribution within 200\,ms. The embedding and top emotion were written back to the \texttt{Bit} record on the MainActor. DBSCAN then ran over the full corpus and assigned the new entry to an existing cluster; the cluster name updated and the filter chip appeared in the list view. The knowledge graph node for the new entry was visible after the next render cycle.
 
 \section{Limitations and Next Steps}
 \begin{itemize}
   \item Schema migration: SwiftData currently wipes the store on model changes during development. A versioned migration policy is needed before production deployment.
   \item Accessibility: VoiceOver labels on graph nodes and emotion-wheel controls require a dedicated pass.
-  \item Notification rules: the scheduler logic for daily journaling reminders is defined but the exact trigger conditions (time window, streak rules) are not yet finalised.
-  \item Keychain security: embedding vectors and emotion data are stored in SwiftData; a Keychain-backed encryption layer for the database file is planned.
 \end{itemize}
 
 \section{Acceptance Criteria (for this chapter)}
-The implementation described here is acceptable when:
-\begin{itemize}
-  \item F1 is demonstrable: entry creation triggers the full pipeline and updates UI views.
-  \item Data remains local and encrypted; biometric/PIN gating functions in device builds.
-  \item Clustering and naming produce coherent groups on a sample dataset.
-  \item Performance targets (interactive latency, incremental clustering) are met or have a documented mitigation plan.
-\end{itemize}
+The implementation is acceptable when F1 is demonstrable with FR1--FR4 triggering the full pipeline and updating all UI views, data remains local with no off-device transmission, clustering produces coherent groups on a sample dataset, and inference latency meets the targets on the minimum device.
 
 \section{Summary}
-This chapter presents the design, data model, AI pipeline, clustering algorithm, and functional test for the GJournal prototype. The system runs three interchangeable embedding services and a 12-class emotion classifier entirely on device. Remaining work is operational rather than architectural: schema migration, accessibility, and notification rules.
+This chapter presents the design, data model, AI pipeline, clustering algorithm, and functional test for the GJournal prototype. The system runs three interchangeable embedding services and a 12-class emotion classifier entirely on device. Remaining work is operational rather than architectural: schema migration,  and accessibility.

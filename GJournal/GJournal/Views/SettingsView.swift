@@ -22,6 +22,7 @@ struct SettingsView: View {
     @State private var exportFileURL: URL?
     @State private var showingExportSheet = false
     @State private var isExporting = false
+    @State private var showingChangePIN = false
 
     @AppStorage("embeddingModelChoice") private var embeddingModelRaw: String = EmbeddingModelChoice.nomicMRL.rawValue
     @AppStorage("clusteringStrategyChoice") private var clusteringStrategyRaw: String = ClusteringStrategyChoice.classic.rawValue
@@ -85,15 +86,14 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             List {
-                // Account Section
+                // Profile Section
                 Section {
                     HStack {
                         Image(systemName: "person.circle.fill")
                             .font(.title)
                             .foregroundColor(.pink)
-                        
                         VStack(alignment: .leading) {
-                            Text("Account")
+                            Text("Name")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Text(authManager.currentUser ?? "Unknown")
@@ -102,9 +102,9 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
                 } header: {
-                    Text("Account")
+                    Text("Profile")
                 }
-                
+
                 // Security Section
                 Section {
                     if authManager.canUseBiometric() {
@@ -118,24 +118,28 @@ struct SettingsView: View {
                                 Text("Face ID / Touch ID")
                             }
                         }
-                    } else {
-                        Toggle(isOn: Binding(
-                            get: { authManager.isBiometricEnabled },
-                            set: { authManager.isBiometricEnabled = $0 }
-                        )) {
-                            HStack {
-                                Image(systemName: "lock.fill")
-                                    .foregroundColor(.pink)
-                                Text("Require Passcode")
-                            }
+                    }
+
+                    Button {
+                        showingChangePIN = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "key.fill")
+                                .foregroundColor(.pink)
+                            Text("Change PIN")
+                                .foregroundColor(.primary)
                         }
                     }
                 } header: {
                     Text("Security")
                 } footer: {
-                    Text(authManager.canUseBiometric() 
-                         ? "Use Face ID or Touch ID to unlock the app" 
-                         : "Require device passcode to unlock the app")
+                    Text(authManager.canUseBiometric()
+                         ? "Face ID / Touch ID unlocks the app; PIN is the fallback."
+                         : "PIN is required to unlock the app.")
+                }
+                .sheet(isPresented: $showingChangePIN) {
+                    ChangePINView()
+                        .environmentObject(authManager)
                 }
                 
                 // AI Model Section

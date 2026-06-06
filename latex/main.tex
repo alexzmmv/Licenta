@@ -1,6 +1,8 @@
 %\documentclass[12pt]{scrreprt}
 \documentclass[12pt]{report}
 
+\usepackage[language=english]{style}
+
 \specialization{INFORMATICA}
 \title{AI-Based Microjournaling for Self-Reflection using Emotion Detection and Clustering}
 \author{Dumitrascu Constantin-Alexandru}
@@ -18,12 +20,7 @@
 \pagenumbering{roman}
 
 \cleardoublepage
-\begin{center}
-\textbf{ABSTRACT}
-\end{center}
-\vspace{0.5cm}
-\hrule
-\vspace{0.5cm}
+
 
 \begin{abstract}
 This thesis presents the design, implementation, and empirical evaluation of GJournal, a privacy-first iOS microjournaling application that performs all natural language processing on the device. The system uses three interchangeable embedding strategies -- Apple NLEmbedding, all-MiniLM-L6-v2, and nomic-embed-text-v1.5 -- combined with adaptive DBSCAN clustering and a MobileBERT-based emotion classifier, all running locally via Core ML without any cloud component.
@@ -40,10 +37,11 @@ The contributions of this thesis are: a fully on-device NLP pipeline for reflect
 \pagenumbering{arabic}
 
 \input{chapters/chapter1_introduction}
+\input{chapters/chapter2_background}
 \input{chapters/chapter2}
 \input{chapters/chapter3}
 \input{chapters/chapter4}
-\input{chapters/chapter6_conclusions}
+\input{chapters/chapter5_conclusions}
 
 \nocite{*}
 \bibliography{references}
