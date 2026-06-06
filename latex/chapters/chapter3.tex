@@ -24,7 +24,7 @@ Essential fields:
 \begin{itemize}
   \item \texttt{id, title, feel, event, action, createdAt, lastModified}
   \item User selections: \texttt{feelEmotionRawValue, eventEmotionRawValue, actionEmotionRawValue, intensity}
-  \item AI outputs: \texttt{embeddingJSON (768 floats), emotionProbabilitiesJSON}
+  \item AI outputs: \texttt{embeddingJSON} (variable-length float array; 384 floats for MiniLM, 256 for Nomic-MRL default), \texttt{emotionProbabilitiesJSON}
   \item Flags/timestamps: \texttt{isHidden, isSafeContent, deletedAt, embeddingGeneratedAt, clusterAssignedAt}
   \item Computed accessors decode/encode JSON to typed arrays.
 \end{itemize}
@@ -44,8 +44,8 @@ The \texttt{AIProcessingManager} runs a six‑step pipeline on a background task
 \begin{enumerate}
   \item \textbf{Text flattening:} combine title, Feel, Event, Action into a tagged string for the model.
   \item \textbf{Safety filter:} on‑device keyword scan across harm categories; flagged entries are stored but excluded from clustering/recommendations.
-  \item \textbf{Embedding:} produce a 768‑dim vector (mock deterministic generator in development; Core ML DistilBERT quantized model in production).
-  \item \textbf{Emotion detection:} probability distribution over emotion classes (mock keyword model now; Core ML classifier later).
+  \item \textbf{Embedding:} produce a fixed-length vector using one of three interchangeable services behind the \texttt{EmbeddingService} protocol: \texttt{CoreMLEmbeddingService} (all-MiniLM-L6-v2, 384-dim, mean pooling, 43\,MB Core ML package), \texttt{NomicEmbeddingService} (nomic-embed-text-v1.5 with MRL truncation, default 256-dim, 261\,MB Core ML package), or \texttt{NLEmbeddingService} (Apple's built-in \texttt{NLEmbedding}, 512-dim, zero bundle cost). \texttt{ServiceContainer} selects which service to wire via the \texttt{EmbeddingModelChoice} enum.
+  \item \textbf{Emotion detection:} probability distribution over 12 emotion classes, produced by \texttt{CoreMLEmotionService}: MobileBERT fine-tuned on GoEmotions (28 labels collapsed to 12), converted to a 94\,MB Core ML package. Classes: Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, Guilt.
   \item \textbf{Persistence:} write embedding, emotion probabilities, safety flag, and timestamps on the MainActor.
   \item \textbf{Clustering:} re‑run DBSCAN and update \texttt{Cluster} rows.
 \end{enumerate}
@@ -56,7 +56,7 @@ The pipeline minimizes UI latency by running off the main thread and switching t
 \begin{itemize}
   \item \textbf{Algorithm:} DBSCAN chosen for no required cluster count and noise detection.
   \item \textbf{Distance:} cosine distance \(d(a,b)=1-\frac{a\cdot b}{\|a\|\|b\|}\).
-  \item \textbf{Parameters:} default \(\epsilon=0.3\), \(\text{minPoints}=3\) (tuned for mock embeddings; to be retuned with real models).
+  \item \textbf{Parameters:} adaptive epsilon calibrated per corpus via \texttt{calibrate\_epsilon} (10th percentile of pairwise distances); adaptive \texttt{minPoints} scaled by corpus size (minimum 3, maximum 11). For MRL-truncated embeddings, epsilon is further scaled by $\sqrt{d / 768}$ to compensate for the compressed distance range at lower dimensions.
   \item \textbf{Naming:} NLP-based namer extracts frequent nouns/adjectives from cluster entries; fallback to dominant emotion.
   \item \textbf{Complexity:} pairwise distance matrix \(O(N^2)\) acceptable for hundreds of entries; future optimizations (indexing/approximate NN) planned for scale.
 \end{itemize}
@@ -94,10 +94,10 @@ All AI services are protocol‑based and provided by a \texttt{ServiceContainer}
 
 \section{Limitations and Next Steps}
 \begin{itemize}
-  \item Current mocks: embedding and emotion services are mocked; replace with quantized DistilBERT and a Core ML emotion classifier.
-  \item Clustering parameters require retuning with real embeddings.
-  \item Performance benchmarking and model quantization to meet NFR targets (latency, model footprint, battery).
-  \item Finalize backup/encryption UX and notification rules.
+  \item Schema migration: SwiftData currently wipes the store on model changes during development. A versioned migration policy is needed before production deployment.
+  \item Accessibility: VoiceOver labels on graph nodes and emotion-wheel controls require a dedicated pass.
+  \item Notification rules: the scheduler logic for daily journaling reminders is defined but the exact trigger conditions (time window, streak rules) are not yet finalised.
+  \item Keychain security: embedding vectors and emotion data are stored in SwiftData; a Keychain-backed encryption layer for the database file is planned.
 \end{itemize}
 
 \section{Acceptance Criteria (for this chapter)}
@@ -110,4 +110,4 @@ The implementation described here is acceptable when:
 \end{itemize}
 
 \section{Summary}
-This condensed chapter preserves the necessary design, implementation, and testing details required for the bachelor thesis deliverable. It aligns with the System Requirements chapter structure and provides a clear path to replace mocks with production Core ML models, tune clustering, and complete device benchmarking.
+This chapter presents the design, data model, AI pipeline, clustering algorithm, and functional test for the GJournal prototype. The system runs three interchangeable embedding services and a 12-class emotion classifier entirely on device. Remaining work is operational rather than architectural: schema migration, accessibility, and notification rules.

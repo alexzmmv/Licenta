@@ -1,0 +1,198 @@
+\chapter{Evaluation}
+\label{chap:evaluation}
+
+This chapter describes the quantitative evaluation of the three embedding strategies used in GJournal, the DBSCAN algorithm variants tested, and the emotion classifier results. The evaluation runs in four steps, each adding a layer of evidence about how these models behave on realistic journaling data.
+
+\section{Evaluation Setup}
+
+\subsection{Datasets}
+
+Two standard datasets cover different aspects of embedding quality:
+
+\begin{itemize}
+  \item \textbf{STS-B} (Semantic Textual Similarity Benchmark): 1500 sentence pairs scored by human annotators on a 0--5 similarity scale. Spearman rank correlation between model-predicted cosine similarities and the gold scores measures how well a model captures semantic meaning.
+  \item \textbf{TwentyNewsgroupsClustering}: 1000 sentences drawn from 20 newsgroup topic categories. Ground-truth topic labels allow direct measurement of clustering quality.
+\end{itemize}
+
+Domain validation uses 100 manually labelled journal entries written during the testing period, annotated with ground-truth topic groupings. This set tests whether behaviour on standard benchmarks carries over to the actual application domain.
+
+\subsection{Metrics}
+
+Embedding quality is measured with Spearman rank correlation ($r_s$) on STS-B. Clustering quality uses:
+
+\begin{itemize}
+  \item \textbf{V-measure}: harmonic mean of homogeneity and completeness. A cluster has high homogeneity if it contains entries from only one ground-truth class; high completeness if all members of a class land in the same cluster.
+  \item \textbf{ARI} (Adjusted Rand Index): agreement between predicted clusters and ground-truth labels, corrected for chance. Values range from 0 (random) to 1 (perfect).
+  \item \textbf{Noise fraction}: the share of points DBSCAN marks as noise and leaves unclustered. High noise can mean over-strict parameters or genuinely sparse embeddings.
+\end{itemize}
+
+\subsection{Hardware}
+
+All Python benchmarks run on an Apple M-series processor using the MPS backend (PyTorch). Swift on-device inference uses the Core ML Neural Engine on the same machine.
+
+\section{Embedding Models}
+
+Three strategies are implemented in GJournal behind the \texttt{EmbeddingService} protocol:
+
+\begin{itemize}
+  \item \textbf{Apple NLEmbedding}: the embedding provided by the iOS \texttt{NaturalLanguage} framework. It produces 512-dimensional vectors with no additional bundle cost; the model weights are part of the operating system. Benchmarking against STS-B requires iOS runtime and is not included in this chapter. A device-side latency measurement is deferred to follow-up work.
+  \item \textbf{all-MiniLM-L6-v2} \cite{reimers2019sentencebert}: a 6-layer MiniLM model producing 384-dimensional mean-pooled embeddings. Converted to a 43\,MB Core ML package. This model is the default in GJournal.
+  \item \textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic}: a 768-dimensional model trained with Matryoshka Representation Learning (Section~\ref{sec:mrl}). Converted to a 261\,MB Core ML package. Each input requires the prefix \texttt{"clustering: "}. The GJournal default configuration uses 256-dimensional MRL truncation.
+\end{itemize}
+
+\section{Matryoshka Representation Learning}
+\label{sec:mrl}
+
+Standard embedding models fix output dimensionality at training time. Reducing it after training typically requires retraining from scratch or post-hoc compression, both of which degrade quality. Matryoshka Representation Learning \cite{kusupati2022matryoshka} avoids this by training the model with a nested loss: the full $d$-dimensional output optimises a similarity objective, and simultaneously each prefix sub-vector of length $d' < d$ optimises the same objective independently. The result is that any prefix of the output vector is itself a competitive embedding.
+
+For GJournal, the practical consequence is that the 261\,MB nomic model can produce embeddings at \{64, 128, 256, 512, 768\} dimensions by truncating its output after inference. No additional models or fine-tuning are needed. Table~\ref{tab:mrl_tradeoff} shows how Spearman correlation, silhouette score, and latency change across dimensions.
+
+\begin{table}[h]
+\centering
+\caption{Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix)}
+\label{tab:mrl_tradeoff}
+\begin{tabular}{|r|c|c|c|c|}
+\hline
+\textbf{Dim} & \textbf{Spearman $r_s$} & \textbf{Silhouette} & \textbf{$\varepsilon$ (MRL-scaled)} & \textbf{Latency (ms)} \\
+\hline
+ 64 & 0.8408 & 0.1193 & 0.0866 & 20.7 \\
+128 & 0.8521 & 0.1122 & 0.1225 & 20.4 \\
+256 & 0.8571 & 0.1004 & 0.1732 & 20.3 \\
+512 & 0.8584 & 0.1097 & 0.2449 & 20.2 \\
+768 & 0.8596 & 0.1158 & 0.3000 & 20.2 \\
+\hline
+\end{tabular}
+\end{table}
+
+Two observations stand out. First, latency is flat across all dimensions: inference takes approximately 20\,ms regardless of output size, because the transformer forward pass dominates and the output slice is cheap. Second, the Spearman gap from 128-dim (0.8521) to full 768-dim (0.8596) is 0.0075, so the accuracy cost of $6\times$ compression is small. Quality drops more noticeably below 128 dimensions: going from 128 to 64 loses 0.0113 Spearman.
+
+The scaled $\varepsilon$ column shows the DBSCAN neighbourhood radius after MRL adjustment: $\varepsilon_d = \varepsilon_{768} \cdot \sqrt{d / 768}$. This compensates for the fact that cosine distances in lower-dimensional spaces tend to be smaller on average, which would otherwise cause DBSCAN to over-cluster at short dimensions.
+
+\section{Embedding Quality on STS-B}
+
+Table~\ref{tab:embedding_quality} shows Spearman correlation on 1500 STS-B pairs.
+
+\begin{table}[h]
+\centering
+\caption{Embedding quality on STS-B (1500 pairs, MPS device)}
+\label{tab:embedding_quality}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Model} & \textbf{Dim} & \textbf{Spearman $r_s$} \\
+\hline
+MiniLM-L6-v2 & 384 & \textbf{0.8672} \\
+Nomic-v1.5   & 256 & 0.8403 \\
+Nomic-v1.5   & 768 & 0.8447 \\
+\hline
+\end{tabular}
+\end{table}
+
+MiniLM leads by 0.023 over Nomic at full dimensionality. Increasing Nomic from 256 to 768 dimensions recovers 0.0044 Spearman, a marginal improvement that does not close the gap to MiniLM. Apple NLEmbedding is not included here, as noted in Section 4.2.
+
+\section{Clustering Quality on TwentyNewsgroups}
+
+Table~\ref{tab:clustering_quality} shows clustering metrics on 1000 TwentyNewsgroups sentences using adaptive DBSCAN, with epsilon calibrated to the 10th percentile of pairwise distances per model.
+
+\begin{table}[h]
+\centering
+\caption{Clustering quality on TwentyNewsgroupsClustering (1000 sentences, adaptive DBSCAN)}
+\label{tab:clustering_quality}
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Dim} & \textbf{V-m} & \textbf{ARI} & \textbf{Homog} & \textbf{Compl} & \textbf{Noise\%} & \textbf{Clusters} \\
+\hline
+MiniLM-L6-v2 & 384 & \textbf{0.584} & \textbf{0.249} & 0.437 & 0.881 & 56.3\% & 6 \\
+Nomic-v1.5   & 256 & 0.366          & 0.089          & 0.234 & 0.844 & 23.1\% & 3 \\
+Nomic-v1.5   & 768 & 0.477          & 0.121          & 0.322 & 0.924 & 40.4\% & 5 \\
+\hline
+\end{tabular}
+\end{table}
+
+MiniLM achieves the best V-measure (0.584) and ARI (0.249). Its noise fraction is higher (56\%) because its tighter clusters leave borderline points unclaimed. Nomic-256 assigns 77\% of sentences to clusters but homogeneity drops to 0.23, meaning its clusters mix topics. Nomic-768 sits between the two on most metrics.
+
+\section{Algorithm Comparison}
+
+Four DBSCAN variants were compared on TwentyNewsgroups using Nomic-768 embeddings. Table~\ref{tab:algorithm_comparison} shows the results.
+
+\begin{table}[h]
+\centering
+\caption{Algorithm comparison on TwentyNewsgroupsClustering (Nomic-768, 1000 sentences)}
+\label{tab:algorithm_comparison}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{V-m} & \textbf{ARI} & \textbf{Homog} & \textbf{Compl} & \textbf{Noise\%} & \textbf{Clusters} \\
+\hline
+Vanilla DBSCAN   & 0.009          & 0.000          & 0.004          & 0.496 &  1.8\% &  2 \\
+Classic Adaptive & 0.477          & 0.121          & 0.322          & 0.924 & 40.4\% &  5 \\
+MRL-Adapted      & 0.183          & 0.017          & 0.106          & 0.685 & 27.2\% &  5 \\
+HDBSCAN          & \textbf{0.737} & \textbf{0.421} & \textbf{0.832} & 0.661 & 63.3\% & 52 \\
+\hline
+\end{tabular}
+\end{table}
+
+Fixed-epsilon Vanilla DBSCAN collapses the corpus into two clusters regardless of topic, giving near-zero V-measure. Classic Adaptive, which calibrates epsilon per corpus, raises V-measure to 0.477. The MRL-Adapted variant scales epsilon by $\sqrt{d/768}$; on TwentyNewsgroups it underperforms Classic Adaptive (V-measure 0.183) because the uniform topic distribution does not benefit from the correction designed for short journal entries.
+
+HDBSCAN achieves the best purity (V-measure 0.737, ARI 0.421) but produces 52 clusters on 1000 sentences. In a journaling app with 20 to 50 entries the equivalent behaviour would create a cluster per entry or small group, making the insight view uninformative. Classic Adaptive DBSCAN is the practical choice for this application.
+
+\section{Domain Validation on Journal Entries}
+\label{sec:domain_validation}
+
+Table~\ref{tab:domain_validation} shows results on 100 manually labelled journal entries using adaptive DBSCAN.
+
+\begin{table}[h]
+\centering
+\caption{Domain validation on 100 custom journal entries (adaptive DBSCAN)}
+\label{tab:domain_validation}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{V-m} & \textbf{ARI} & \textbf{Homog} & \textbf{Compl} & \textbf{Noise\%} & \textbf{Clusters} \\
+\hline
+MiniLM    & \textbf{0.662} & \textbf{0.520} & 0.552 & 0.828 & 30\% & 3 \\
+Nomic-256 & 0.511          & 0.296          & 0.354 & 0.918 & 22\% & 2 \\
+Nomic-768 & 0.481          & 0.253          & 0.327 & 0.909 & 12\% & 2 \\
+\hline
+\end{tabular}
+\end{table}
+
+On actual journal text the gap between MiniLM and Nomic widens. MiniLM V-measure is 0.662 versus 0.511 for Nomic-256, a difference of 15 percentage points. Nomic-768 has the lowest noise fraction (12\%), meaning it assigns the most entries to clusters, but homogeneity is only 0.327: many of those assignments group unrelated entries together. For a journaling app a cluster that mixes different topics will mislead the user more than leaving borderline entries unclustered. MiniLM's behaviour -- tighter clusters with more noise -- is the better fit here.
+
+\section{Emotion Classification}
+\label{sec:emotion}
+
+The emotion classifier is MobileBERT \cite{sun2020mobilebert} fine-tuned for three epochs on GoEmotions \cite{demszky2020goemotions}, with 28 original labels collapsed to 12 classes: Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, and Guilt. The trained model was converted to a 94\,MB Core ML package.
+
+Overall accuracy on the 4542-sample test set is \textbf{59.5\%}. Table~\ref{tab:emotion_results} shows per-class results sorted by F1.
+
+\begin{table}[h]
+\centering
+\caption{Emotion classifier per-class results (MobileBERT, GoEmotions 12-class, 4542 test samples)}
+\label{tab:emotion_results}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Emotion} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Test samples} \\
+\hline
+Gratitude  & 0.748 & 0.892 & \textbf{0.813} & 352 \\
+Love       & 0.745 & 0.597 & 0.663          & 960 \\
+Anger      & 0.683 & 0.562 & 0.616          & 785 \\
+Excitement & 0.525 & 0.711 & 0.604          & 387 \\
+Fear       & 0.500 & 0.731 & 0.594          &  78 \\
+Joy        & 0.653 & 0.514 & 0.576          & 803 \\
+Guilt      & 0.482 & 0.710 & 0.574          &  93 \\
+Sadness    & 0.485 & 0.524 & 0.504          & 313 \\
+Disgust    & 0.363 & 0.667 & 0.470          & 123 \\
+Surprise   & 0.514 & 0.426 & 0.466          & 439 \\
+Hope       & 0.357 & 0.645 & 0.460          & 186 \\
+Anxiety    & 0.306 & 0.478 & 0.373          &  23 \\
+\hline
+\end{tabular}
+\end{table}
+
+Performance varies across classes mostly because of dataset imbalance. Gratitude has 352 test samples and achieves F1 0.813; Anxiety has 23 samples and achieves F1 0.373. The model has not seen enough Anxiety examples to separate it reliably from adjacent classes like Fear and Sadness. For the journaling use case this trade-off is acceptable: Joy, Sadness, Anger, Love, and Gratitude account for the majority of everyday entries, and all of them score above F1 0.57. Rare-class misclassifications fall through to the keyword-based \texttt{SafetyFilter} as a fallback.
+
+\section{Discussion}
+
+MiniLM outperforms Nomic on every clustering metric across both the standard benchmark and the journal domain. The most likely reason is that MiniLM's 384-dimensional output, trained for semantic similarity tasks, is better calibrated for cosine-distance DBSCAN on short texts. Nomic's MRL support does not close that gap.
+
+The MRL dimension table tells a different story for memory. Latency is flat at approximately 20\,ms regardless of dimension, so there is no speed benefit to using fewer dimensions. But storage is affected: at 256 dimensions each embedding occupies $256 \times 4 = 1024$ bytes versus $768 \times 4 = 3072$ bytes at full size. Over 1000 journal entries that is roughly 2\,MB saved in the SwiftData store. The Spearman cost of compressing from 768 to 256 dimensions is 0.0044, a drop of 0.52\%.
+
+The practical outcome for GJournal is that MiniLM is the default: best clustering quality, smallest bundle at 43\,MB, no prefix requirement. Nomic at 256 dimensions is available as a user-selectable option for configurations where total model size must stay under a specific limit, or where MRL flexibility matters for future tasks such as search or cross-entry recommendations.

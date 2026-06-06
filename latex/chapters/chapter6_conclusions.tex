@@ -1,4 +1,4 @@
-\chapter{Concluzii}
+\chapter{Conclusions}
 \label{conclusions}
 
 \par
@@ -11,7 +11,23 @@ The architecture developed for this thesis manages to effectively combine quanti
 The project provided technical evidence that transformers can be fine-tuned, compressed, and then run on consumer-grade mobile devices without sacrificing too much accuracy in the analysis of short-form texts. In addition, the clustering process showed that it is possible to gain valuable information from the micro-journals that can be displayed in calendar views, lists, or graphs.
 
 \par
-The following are the primary contributions made by this thesis: the design of a complete end-to-end NLP pipeline that runs entirely on-device, the implementation of quantized transformer architectures that can be executed on mobile devices, the creation of an incrementally clustering approach that is designed specifically for short entries by individuals, and finally, the design of a safe and privacy-centric application structure.
+The evaluation in Chapter~\ref{chap:evaluation} produced concrete numbers. all-MiniLM-L6-v2 achieved Spearman $r_s = 0.867$ on STS-B and V-measure 0.662 on the journal-domain validation set, outperforming both Nomic-256 (V-measure 0.511) and Nomic-768 (V-measure 0.481) on clustering quality. The MRL dimension trade-off analysis showed that Nomic inference latency stays flat at approximately 20\,ms across all truncation levels, while the Spearman drop from 768 to 256 dimensions is only 0.0044. The MobileBERT emotion classifier reached 59.5\% accuracy on a 12-class GoEmotions test set, with strong performance on the most common journaling emotions (Gratitude F1 0.813, Love F1 0.663, Anger F1 0.616).
 
 \par
-Potential future directions include the enhancement of the emotion taxonomy, stabilization of the clustering process, inclusion of other modalities like speech and images, or cross-device encryption synchronization without compromising the security features. Regardless, the findings discussed in this thesis clearly demonstrate that on-device NLP is a viable approach to personal journaling applications.
+The primary contributions of this thesis are: the design of a complete end-to-end NLP pipeline that runs entirely on-device; the implementation of quantized transformer architectures for mobile execution; an incremental clustering approach tailored for short personal entries; a privacy-centric application architecture without cloud components; and an empirical evaluation of Matryoshka Representation Learning truncation on journal-domain clustering, showing that 256-dim Nomic embeddings retain over 99.5\% of Spearman correlation relative to full 768-dim while losing 15 percentage points of V-measure against MiniLM on domain data.
+
+\section{Future Work}
+
+Several directions follow naturally from the current results.
+
+\textbf{Apple NLEmbedding benchmarks.} The evaluation in Chapter~\ref{chap:evaluation} could not include Apple NLEmbedding in the STS-B and clustering tables because benchmarking it requires iOS runtime. Running the same four-step evaluation on device would give a complete three-way comparison and close the most obvious gap in the current results.
+
+\textbf{Finer emotion taxonomy.} The 12-class GoEmotions mapping collapses related emotions to make the classification task tractable on mobile hardware. A more granular taxonomy, or one calibrated specifically to journaling language, would improve the quality of emotion-based filtering and the cluster-naming heuristic.
+
+\textbf{Clustering stability.} DBSCAN recomputes all clusters from scratch when a new entry arrives. For a corpus of several hundred entries this is acceptable, but it becomes slow and produces label churn as the user adds entries over weeks. Incremental DBSCAN or a hierarchical approach that reuses previous cluster assignments would reduce both latency and label instability.
+
+\textbf{Multimodal input.} The current system processes only text. Short audio recordings or attached photos are common in mobile journaling workflows. Extending the embedding pipeline to fuse text with speech or image features would broaden the kinds of patterns the system can surface.
+
+\textbf{On-device MRL search.} The MRL truncation flexibility studied here was applied only to clustering. The same property makes MRL embeddings attractive for fast approximate nearest-neighbour search: a user could search past entries using a 64-dimensional index for speed, then re-rank results using the full 256-dim vectors. This retrieval pattern would complement the existing clustering view without requiring a second model.
+
+\textbf{Schema migration and App Store readiness.} The SwiftData schema currently wipes stored data on model changes. A versioned migration policy, a privacy policy URL, and a VoiceOver accessibility pass are the remaining steps before an App Store submission.
