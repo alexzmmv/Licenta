@@ -23,6 +23,8 @@ struct SettingsView: View {
     @State private var showingExportSheet = false
     @State private var isExporting = false
     @State private var showingChangePIN = false
+    @State private var isBenchmarking = false
+    @State private var benchmarkStatusMessage: String?
 
     @AppStorage("embeddingModelChoice") private var embeddingModelRaw: String = EmbeddingModelChoice.nomicMRL.rawValue
     @AppStorage("clusteringStrategyChoice") private var clusteringStrategyRaw: String = ClusteringStrategyChoice.classic.rawValue
@@ -343,7 +345,47 @@ struct SettingsView: View {
                 } footer: {
                     Text("These tools re-process entries using the currently selected embedding model.")
                 }
-                
+
+                // MARK: - Thesis Benchmark
+                Section {
+                    if isBenchmarking {
+                        HStack {
+                            ProgressView().tint(.orange)
+                            Text(benchmarkStatusMessage ?? "Running…")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    } else if let msg = benchmarkStatusMessage {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text(msg)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Button {
+                        Task { await runEfficiencyBenchmark() }
+                    } label: {
+                        HStack {
+                            Image(systemName: "speedometer")
+                                .foregroundColor(.orange)
+                            VStack(alignment: .leading) {
+                                Text("Run Efficiency Benchmark")
+                                Text("Cold start + 50 warm runs per model — exports JSON")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .disabled(isBenchmarking)
+                } header: {
+                    Text("Thesis")
+                } footer: {
+                    Text("Run on device (not Simulator) for representative Neural Engine timings.")
+                }
+
                 // Trash Section
                 Section {
                     NavigationLink(destination: RecentlyDeletedView(repository: repository)) {
@@ -605,6 +647,39 @@ struct SettingsView: View {
         } catch {
             debugStatusMessage = "Failed to clear clusters: \(error.localizedDescription)"
             AppLogger.error("[Settings] Failed to clear clusters: \(error)")
+        }
+    }
+
+    // MARK: - Thesis Benchmark
+
+    private func runEfficiencyBenchmark() async {
+        await MainActor.run {
+            isBenchmarking = true
+            benchmarkStatusMessage = "Starting…"
+        }
+        do {
+            let report = try await EfficiencyBenchmark().run { msg in
+                await MainActor.run { self.benchmarkStatusMessage = msg }
+            }
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode(report)
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd_HH-mm"
+            let filename = "gjournal_benchmark_\(formatter.string(from: Date())).json"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            try data.write(to: url)
+            await MainActor.run {
+                exportFileURL = url
+                showingExportSheet = true
+                benchmarkStatusMessage = "Done — \(report.embeddings.count) models benchmarked"
+                isBenchmarking = false
+            }
+        } catch {
+            await MainActor.run {
+                benchmarkStatusMessage = "Failed: \(error.localizedDescription)"
+                isBenchmarking = false
+            }
         }
     }
 

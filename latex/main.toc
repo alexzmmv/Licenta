@@ -67,7 +67,8 @@
 \contentsline {section}{\numberline {5.6}Algorithm Comparison}{23}{section.5.6}%
 \contentsline {section}{\numberline {5.7}Domain Validation on Journal Entries}{24}{section.5.7}%
 \contentsline {section}{\numberline {5.8}Emotion Classification}{25}{section.5.8}%
-\contentsline {section}{\numberline {5.9}Discussion}{25}{section.5.9}%
-\contentsline {chapter}{\numberline {6}Conclusions}{27}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Future Work}{28}{section.6.1}%
-\contentsline {chapter}{Bibliography}{29}{chapter*.2}%
+\contentsline {section}{\numberline {5.9}On-Device Efficiency}{25}{section.5.9}%
+\contentsline {section}{\numberline {5.10}Discussion}{26}{section.5.10}%
+\contentsline {chapter}{\numberline {6}Conclusions}{28}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Future Work}{29}{section.6.1}%
+\contentsline {chapter}{Bibliography}{30}{chapter*.2}%

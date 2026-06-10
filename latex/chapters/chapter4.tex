@@ -47,7 +47,7 @@ For GJournal, the practical consequence is that the 261\,MB nomic model can prod
 
 \begin{table}[h]
 \centering
-\caption{Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix)}
+\caption{Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix, Python/MPS benchmark)}
 \label{tab:mrl_tradeoff}
 \begin{tabular}{|r|c|c|c|c|}
 \hline
@@ -62,7 +62,7 @@ For GJournal, the practical consequence is that the 261\,MB nomic model can prod
 \end{tabular}
 \end{table}
 
-Latency is flat across all dimensions: inference takes approximately 20\,ms regardless of output size because the transformer forward pass dominates and the output slice is cheap. The Spearman gap from 128-dim (0.8521) to full 768-dim (0.8596) is 0.0075, so the accuracy cost of $6\times$ compression is small. Quality drops more noticeably below 128 dimensions: going from 128 to 64 loses 0.0113 Spearman.
+Latency is flat across all dimensions in the Python benchmark: inference takes approximately 20\,ms on Apple MPS regardless of output size because the transformer forward pass dominates and the output slice is cheap. On-device Core ML numbers are reported in Section~\ref{sec:efficiency}. The Spearman gap from 128-dim (0.8521) to full 768-dim (0.8596) is 0.0075, so the accuracy cost of $6\times$ compression is small. Quality drops more noticeably below 128 dimensions: going from 128 to 64 loses 0.0113 Spearman.
 
 The scaled $\varepsilon$ column shows the DBSCAN neighbourhood radius after MRL adjustment: $\varepsilon_d = \varepsilon_{768} \cdot \sqrt{d / 768}$. This compensates for the fact that cosine distances in lower-dimensional spaces tend to be smaller on average, which would otherwise cause DBSCAN to over-cluster at short dimensions.
 
@@ -192,12 +192,43 @@ Anxiety    & 0.306 & 0.478 & 0.373          &  23 \\
 
 Performance varies across classes mostly because of dataset imbalance. Gratitude has 352 test samples and achieves F1 0.813; Anxiety has 23 samples and achieves F1 0.373. The model has not seen enough Anxiety examples to separate it reliably from adjacent classes like Fear and Sadness. For the journaling use case this trade-off is acceptable: Joy, Sadness, Anger, Love, and Gratitude account for the majority of everyday entries, and all of them score above F1 0.57. Rare-class misclassifications fall through to the keyword-based \texttt{SafetyFilter} as a fallback.
 
+\section{On-Device Efficiency}
+\label{sec:efficiency}
+
+Table~\ref{tab:efficiency} reports cold-start time, warm inference latency, and bundle size for each model. Measurements were taken on an iPhone running iOS~26.5 using Core ML. Cold start is the time from the first \texttt{generateEmbedding} call on a fresh service instance, which triggers model loading internally. Warm latency is the mean of 50 consecutive calls after 5 warm-up runs; p50 and p95 are the corresponding percentiles over the same 50 runs. The test input was a single 56-character sentence.
+
+\begin{table}[h]
+\centering
+\caption{On-device efficiency (iPhone, iOS 26.5, Core ML, Neural Processing Unit)}
+\label{tab:efficiency}
+\begin{tabular}{|l|c|r|r|r|r|r|}
+\hline
+\textbf{Model} & \textbf{Dim} & \textbf{Cold (ms)} & \textbf{Mean (ms)} & \textbf{p50 (ms)} & \textbf{p95 (ms)} & \textbf{Size (MB)} \\
+\hline
+MiniLM-L6-v2       & 384 & 1933 &  5.4 &  4.7 &  8.4 &  45.0 \\
+Nomic-v1.5 (768d)  & 768 & 3560 & 31.9 & 31.1 & 35.8 & 273.9 \\
+Nomic-v1.5 (256d)  & 256 &  345$^\dagger$ & 32.2 & 31.0 & 35.8 & 273.9 \\
+Apple NLEmbedding  & 512 &  704 & 10.0 &  9.6 & 12.3 &   0.0 \\
+MobileBERT emotion & 12c & 1366 & 15.9 & 15.8 & 18.2 &  98.6 \\
+\hline
+\end{tabular}
+
+\smallskip
+{\footnotesize $^\dagger$ Nomic-256d and Nomic-768d load the same \texttt{.mlmodelc} file. The 345\,ms figure reflects OS model caching from the preceding 768d run in the benchmark sequence. The actual cold start from a clean process is comparable to the 3560\,ms figure.}
+\end{table}
+
+MiniLM has the lowest warm latency at 5.4\,ms, about six times faster than either Nomic variant (32\,ms) and twice as fast as Apple NLEmbedding (10\,ms). Nomic-256d and Nomic-768d take the same time: 32.2\,ms versus 31.9\,ms, a 0.3\,ms gap within measurement noise. MRL truncation adds no inference overhead, which confirms the result from the Python benchmark in Section~\ref{sec:mrl}: the transformer forward pass dominates and the output slice is cheap.
+
+Cold starts are significant. MiniLM takes 1.9\,s on its first call; Nomic takes 3.6\,s. Both are handled by lazy loading: models load on the first entry save, not at app launch, so the user does not wait at startup. Apple NLEmbedding has a 704\,ms cold start despite no bundle file; this is the cost of the first call into the \texttt{NLEmbedding} framework.
+
+The three Core ML bundles total 417\,MB (MiniLM 45\,MB + Nomic 274\,MB + emotion 99\,MB). GJournal ships all three so the user can switch models without a download. Apple NLEmbedding adds nothing to the bundle because its weights are part of iOS.
+
 \section{Discussion}
 
 MiniLM outperforms all other models on clustering metrics across both the standard benchmark and the journal domain. Its 384-dimensional output, trained for semantic similarity tasks, is better calibrated for cosine-distance DBSCAN on short texts. Nomic's MRL support does not close that gap.
 
 Apple NLEmbedding scores 0.717 Spearman on STS-B, usable for rough semantic similarity but 0.15 below MiniLM. Its clustering performance is much weaker: V-measure 0.020 on TwentyNewsgroups and 0.459 on journal entries. The poor clustering result reflects the API's design: \texttt{NLEmbedding.sentenceEmbedding} is a general-purpose on-device model trained across many language tasks, not for dense retrieval or clustering. Its advantage is zero bundle cost; the weights ship with the OS. That makes it a reasonable fallback when storage is the binding constraint, but not the primary embedding strategy.
 
-The MRL dimension table tells a different story for memory. Latency is flat at approximately 20\,ms regardless of dimension, so there is no speed benefit to using fewer dimensions. But storage is affected: at 256 dimensions each embedding occupies $256 \times 4 = 1024$ bytes versus $768 \times 4 = 3072$ bytes at full size. Over 1000 journal entries that is roughly 2\,MB saved in the SwiftData store. The Spearman cost of compressing from 768 to 256 dimensions is 0.0044, a drop of 0.52\%.
+MRL truncation reduces storage without affecting inference time. At 256 dimensions each embedding occupies $256 \times 4 = 1{,}024$ bytes versus $768 \times 4 = 3{,}072$ bytes at full size; over 1000 journal entries that is roughly 2\,MB saved in the SwiftData store. The Spearman cost is 0.0044, a drop of 0.52\%. The on-device benchmark (Table~\ref{tab:efficiency}) confirms that Core ML inference time is flat at approximately 32\,ms regardless of output dimension, so there is no speed reason to choose 256d over 768d. The only benefit is storage.
 
-The practical outcome for GJournal is that MiniLM is the default: best clustering quality, smallest dedicated bundle at 43\,MB, no prefix requirement. Nomic at 256 dimensions is available as a user-selectable option where total model size must stay under a specific limit. Apple NLEmbedding remains available as a zero-cost fallback for devices where storage is the binding constraint.
+The practical outcome for GJournal is that MiniLM is the default: best clustering quality, smallest dedicated bundle at 45\,MB, fastest warm inference at 5.4\,ms per entry, no prefix requirement. Nomic at 256 dimensions is available as a user-selectable option. Apple NLEmbedding remains available as a zero-cost fallback for devices where storage is the binding constraint.

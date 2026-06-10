@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.6)  10 JUN 2026 22:15
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.6)  10 JUN 2026 22:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -794,12 +794,6 @@ Overfull \hbox (5.94136pt too wide) in paragraph at lines 28--29
 be trun-cated to smaller
  []
 
-
-Overfull \hbox (0.39725pt too wide) in paragraph at lines 28--29
-\OT1/ppl/m/n/12 trun-ca-tion lev-els. On the journal-domain clus-ter-ing task, 
-all-MiniLM-L6-v2 achieves
- []
-
 [1
 
 ] (./main.toc
@@ -1130,10 +1124,19 @@ Overfull \hbox (7.65704pt too wide) in paragraph at lines 37--38
  pro-duc-ing 384-dimensional
  []
 
-[21] [22]
+[21]
+Underfull \hbox (badness 1178) in paragraph at lines 50--50
+[]\OT1/ppl/m/n/12 Table 5.1: []Nomic-v1.5 MRL di-men-sion trade-off on STS-B (c
+lus-ter-ing pre-fix,
+ []
+
+[22]
 Overfull \hbox (15.05144pt too wide) in paragraph at lines 99--109
  [][] 
  []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
 
 [23] [24]
 Overfull \hbox (2.59477pt too wide) in paragraph at lines 193--194
@@ -1141,11 +1144,23 @@ Overfull \hbox (2.59477pt too wide) in paragraph at lines 193--194
  23 sam-ples and achieves
  []
 
-[25]) (./chapters/chapter5_conclusions.tex [26]
-Chapter 6.
-[27
 
-]) (./main.bbl [28]
+Overfull \hbox (42.00331pt too wide) in paragraph at lines 204--215
+ [][] 
+ []
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 217.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 217.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[25] [26]) (./chapters/chapter5_conclusions.tex [27]
+Chapter 6.
+[28
+
+]) (./main.bbl [29]
 Underfull \hbox (badness 1199) in paragraph at lines 17--21
 []\OT1/ppl/m/n/12 Martin Es-ter, Hans-Peter Kriegel, J[]org Sander, and Xi-aowe
 i Xu.
@@ -1168,39 +1183,40 @@ Underfull \hbox (badness 1057) in paragraph at lines 29--32
 m/n/12 https : / / www .
  []
 
-[29
+[30
 
-]) [30] (./main.aux)
+]) [31] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 1406D7CF9228AAF8C504992B245ED978;12402.
+(rerunfilecheck)             Checksum: 0A93B2D7BF6B6E4CB750DC6D8EAF0E56;12561.
  ) 
 Here is how much of TeX's memory you used:
- 31648 strings out of 467525
- 750329 string characters out of 5418983
- 1270928 words of memory out of 5000000
- 59899 multiletter control sequences out of 15000+600000
- 640670 words of font info for 71 fonts, out of 8000000 for 9000
+ 31660 strings out of 467525
+ 750471 string characters out of 5418983
+ 1269928 words of memory out of 5000000
+ 59906 multiletter control sequences out of 15000+600000
+ 642287 words of font info for 75 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,19n,118p,1000b,2275s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,19n,118p,1149b,2275s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 ></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb>
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></
 usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></us
 r/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/l
 ocal/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/lo
-cal/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/loca
-l/texlive/2026/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texliv
-e/2026/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></usr/local/texlive/2026/
-texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></usr/local/texlive/2026/texmf-d
-ist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on main.pdf (36 pages, 222642 bytes).
+cal/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/loca
+l/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/
+texlive/2026/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/
+2026/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></usr/local/texlive/2026/te
+xmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></usr/local/texlive/2026/texmf-dis
+t/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on main.pdf (37 pages, 234791 bytes).
 PDF statistics:
- 706 PDF objects out of 1000 (max. 8388607)
- 637 compressed objects within 7 object streams
- 149 named destinations out of 1000 (max. 500000)
- 589 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 730 PDF objects out of 1000 (max. 8388607)
+ 658 compressed objects within 7 object streams
+ 152 named destinations out of 1000 (max. 500000)
+ 597 words of extra memory for PDF output out of 10000 (max. 10000000)
 
