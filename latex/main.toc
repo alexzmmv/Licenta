@@ -1,0 +1,73 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Background and Related Work}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Digital Journaling and Self-Reflection}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Natural Language Processing in Personal Well-Being}{3}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Sentence Embedding Models}{4}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Emotion Classification}{4}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Matryoshka Representation Learning}{4}{section.2.3}%
+\contentsline {section}{\numberline {2.4}On-Device Machine Learning}{5}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Clustering and Semantic Analysis}{5}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Mobile Hardware for On-Device AI}{5}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Evolution of Mobile NPUs}{5}{subsection.2.6.1}%
+\contentsline {subsection}{\numberline {2.6.2}Implications for On-Device NLP}{6}{subsection.2.6.2}%
+\contentsline {subsection}{\numberline {2.6.3}Privacy and Energy Considerations}{7}{subsection.2.6.3}%
+\contentsline {section}{\numberline {2.7}Summary}{7}{section.2.7}%
+\contentsline {chapter}{\numberline {3}System Requirements and Specification}{8}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Scope and Objectives}{8}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Assumptions and Constraints}{8}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Functional Requirements}{9}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Core Functionality}{9}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Editing and Deletion Policies}{9}{subsection.3.3.2}%
+\contentsline {section}{\numberline {3.4}Non‑Functional Requirements}{9}{section.3.4}%
+\contentsline {section}{\numberline {3.5}System Architecture}{10}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Components}{10}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}Architecture Diagram}{10}{subsection.3.5.2}%
+\contentsline {section}{\numberline {3.6}Data Flow and Processing Pipeline}{10}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Use Cases and User Flows}{11}{section.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}Use Case UC1: Create Entry}{11}{subsection.3.7.1}%
+\contentsline {subsection}{\numberline {3.7.2}Use Case UC2: View Insights}{12}{subsection.3.7.2}%
+\contentsline {subsection}{\numberline {3.7.3}Use Case UC3: Edit Entry}{12}{subsection.3.7.3}%
+\contentsline {subsection}{\numberline {3.7.4}Use Case UC4: Delete Entry}{12}{subsection.3.7.4}%
+\contentsline {section}{\numberline {3.8}Model Selection and Formats}{12}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Clustering Strategy}{12}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Privacy}{13}{section.3.10}%
+\contentsline {section}{\numberline {3.11}Performance Targets and Testing}{13}{section.3.11}%
+\contentsline {section}{\numberline {3.12}Acceptance Criteria}{13}{section.3.12}%
+\contentsline {section}{\numberline {3.13}Implementation Plan and Milestones}{13}{section.3.13}%
+\contentsline {section}{\numberline {3.14}Traceability Matrix}{14}{section.3.14}%
+\contentsline {section}{\numberline {3.15}Open Issues and Decisions}{14}{section.3.15}%
+\contentsline {section}{\numberline {3.16}Summary}{14}{section.3.16}%
+\contentsline {chapter}{\numberline {4}Design, Implementation, and Testing}{15}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Scope and Objectives}{15}{section.4.1}%
+\contentsline {section}{\numberline {4.2}High‑level Architecture}{15}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Data Model}{15}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Bit}{15}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Cluster}{16}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Retention}{16}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Repository and UI Synchronization}{16}{section.4.4}%
+\contentsline {section}{\numberline {4.5}AI Processing Pipeline}{16}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Clustering}{17}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Knowledge Graph Visualization}{17}{section.4.7}%
+\contentsline {section}{\numberline {4.8}User Interface}{17}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Dependency Injection and Testability}{18}{section.4.9}%
+\contentsline {section}{\numberline {4.10}Functional Test F1}{18}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Limitations and Next Steps}{18}{section.4.11}%
+\contentsline {section}{\numberline {4.12}Acceptance Criteria (for this chapter)}{19}{section.4.12}%
+\contentsline {section}{\numberline {4.13}Summary}{19}{section.4.13}%
+\contentsline {chapter}{\numberline {5}Evaluation}{20}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Evaluation Setup}{20}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Datasets}{20}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Metrics}{20}{subsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.1.3}Hardware}{21}{subsection.5.1.3}%
+\contentsline {section}{\numberline {5.2}Embedding Models}{21}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Matryoshka Representation Learning}{21}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Embedding Quality on STS-B}{22}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Clustering Quality on TwentyNewsgroups}{23}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Algorithm Comparison}{23}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Domain Validation on Journal Entries}{24}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Emotion Classification}{25}{section.5.8}%
+\contentsline {section}{\numberline {5.9}Discussion}{25}{section.5.9}%
+\contentsline {chapter}{\numberline {6}Conclusions}{27}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Future Work}{28}{section.6.1}%
+\contentsline {chapter}{Bibliography}{29}{chapter*.2}%

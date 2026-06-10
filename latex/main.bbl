@@ -1,0 +1,89 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{DMAK{\etalchar{+}}20}
+
+\bibitem[AH22]{awad2022improved}
+Fouad~H Awad and Murtadha~M Hamad.
+\newblock Improved k-means clustering algorithm for big data based on
+  distributed smartphone neural engine processor.
+\newblock {\em Electronics}, 11(6):883, 2022.
+
+\bibitem[DMAK{\etalchar{+}}20]{demszky2020goemotions}
+Dorottya Demszky, Dana Movshovitz-Attias, Jeongwoo Ko, Alan Cowen, Gaurav
+  Nemade, and Sujith Ravi.
+\newblock {GoEmotions}: A dataset of fine-grained emotions.
+\newblock In {\em ACL}, 2020.
+
+\bibitem[EKSX96]{ester1996density}
+Martin Ester, Hans-Peter Kriegel, J{\"o}rg Sander, and Xiaowei Xu.
+\newblock A density-based algorithm for discovering clusters in large spatial
+  databases with noise.
+\newblock In {\em KDD}, 1996.
+
+\bibitem[Inc23a]{apple2023neuralengine}
+Apple Inc.
+\newblock Apple neural engine performance overview, 2023.
+\newblock Available online:
+  \url{https://developer.apple.com/machine-learning/}.
+
+\bibitem[Inc23b]{qualcomm2023hexagon}
+Qualcomm~Technologies Inc.
+\newblock Qualcomm hexagon processor: Ai performance overview, 2023.
+\newblock Available online: \url{https://www.qualcomm.com/}.
+
+\bibitem[JYS{\etalchar{+}}20]{jiao2020tinybert}
+Xiaoqi Jiao, Yichun Yin, Lifeng Shang, Xin Jiang, Xiao Chen, Linlin Li, Fang
+  Wang, and Qun Liu.
+\newblock Tinybert: Distilling bert for natural language understanding.
+\newblock In {\em EMNLP}, 2020.
+
+\bibitem[KBR{\etalchar{+}}22]{kusupati2022matryoshka}
+Aditya Kusupati, Gantavya Bhatt, Aniket Rege, Matthew Wallingford, Aditya
+  Sinha, Vivek Ramanujan, William Howard-Snyder, Kaifeng Chen, Sham Kakade,
+  Prateek Jain, et~al.
+\newblock Matryoshka representation learning.
+\newblock In {\em Advances in Neural Information Processing Systems}, 2022.
+
+\bibitem[MBS{\etalchar{+}}23]{10351450}
+Amit~Kumar Mishra, Krishna~Kant Bhartiy, Jagendra Singh, Srinivas Aluvala,
+  Prabhishek Singh, and Kaushal Kishor.
+\newblock Unlocking the power of natural language processing through journaling
+  with the assistance.
+\newblock In {\em 2023 3rd International Conference on Innovative Sustainable
+  Computational Technologies (CISCT)}, 2023.
+
+\bibitem[NMDM24]{nussbaum2024nomic}
+Zach Nussbaum, John~X. Morris, Brandon Duderstadt, and Andriy Mulyar.
+\newblock nomic-embed: Training a reproducible long context text embedder,
+  2024.
+
+\bibitem[PRA{\etalchar{+}}21]{Pandelea2021EmotionEdge}
+Vlad Pandelea, Edoardo Ragusa, Tommaso Apicella, Paolo Gastaldo, and Erik
+  Cambria.
+\newblock Emotion recognition on edge devices: Training and deployment.
+\newblock {\em Sensors}, 21(13):4496, 2021.
+
+\bibitem[RG19]{reimers2019sentencebert}
+Nils Reimers and Iryna Gurevych.
+\newblock Sentence-bert: Sentence embeddings using siamese bert-networks.
+\newblock In {\em EMNLP}, 2019.
+
+\bibitem[SDCW19]{sanh2019distilbert}
+Victor Sanh, Lysandre Debut, Julien Chaumond, and Thomas Wolf.
+\newblock Distilbert, a distilled version of bert: smaller, faster, cheaper and
+  lighter.
+\newblock In {\em NeurIPS Workshop}, 2019.
+
+\bibitem[Siv22]{Sivaram2022HealthyMe}
+Lakshmi Priya~Kenday Sivaram.
+\newblock Healthy me: Exploring personal health journaling with visual
+  analytics for self-reflection and knowledge sharing.
+\newblock Master of science thesis, Simon Fraser University, Canada, 2022.
+\newblock Available online: \url{https://summit.sfu.ca/item/22212}.
+
+\bibitem[SYS{\etalchar{+}}20]{sun2020mobilebert}
+Zhiqing Sun, Hongkun Yu, Xiaodan Song, Renjie Liu, Yiming Yang, and Denny Zhou.
+\newblock Mobilebert: a compact task-agnostic bert for resource-limited
+  devices.
+\newblock In {\em ACL}, 2020.
+
+\end{thebibliography}
