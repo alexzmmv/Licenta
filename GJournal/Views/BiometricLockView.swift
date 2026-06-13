@@ -6,6 +6,7 @@ struct BiometricLockView: View {
     @State private var showPINEntry = false
     @State private var pinError: String?
     @State private var showLogoutConfirmation = false
+    @State private var biometricAvailable = false
 
     var body: some View {
         Group {
@@ -17,8 +18,9 @@ struct BiometricLockView: View {
             }
         }
         .onAppear {
+            biometricAvailable = authManager.canUseBiometric()
             guard authManager.isAuthenticated && !authManager.isSessionAuthenticated else { return }
-            if authManager.isBiometricEnabled && authManager.canUseBiometric() {
+            if authManager.isBiometricEnabled && biometricAvailable {
                 Task { await attemptBiometric() }
             } else {
                 showPINEntry = true
@@ -44,7 +46,7 @@ struct BiometricLockView: View {
         VStack(spacing: 40) {
             Spacer()
 
-            Image(systemName: authManager.canUseBiometric() ? "faceid" : "lock.fill")
+            Image(systemName: biometricAvailable ? "faceid" : "lock.fill")
                 .font(.system(size: 80))
                 .foregroundColor(.pink)
 
@@ -107,7 +109,7 @@ struct BiometricLockView: View {
                 title: "Enter PIN",
                 subtitle: authManager.currentUser.map { "Welcome back, \($0)" },
                 errorMessage: pinError,
-                onCancel: (authManager.isBiometricEnabled && authManager.canUseBiometric()) ? {
+                onCancel: (authManager.isBiometricEnabled && biometricAvailable) ? {
                     pinError = nil
                     withAnimation { showPINEntry = false }
                 } : nil
