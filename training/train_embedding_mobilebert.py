@@ -1,23 +1,3 @@
-"""
-Download and evaluate all-MiniLM-L6-v2 for sentence-level semantic similarity.
-Output: training/models/mobilebert-stsb/
-
-SLOT 1 model (< 100 MB): sentence-transformers/all-MiniLM-L6-v2
-Selected per MTEB/STS-B analysis (2024-2026) as the top mean-pooling model
-under 100 MB. No modern sub-100 MB mean-pooled alternative exceeds its STS-B
-baseline. Tokenizer: WordPiece. Pooling: mean (mandatory, architecturally enforced).
-
-No fine-tuning needed — already trained on STS-B and 1B+ sentence pairs.
-
-Run: python train_embedding_mobilebert.py
-Time: ~1 min (download + eval only)
-
-Comparison:
-  MobileBERT (fine-tuned, 2020)         ~0.78 Spearman  96 MB
-  snowflake-arctic-embed-xs (CLS only)  superior MTEB retrieval but CLS-pooled — disqualified
-  all-MiniLM-L6-v2 (SLOT 1 winner)     ~0.82-0.85 Spearman  ~80 MB  ← this script
-"""
-
 import json
 from pathlib import Path
 
