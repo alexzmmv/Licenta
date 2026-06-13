@@ -13,8 +13,8 @@ GJournal uses a four‑layer architecture: \textbf{UI (SwiftUI)}, \textbf{Reposi
   \item[Bit.] The journal entry itself. Essential fields:
     \begin{itemize}
       \item \texttt{id, title, feel, event, action, createdAt, lastModified}
-      \item User selections: \texttt{feelEmotionRawValue,\allowbreak{} eventEmotionRawValue,\allowbreak{} actionEmotionRawValue,\allowbreak{} intensity}
-      \item AI outputs: \texttt{embeddingJSON} (variable-length float array; 384 floats for MiniLM, 256 for Nomic-MRL default), \texttt{emotionProbabilitiesJSON}
+      \item User selection: \texttt{intensity}
+      \item AI outputs: \texttt{embeddingData} (binary float array; 384 floats for MiniLM, 256 for Nomic-MRL default), \texttt{emotionProbabilitiesData}
       \item Flags/timestamps: \texttt{isHidden, isSafeContent, deletedAt,\\ embeddingGeneratedAt, clusterAssignedAt}
       \item Computed accessors decode/encode JSON to typed arrays.
     \end{itemize}
@@ -56,7 +56,7 @@ Figure~\ref{fig:graph} shows the graph view on a populated journal corpus. Each 
 \end{figure}
 
 \section{User Interface}
-The Dashboard shows a greeting, activity heatmap, top emotions, and a quick entry shortcut. The Editor has Feel-Event-Action fields, an emotion wheel, an intensity picker, and auto‑saved drafts. The List and Calendar views provide grouped entries with full‑text search, emotion and cluster filter chips, and sorting. The Graph screen renders an interactive cluster graph with centroid labels and node detail cards.
+The Dashboard shows a greeting, activity heatmap, top emotions, and a quick entry shortcut. The Editor has Feel-Event-Action fields and an intensity picker. The List and Calendar views provide grouped entries with full‑text search, emotion and cluster filter chips, and sorting. The Graph screen renders an interactive cluster graph with centroid labels and node detail cards.
 
 Figures~\ref{fig:dashboard} and~\ref{fig:editor} show the main screens.
 
