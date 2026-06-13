@@ -5,7 +5,7 @@
 The prototype targets iOS and performs all NLP on device, providing secure local micro‑journaling, on‑device embedding and emotion detection per entry, semantic clustering presented via list, calendar, and graph, with no cloud inference or storage, and interactive performance maintained from iPhone 14 onward.
 
 \section{High‑level Architecture}
-GJournal uses a four‑layer architecture: \textbf{UI (SwiftUI)}, \textbf{Repository}, \textbf{Service} (AIProcessingManager, DBSCANClusterer, SafetyFilter), and \textbf{Persistence (SwiftData)}. Services are injected via protocol interfaces so mock implementations can be replaced by Core ML models without changing higher layers.
+GJournal uses a four‑layer architecture: \textbf{UI (SwiftUI)}, \textbf{Repository}, \textbf{Service} (AI\allowbreak{}Processing\allowbreak{}Manager, DBSCAN\allowbreak{}Clusterer, Safety\allowbreak{}Filter), and \textbf{Persistence (SwiftData)}. Services are injected via protocol interfaces so mock implementations can be replaced by Core ML models without changing higher layers.
 
 \section{Data Model}
 \texttt{SwiftData} stores three primary entities:
@@ -13,12 +13,12 @@ GJournal uses a four‑layer architecture: \textbf{UI (SwiftUI)}, \textbf{Reposi
   \item[Bit.] The journal entry itself. Essential fields:
     \begin{itemize}
       \item \texttt{id, title, feel, event, action, createdAt, lastModified}
-      \item User selections: \texttt{feelEmotionRawValue, eventEmotionRawValue, actionEmotionRawValue, intensity}
+      \item User selections: \texttt{feelEmotionRawValue,\allowbreak{} eventEmotionRawValue,\allowbreak{} actionEmotionRawValue,\allowbreak{} intensity}
       \item AI outputs: \texttt{embeddingJSON} (variable-length float array; 384 floats for MiniLM, 256 for Nomic-MRL default), \texttt{emotionProbabilitiesJSON}
-      \item Flags/timestamps: \texttt{isHidden, isSafeContent, deletedAt, embeddingGeneratedAt, clusterAssignedAt}
+      \item Flags/timestamps: \texttt{isHidden, isSafeContent, deletedAt,\\ embeddingGeneratedAt, clusterAssignedAt}
       \item Computed accessors decode/encode JSON to typed arrays.
     \end{itemize}
-  \item[Cluster.] Relational model with \texttt{@Relationship(deleteRule:.nullify)} to \texttt{Bit}. Cluster rows store \texttt{id, name, createdAt} and a list of member bits; names are updated centrally and observed reactively by SwiftData.
+  \item[Cluster.] Relational model with \texttt{@Relationship\allowbreak{}(deleteRule:\allowbreak{}.nullify)} to \texttt{Bit}. Cluster rows store \texttt{id, name, createdAt} and a list of member bits; names are updated centrally and observed reactively by SwiftData.
   \item[Retention.] Soft delete sets \texttt{deletedAt}; a maintenance pass permanently removes entries after three days.
 \end{description}
 
@@ -31,7 +31,8 @@ The \texttt{AIProcessingManager} runs a six‑step pipeline on a background task
 \begin{enumerate}
   \item \textbf{Text flattening:} combine title, Feel, Event, Action into a tagged string for the model.
   \item \textbf{Safety filter:} on‑device keyword scan across harm categories; flagged entries are stored but excluded from clustering/recommendations.
-  \item \textbf{Embedding:} produce a fixed-length vector using one of three interchangeable services behind the \texttt{EmbeddingService} protocol: \texttt{CoreMLEmbeddingService} (all-MiniLM-L6-v2, 384-dim, mean pooling, 45\,MB Core ML package), \texttt{NomicEmbeddingService} (nomic-embed-text-v1.5 with MRL truncation, default 256-dim, 274\,MB Core ML package), or \texttt{NLEmbeddingService} (Apple's built-in \texttt{NLEmbedding}, 512-dim, zero bundle cost). \texttt{ServiceContainer} selects which service to wire via the \texttt{EmbeddingModelChoice} enum.
+  \item \textbf{Embedding:} produce a fixed-length vector using one of three interchangeable services behind the \texttt{EmbeddingService} protocol: \\ \texttt{CoreMLEmbeddingService} (all-MiniLM-L6-v2, 384-dim, mean pooling, 45\,MB Core ML package),
+  \newline\texttt{NomicEmbeddingService} (nomic-embed-text-v1.5 with MRL truncation, default 256-dim, 274\,MB Core ML package), or \texttt{NLEmbeddingService} (Apple's built-in \texttt{NLEmbedding}, 512-dim, zero bundle cost). \texttt{ServiceContainer} selects which service to wire via the \texttt{EmbeddingModelChoice} enum.
   \item \textbf{Emotion detection:} probability distribution over 12 emotion classes, produced by \texttt{CoreMLEmotionService}: MobileBERT fine-tuned on GoEmotions (28 labels collapsed to 12), converted to a 99\,MB Core ML package. Classes: Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, Guilt.
   \item \textbf{Persistence:} write embedding, emotion probabilities, safety flag, and timestamps on the MainActor.
   \item \textbf{Clustering:} re‑run DBSCAN and update \texttt{Cluster} rows.
@@ -94,12 +95,12 @@ Figures~\ref{fig:dashboard} and~\ref{fig:editor} show the main screens.
 \end{figure}
 
 \section{Dependency Injection and Testability}
-All AI services are protocol‑based and provided by a \texttt{ServiceContainer} with three configurations: \texttt{makeMock()} (development), mixed device testing, and \texttt{makeProduction()} (Core ML models). This enables unit testing and device testing without changing application logic.
+All AI services are protocol‑based and provided by a \texttt{ServiceContainer} with three configurations: \texttt{makeMock()} (development), mixed device testing, and \texttt{make\allowbreak{}Production()} (Core~ML models). This enables unit testing and device testing without changing application logic.
 
 \section{Functional Test F1}
 This test covers FR1 (create entry), FR3 (on‑device analysis), and FR4 (clustering), run on device using the production Core ML models.
 
-A Bit was created in the editor across the Feel, Event, and Action fields, then saved. The entry appeared in the calendar immediately. The \texttt{AIProcessingManager} pipeline fired on a background task: console logs confirmed all six steps completed in order, embedding generation completed on the Neural Engine with all-MiniLM-L6-v2, and the emotion classifier returned a probability distribution. Benchmark measurements are reported in Section~\ref{sec:efficiency}. The embedding and top emotion were written back to the \texttt{Bit} record on the MainActor. DBSCAN then ran over the full corpus and assigned the new entry to an existing cluster; the cluster name updated and the filter chip appeared in the list view. The knowledge graph node for the new entry was visible after the next render cycle.
+A Bit was created in the editor across the Feel, Event, and Action fields, then saved. The entry appeared in the calendar immediately.\\ The \texttt{AIProcessingManager} pipeline fired on a background task: console logs confirmed all six steps completed in order, embedding generation completed on the Neural Engine with all-MiniLM-L6-v2, and the emotion classifier returned a probability distribution. Benchmark measurements are reported in Section~\ref{sec:efficiency}. The embedding and top emotion were written back to the \texttt{Bit} record on the MainActor. DBSCAN then ran over the full corpus and assigned the new entry to an existing cluster; the cluster name updated and the filter chip appeared in the list view. The knowledge graph node for the new entry was visible after the next render cycle.
 
 Figure~\ref{fig:processed-entry} shows an entry card after the full pipeline has completed, with the detected emotion and cluster assignment visible.
 

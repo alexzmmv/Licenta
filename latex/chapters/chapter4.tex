@@ -33,9 +33,19 @@ All Python benchmarks run on an Apple M-series processor using the MPS backend (
 Three strategies are implemented in GJournal behind the \texttt{EmbeddingService} protocol:
 
 \begin{itemize}
-  \item \textbf{Apple NLEmbedding}: the sentence embedding provided by the iOS \texttt{NaturalLanguage} framework via \texttt{NLEmbedding.sentenceEmbedding(for: .english)}. It produces 512-dimensional vectors with no additional bundle cost; the model weights are part of the operating system. Because this API is only callable from Swift, a standalone macOS Swift script (\texttt{embed\_apple\_nlp.swift}) was written to embed all benchmark sentences and export them to JSON for the Python evaluation pipeline. This approach allowed Apple NLEmbedding to participate in all three evaluation steps under the same metrics and DBSCAN configuration used for the other models.
+  \item \textbf{Apple NLEmbedding}: the sentence embedding provided by the iOS%
+\newline \texttt{NaturalLanguage} framework,%
+\newline via \texttt{NLEmbedding.sentenceEmbedding(for:~.english)}.%
+\newline It produces 512-dimensional vectors with no additional bundle cost; the model weights are part of the operating system. Because this API is only callable from Swift, a standalone macOS Swift script (\texttt{embed\_apple\_nlp.swift}) was written to embed all benchmark sentences and export them to JSON for the Python evaluation pipeline. This approach allowed Apple NLEmbedding to participate in all three evaluation steps under the same metrics and DBSCAN configuration used for the other models.
   \item \textbf{all-MiniLM-L6-v2} \cite{reimers2019sentencebert}: a 6-layer MiniLM model producing 384-dimensional mean-pooled embeddings. Converted to a 45\,MB Core ML package. This model is the default in GJournal.
-  \item \textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic}: a 768-dimensional model trained with Matryoshka Representation Learning (Section~\ref{sec:mrl}). Converted to a 274\,MB Core ML package. The model is instruction-tuned: it was trained with task-specific text prefixes that condition the embedding space for a stated downstream task. Supported prefixes include \texttt{"search\_query: "}, \texttt{"search\_document: "}, \texttt{"classification: "}, and \texttt{"clustering: "}. GJournal prepends \texttt{"clustering: "} to every input so the model produces embeddings whose geometry is optimised for grouping similar texts, rather than a generic representation. The GJournal default configuration uses 256-dimensional MRL truncation.
+  \item \textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic}: a 768-dimensional model trained with Matryoshka Representation Learning (Section~\ref{sec:mrl}). Converted to a 274\,MB Core ML package. The model is instruction-tuned: it was trained with task-specific text prefixes that condition the embedding space for a stated downstream task. Supported prefixes include:
+  \begin{itemize}
+    \item \texttt{"search\_query: "}
+    \item \texttt{"search\_document: "}
+    \item \texttt{"classification: "}
+    \item \texttt{"clustering: "}
+  \end{itemize}
+  GJournal prepends \texttt{"clustering: "} to every input so the model produces embeddings whose geometry is optimised for grouping similar texts, rather than a generic representation. The GJournal default configuration uses 256-dimensional MRL truncation.
 \end{itemize}
 
 \section{Matryoshka Representation Learning}
@@ -96,6 +106,7 @@ Table~\ref{tab:clustering_quality} shows clustering metrics on 1000 TwentyNewsgr
 \centering
 \caption{Clustering quality on TwentyNewsgroupsClustering (1000 sentences, adaptive DBSCAN)}
 \label{tab:clustering_quality}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
 \textbf{Model} & \textbf{Dim} & \textbf{V-m} & \textbf{ARI} & \textbf{Homog} & \textbf{Compl} & \textbf{Noise\%} & \textbf{Clusters} \\
@@ -105,7 +116,8 @@ Nomic-v1.5        & 256 & 0.366          & 0.089          & 0.234 & 0.844 & 23.1
 Nomic-v1.5        & 768 & 0.477          & 0.121          & 0.322 & 0.924 & 40.4\% & 5 \\
 Apple NLEmbedding & 512 & 0.020          & 0.001          & 0.010 & 0.585 & 22.3\% & 2 \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 MiniLM achieves the best V-measure (0.584) and ARI (0.249). Its noise fraction is higher (56\%) because its tighter clusters leave borderline points unclaimed. Nomic-256 assigns 77\% of sentences to clusters but homogeneity drops to 0.23, meaning its clusters mix topics. Nomic-768 sits between the two on most metrics. Apple NLEmbedding collapses all 1000 sentences into 2 clusters with near-zero V-measure (0.020) and ARI (0.001). Its cosine-distance geometry at 512 dimensions is too flat for DBSCAN to recover the topic structure in this benchmark.

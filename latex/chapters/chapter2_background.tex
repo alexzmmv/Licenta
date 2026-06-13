@@ -42,7 +42,8 @@ Sentence embedding models encode a variable-length text input into a fixed-dimen
 
 \textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic} produces 768-dimensional embeddings trained with Matryoshka Representation Learning (Section~\ref{sec:mrl_background}), which allows its output to be truncated to any prefix length at inference time. GJournal uses 256-dimensional truncation by default. The Core ML package is 274\,MB. The model is instruction-tuned and requires a task prefix: GJournal uses \texttt{"clustering: "} to condition the embedding space for grouping tasks.
 
-\textbf{Apple NLEmbedding} is the sentence embedding provided by the iOS \texttt{NaturalLanguage} framework. It produces 512-dimensional vectors with no additional bundle cost because the model weights ship as part of the operating system. It is a general-purpose on-device model trained across many language tasks rather than specifically for semantic similarity.
+\textbf{Apple NLEmbedding} is the sentence embedding provided by the iOS%
+\newline \texttt{NaturalLanguage} framework. It produces 512-dimensional vectors with no additional bundle cost because the model weights ship as part of the operating system. It is a general-purpose on-device model trained across many language tasks rather than specifically for semantic similarity.
 
 \subsection{Emotion Classification}
 

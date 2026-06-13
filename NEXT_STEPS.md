@@ -1,4 +1,13 @@
+NomicEmbeddingSe
+makeProduction(
+(Core ML models)
+AIProcessingManager
+NaturalLanguage
+search document:
+Table 5.3. - little bit smaller 
+
 # Thesis — What To Do Next
+
 
 **Date:** June 10, 2026  
 **Supervisor:** Lect. PhD. Horea-Bogdan Muresan
