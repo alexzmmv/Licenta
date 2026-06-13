@@ -1,9 +1,3 @@
-//  BitCard.swift
-//  GJournal
-//
-//  Created by Constantin-Alexandru Dumitrascu on 21.10.2025.
-//
-
 import SwiftUI
 
 struct BitCard: View {
@@ -15,7 +9,6 @@ struct BitCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header with emoji and menu
             HStack {
                 Text(bit.emotion.emoji)
                     .font(.title)
@@ -54,7 +47,6 @@ struct BitCard: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             
-            // Content
             VStack(alignment: .leading, spacing: 12) {
                 if let title = bit.title, !title.isEmpty {
                     Text(title)
@@ -62,7 +54,6 @@ struct BitCard: View {
                         .foregroundColor(.primary)
                 }
 
-                // Micro-journaling sections: Feel, Event, Action
                 VStack(alignment: .leading, spacing: 16) {
                     if !bit.feel.isEmpty {
                         MicroJournalSection(title: "Feel", text: bit.feel, isHidden: bit.isHidden)
@@ -78,7 +69,6 @@ struct BitCard: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             
-            // Footer with time and intensity
             HStack {
                 Text(bit.lastModified.timeOfDay)
                     .font(.caption)
@@ -196,12 +186,6 @@ struct MicroJournalSection: View {
         )
     }
 }
-//
-//  BitDetailView.swift
-//  GJournal
-//
-//  A read-only detailed view of a single journal entry (Bit).
-//
 
 import SwiftUI
 
@@ -231,7 +215,6 @@ struct BitDetailView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Header Section
                     VStack(alignment: .leading, spacing: 8) {
                         if let title = currentBit.title, !title.isEmpty {
                             Text(title)
@@ -257,7 +240,6 @@ struct BitDetailView: View {
                     }
                     .padding(.bottom, 8)
 
-                    // Content Sections
                     VStack(alignment: .leading, spacing: 20) {
                         detailSection(title: "How you felt", content: currentBit.feel)
 
@@ -270,7 +252,6 @@ struct BitDetailView: View {
                         }
                     }
 
-                    // Metadata Section
                     VStack(alignment: .leading, spacing: 12) {
                         Divider()
                             .background(Color.gray.opacity(0.3))
@@ -298,7 +279,6 @@ struct BitDetailView: View {
                     }
                     .padding(.top, 8)
 
-                    // Connected Moments Section
                     let connected = SemanticUtils.relatedBits(
                         to: currentBit,
                         in: currentBit.cluster?.bits.filter { !$0.isDeleted && $0.id != currentBit.id } ?? []

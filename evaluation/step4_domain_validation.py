@@ -143,22 +143,18 @@ def embed_nomic(sentences, dim):
 
 
 def load_apple_nlp_embeddings():
-    """Load pre-computed Apple NLP embeddings from JSON, if available."""
+    """Load pre-computed Apple NLP embeddings from JSON."""
     emb_path = EVAL_DIR / "datasets" / "apple_nlp_journal_embeddings.json"
     if not emb_path.exists():
-        return None
+        raise FileNotFoundError(
+            f"{emb_path} not found. Export Apple NLP embeddings for the journal "
+            f"dataset first by running the Swift script, then re-run this script."
+        )
 
     with open(emb_path, "r") as f:
         data = json.load(f)
 
-    # Expect a list of embedding vectors (list of lists)
-    if isinstance(data, list):
-        return np.asarray(data, dtype=np.float32)
-    elif isinstance(data, dict) and "embeddings" in data:
-        return np.asarray(data["embeddings"], dtype=np.float32)
-    else:
-        print("  ⚠ Unexpected Apple NLP embeddings format, skipping.")
-        return None
+    return np.asarray(data["embeddings"], dtype=np.float32)
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
@@ -196,19 +192,16 @@ def main():
 
         print(f"    calibrated ε = {eps:.4f},  minPoints = {mp},  clusters = {metrics['Clusters']}")
 
-    # 4. Apple NLP (pre-computed, optional)
+    # 4. Apple NLP (pre-computed)
     print("\n  ▸ Apple NLP (pre-computed)")
     apple_emb = load_apple_nlp_embeddings()
-    if apple_emb is not None:
-        print(f"    embedding shape: {apple_emb.shape}")
-        pred, eps, mp = run_adaptive_dbscan(apple_emb)
-        metrics = compute_metrics(labels, pred)
-        metrics["Epsilon"] = round(eps, 4)
-        metrics["MinPts"] = mp
-        results["Apple NLP"] = metrics
-        print(f"    calibrated ε = {eps:.4f},  minPoints = {mp},  clusters = {metrics['Clusters']}")
-    else:
-        print("    ⚠ Apple NLP embeddings not found, skipping.")
+    print(f"    embedding shape: {apple_emb.shape}")
+    pred, eps, mp = run_adaptive_dbscan(apple_emb)
+    metrics = compute_metrics(labels, pred)
+    metrics["Epsilon"] = round(eps, 4)
+    metrics["MinPts"] = mp
+    results["Apple NLP"] = metrics
+    print(f"    calibrated ε = {eps:.4f},  minPoints = {mp},  clusters = {metrics['Clusters']}")
 
     # ── Display results ──
     print("\n" + "=" * 70)

@@ -1,10 +1,3 @@
-//
-//  BiometricLockView.swift
-//  GJournal
-//
-//  Session lock screen: Face ID / Touch ID with in-app PIN fallback.
-//
-
 import SwiftUI
 import LocalAuthentication
 
@@ -28,7 +21,6 @@ struct BiometricLockView: View {
             if authManager.isBiometricEnabled && authManager.canUseBiometric() {
                 Task { await attemptBiometric() }
             } else {
-                // No biometrics available or disabled — go straight to PIN
                 showPINEntry = true
             }
         }
@@ -48,7 +40,6 @@ struct BiometricLockView: View {
         }
     }
 
-    // Biometric prompt screen
     private var biometricUnlockView: some View {
         VStack(spacing: 40) {
             Spacer()
@@ -108,7 +99,6 @@ struct BiometricLockView: View {
         }
     }
 
-    // In-app PIN entry screen
     private var pinUnlockView: some View {
         VStack {
             Spacer()
@@ -160,13 +150,11 @@ struct BiometricLockView: View {
         } catch let error as LAError {
             switch error.code {
             case .userFallback:
-                // User tapped "Use PIN" in the system dialog
                 withAnimation { showPINEntry = true }
             case .biometryNotAvailable, .biometryNotEnrolled, .biometryLockout:
-                // Biometrics not usable — fall back to PIN
                 withAnimation { showPINEntry = true }
             case .userCancel, .appCancel, .systemCancel:
-                break   // stay on biometric screen
+                break
             default:
                 withAnimation { showPINEntry = true }
             }

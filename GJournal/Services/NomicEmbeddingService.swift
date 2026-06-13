@@ -1,16 +1,3 @@
-//
-//  NomicEmbeddingService.swift
-//  GJournal
-//
-//  Sentence embeddings via nomic-embed-text-v1 with Matryoshka Representation Learning.
-//  The model outputs 768-dim last_hidden_state; this service:
-//    1. Prepends the "clustering: " task prefix (Nomic requires it for clustering tasks)
-//    2. Applies mean pooling over real (non-padding) token positions
-//    3. Truncates the L2-normalised vector to `truncateDim` for MRL evaluation
-//
-//  Supported MRL truncation dimensions: 64, 128, 256, 512, 768
-//  Lower dims = faster clustering + smaller distance matrix; quality peaks around 256-384.
-
 import Foundation
 import CoreML
 import Accelerate

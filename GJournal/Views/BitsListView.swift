@@ -1,18 +1,9 @@
-//
-//  BitsListView.swift
-//  GJournal
-//
-//  Searchable, filterable list view for all journal entries (Bits).
-//  Supports text search, emotion filtering, date sorting, and intensity filtering.
-//
-
 import SwiftUI
 
 struct BitsListView: View {
     @ObservedObject var repository: BaseJournalRepository
     @Environment(\.dismiss) var dismiss
 
-    // Search & Filter State
     @State private var searchText = ""
     @State private var selectedEmotions: Set<Emotion> = []
     @State private var showingFilters = false
@@ -20,12 +11,10 @@ struct BitsListView: View {
     @State private var selectedIntensityRange: ClosedRange<Int> = 1...4
     @State private var selectedClusters: Set<Int> = []
 
-    // Sheet state
     @State private var bitToEdit: Bit?
     @State private var showingDeleteAlert = false
     @State private var bitToDelete: Bit?
 
-    // View mode
     enum ViewMode { case list, clusters }
     @State private var viewMode: ViewMode = .list
 
@@ -48,7 +37,6 @@ struct BitsListView: View {
             clusterIDs: selectedClusters.isEmpty ? nil : Array(selectedClusters)
         )
 
-        // Apply sort order
         switch sortOrder {
         case .newestFirst:
             results.sort { $0.createdAt > $1.createdAt }
@@ -85,10 +73,8 @@ struct BitsListView: View {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
                 headerView
 
-                // View mode toggle
                 Picker("", selection: $viewMode) {
                     Label("List", systemImage: "list.bullet").tag(ViewMode.list)
                     Label("Clusters", systemImage: "circle.hexagongrid.fill").tag(ViewMode.clusters)
@@ -98,15 +84,12 @@ struct BitsListView: View {
                 .padding(.vertical, 8)
 
                 if viewMode == .list {
-                    // Search bar
                     searchBarView
 
-                    // Filter chips (when filters are active)
                     if !selectedEmotions.isEmpty || !selectedClusters.isEmpty {
                         activeFiltersView
                     }
 
-                    // Content
                     if filteredBits.isEmpty {
                         emptyStateView
                     } else {
@@ -240,7 +223,6 @@ struct BitsListView: View {
     private var activeFiltersView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                // Emotion Chips
                 ForEach(Array(selectedEmotions), id: \.self) { emotion in
                     HStack(spacing: 4) {
                         Text(emotion.emoji)
@@ -263,7 +245,6 @@ struct BitsListView: View {
                     .cornerRadius(16)
                 }
                 
-                // Cluster Chips
                 ForEach(Array(selectedClusters).sorted(), id: \.self) { clusterID in
                     HStack(spacing: 4) {
                         Image(systemName: "circle.grid.hex")
@@ -340,7 +321,6 @@ struct BitsListView: View {
     private var bitListView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                // Results count
                 HStack {
                     Text("\(filteredBits.count) \(filteredBits.count == 1 ? "entry" : "entries")")
                         .font(.caption)
@@ -348,7 +328,6 @@ struct BitsListView: View {
 
                     Spacer()
 
-                    // Sort indicator
                     HStack(spacing: 4) {
                         Image(systemName: sortOrder == .newestFirst || sortOrder == .highIntensity
                               ? "arrow.down" : "arrow.up")
@@ -362,7 +341,6 @@ struct BitsListView: View {
                 .padding(.bottom, 12)
 
                 ForEach(groupedBits, id: \.date) { group in
-                    // Date section header
                     HStack {
                         Text(group.date.sectionHeader)
                             .font(.subheadline)
@@ -416,7 +394,6 @@ struct FilterSheetView: View {
     @Binding var sortOrder: BitsListView.SortOrder
     @Binding var selectedIntensityRange: ClosedRange<Int>
     
-    // Derived clusters
     private var availableClusters: [Int] {
         let ids = Set(repository.bits.compactMap { $0.clusterID }).filter { $0 != -1 }
         return Array(ids).sorted()
@@ -431,7 +408,6 @@ struct FilterSheetView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
-                        // Sort Order
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Sort By")
                                 .font(.headline)
@@ -466,7 +442,6 @@ struct FilterSheetView: View {
                             }
                         }
 
-                        // Emotion Filter
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Filter by Emotion")
                                 .font(.headline)
@@ -507,7 +482,6 @@ struct FilterSheetView: View {
                             }
                         }
 
-                        // Intensity Filter
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Intensity Range")
                                 .font(.headline)
@@ -541,7 +515,6 @@ struct FilterSheetView: View {
                             }
                         }
 
-                        // Cluster Filter
                         if !availableClusters.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Filter by Cluster")
@@ -575,7 +548,6 @@ struct FilterSheetView: View {
                             }
                         }
 
-                        // Reset button
                         Button {
                             selectedEmotions.removeAll()
                             selectedClusters.removeAll()
@@ -612,8 +584,6 @@ struct FilterSheetView: View {
     }
 
     private func toggleIntensity(_ level: Int) {
-        // Simple toggle: if all are selected, select only this one.
-        // If only this one is selected, select all.
         if selectedIntensityRange == level...level {
             selectedIntensityRange = 1...4
         } else {

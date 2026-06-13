@@ -1,28 +1,8 @@
-//
-//  SafetyFilter.swift
-//  GJournal
-//
-//  On-device keyword-based safety filter for detecting harmful,
-//  illegal, or unsafe content in journal entries.
-//  Prevents recommendations based on flagged content.
-//
-
 import Foundation
-
-/// Keyword-based on-device safety filter.
-///
-/// This filter checks journal entries for harmful, illegal, or unsafe content
-/// patterns. It does NOT prevent the user from saving entries — it flags them
-/// so the clustering/recommendation engine can exclude them from pattern
-/// detection and suggestions.
-///
-/// Uses Apple's NaturalLanguage framework concepts but implements a lightweight
-/// keyword/pattern approach suitable for on-device processing.
-final class SafetyFilter: SafetyFilterServiceProtocol {
+class SafetyFilter: SafetyFilterServiceProtocol {
 
     // MARK: - Harmful Content Categories
 
-    /// Categories of content that should be flagged
     private enum ContentCategory: String {
         case selfHarm = "self-harm"
         case violence = "violence"
@@ -30,9 +10,6 @@ final class SafetyFilter: SafetyFilterServiceProtocol {
         case exploitation = "exploitation"
     }
 
-    /// Patterns associated with each category.
-    /// These are simplified keyword sets — in production, a trained NLP classifier
-    /// would be used instead.
     private let flaggedPatterns: [ContentCategory: [String]] = [
         .selfHarm: [
             "kill myself", "end my life", "suicide plan", "want to die",

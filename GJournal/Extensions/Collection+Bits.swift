@@ -1,7 +1,6 @@
 import Foundation
 
 extension Collection where Element == Bit {
-    /// Most frequent emotion among elements, or nil if empty.
     var dominantEmotion: Emotion? {
         var counts: [Emotion: Int] = [:]
         forEach { counts[$0.emotion, default: 0] += 1 }
@@ -10,7 +9,6 @@ extension Collection where Element == Bit {
 }
 
 extension Cluster {
-    /// Display name with a safe fallback.
     var displayName: String {
         name.isEmpty ? "Cluster \(index)" : name
     }

@@ -1,27 +1,46 @@
 \chapter{Background and Related Work}
 \label{ch:background}
-TODO: Not up to date, need rewrite of model names and some revision.
 
-This chapter covers the theoretical foundations and prior work that GJournal builds on: digital journaling and self-reflection tools, NLP techniques used in well-being applications, sentence embedding models, Matryoshka Representation Learning, on-device machine learning, and the mobile hardware that makes local inference practical.
+GJournal draws on work across several areas: digital journaling research, NLP for personal well-being, sentence embedding models, Matryoshka Representation Learning, on-device machine learning, and mobile hardware. This chapter reviews each in turn.
 
 \section{Digital Journaling and Self-Reflection}
 
-Digital journaling platforms have grown as tools for emotional awareness and habit tracking. Mood trackers, guided journaling apps, and reflective writing assistants help users notice patterns in their thoughts and behaviour. Prior research shows that structured journaling can improve emotional regulation and self-awareness \cite{Sivaram2022HealthyMe}.
+Digital journaling platforms have grown as tools for emotional awareness and habit tracking. Mood trackers, guided journaling apps, and reflective writing assistants help users notice patterns in their thoughts and behaviour. Pennebaker's work established that writing about emotional experiences has measurable therapeutic effects \cite{pennebaker1997writing}, and subsequent research confirms that structured journaling can improve emotional regulation and self-awareness \cite{Sivaram2022HealthyMe}.
 
 Recent work has explored AI-assisted journaling, where NLP extracts insights from user text \cite{10351450}. These systems show that automated analysis can support personal reflection, but most rely on cloud-based processing, which raises privacy concerns.
 
+Popular apps such as Daylio, Reflectly, and Journey offer mood tracking and guided prompts, but their analysis either requires manual tagging by the user or runs on a remote server. GJournal differs in that all analysis runs on the device, which means no user text is transmitted and the experience works offline. Table~\ref{tab:app_comparison} summarises the differences.
+
+\begin{table}[h]
+\centering
+\caption{Feature comparison of journaling applications.}
+\label{tab:app_comparison}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Feature} & \textbf{GJournal} & \textbf{Daylio} & \textbf{Reflectly} & \textbf{Journey} \\
+\hline
+On-device AI inference      & Yes & No          & No          & No \\
+Automatic emotion detection & Yes & No (manual) & Yes (cloud) & No \\
+Semantic clustering         & Yes & No          & No          & No \\
+Knowledge graph view        & Yes & No          & No          & No \\
+No cloud processing         & Yes & Yes         & No          & No \\
+No account required         & Yes & No          & No          & No \\
+\hline
+\end{tabular}
+\end{table}
+
 \section{Natural Language Processing in Personal Well-Being}
 
-NLP techniques have been widely applied to sentiment analysis, emotion detection, and mental health monitoring. Transformer-based models have become the dominant approach due to their contextual understanding. Full-size models such as BERT are too computationally expensive for mobile deployment, so compact variants have been developed for edge inference. GJournal uses two categories of such models: sentence embedding models that produce fixed-length vectors from journal text, and a fine-tuned MobileBERT \cite{sun2020mobilebert} classifier for emotion detection.
+NLP techniques have been widely applied to sentiment analysis, emotion detection, and mental health monitoring. Transformer-based models have become the dominant approach due to their contextual understanding. Full-size models such as BERT \cite{devlin2019bert} are too computationally expensive for mobile deployment, so compact variants have been developed for edge inference. GJournal uses two categories of such models: sentence embedding models that produce fixed-length vectors from journal text, and a fine-tuned MobileBERT \cite{sun2020mobilebert} classifier for emotion detection.
 
 \subsection{Sentence Embedding Models}
 \label{sec:sentence_embeddings}
 
 Sentence embedding models encode a variable-length text input into a fixed-dimensional dense vector such that semantically similar texts land close together in the resulting space. GJournal implements three interchangeable embedding services behind a common protocol:
 
-\textbf{all-MiniLM-L6-v2} \cite{reimers2019sentencebert} is a 6-layer transformer producing 384-dimensional mean-pooled sentence embeddings. It was trained with a contrastive objective on a large corpus of sentence pairs and evaluated on semantic textual similarity benchmarks. At 43\,MB as a Core ML package it has the smallest dedicated bundle of the three models.
+\textbf{all-MiniLM-L6-v2} \cite{reimers2019sentencebert} is a 6-layer transformer producing 384-dimensional mean-pooled sentence embeddings. It was trained with a contrastive objective on a large corpus of sentence pairs and evaluated on semantic textual similarity benchmarks. At 45\,MB as a Core ML package it has the smallest dedicated bundle of the three models.
 
-\textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic} produces 768-dimensional embeddings trained with Matryoshka Representation Learning (Section~\ref{sec:mrl_background}), which allows its output to be truncated to any prefix length at inference time. GJournal uses 256-dimensional truncation by default. The Core ML package is 261\,MB.
+\textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic} produces 768-dimensional embeddings trained with Matryoshka Representation Learning (Section~\ref{sec:mrl_background}), which allows its output to be truncated to any prefix length at inference time. GJournal uses 256-dimensional truncation by default. The Core ML package is 274\,MB. The model is instruction-tuned and requires a task prefix: GJournal uses \texttt{"clustering: "} to condition the embedding space for grouping tasks.
 
 \textbf{Apple NLEmbedding} is the sentence embedding provided by the iOS \texttt{NaturalLanguage} framework. It produces 512-dimensional vectors with no additional bundle cost because the model weights ship as part of the operating system. It is a general-purpose on-device model trained across many language tasks rather than specifically for semantic similarity.
 
@@ -34,15 +53,15 @@ Emotion detection from short text is a multi-label classification problem. GoEmo
 
 Standard embedding models fix output dimensionality at training time. Reducing it after training typically requires retraining from scratch or post-hoc compression, both of which degrade quality. Matryoshka Representation Learning (MRL) \cite{kusupati2022matryoshka} avoids this by training the model with a nested loss: the full $d$-dimensional output optimises a similarity objective, and each prefix sub-vector of length $d' < d$ optimises the same objective independently. The result is that any prefix of the output vector is a usable embedding.
 
-For on-device deployment this matters because it means a single model can serve multiple accuracy-versus-storage trade-offs without retraining. The 768-dimensional nomic model can produce embeddings at 64, 128, 256, 512, or 768 dimensions by truncating its output after inference. Chapter~\ref{chap:evaluation} evaluates how Spearman correlation and clustering quality change across these levels.
+The intuition is that the loss forces the model to pack the most discriminative information into the first few dimensions. Later dimensions refine the representation but are not load-bearing, so truncating them costs little accuracy while substantially reducing storage and distance-computation cost.
 
-\section{On-Device Machine Learning}
+For on-device deployment this means a single model can serve multiple accuracy-versus-storage trade-offs without retraining. The 768-dimensional nomic model can produce embeddings at 64, 128, 256, 512, or 768 dimensions by truncating its output after inference. Chapter~\ref{chap:evaluation} evaluates how Spearman correlation and clustering quality change across these levels.
 
-On-device machine learning has grown in relevance due to improvements in mobile NPUs and the need for private computation. Research on edge-based emotion detection \cite{Pandelea2021EmotionEdge} and optimised clustering for mobile processors \cite{awad2022improved} shows that meaningful analysis can run locally. Frameworks such as Core ML and TensorFlow Lite support deployment of compact models on smartphones, enabling inference without network connectivity.
+\section{On-Device NLP and Clustering for Personal Data}
 
-\section{Clustering and Semantic Analysis}
+On-device machine learning has grown in relevance due to improvements in mobile NPUs and the need for private computation. Research on edge-based emotion detection \cite{Pandelea2021EmotionEdge} and optimised clustering for mobile processors \cite{awad2022improved} shows that competitive NLP inference runs locally without a network connection. Frameworks such as Core ML and TensorFlow Lite support deployment of compact transformer models on smartphones.
 
-Clustering algorithms group semantically similar text entries. Density-based methods such as DBSCAN \cite{ester1996density} suit small, irregular datasets like personal journals because they do not require specifying the number of clusters in advance and can mark individual entries as noise. Recent work combining transformer embeddings with clustering has produced solid results for topic discovery and personal data organisation, and these techniques are what GJournal uses to group microjournal entries into themes.
+Clustering is a natural fit for personal journal data: entries accumulate over time, their number is unpredictable, and the user has no interest in manually assigning topics. Density-based methods such as DBSCAN \cite{ester1996density} suit this setting because they do not require a preset cluster count and can mark individual entries as noise rather than forcing every entry into a group. When combined with semantic embeddings from a transformer, DBSCAN can surface recurring themes in a journal corpus without any labelling effort from the user.
 
 \section{Mobile Hardware for On-Device AI}
 
@@ -90,7 +109,7 @@ Tables~\ref{tab:apple_npu} and~\ref{tab:qualcomm_npu} summarise NPU performance 
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:npu_tops} shows the growth trend across both chip families. The increase over the past five years makes transformer-based NLP on a smartphone practical rather than aspirational.
+Figure~\ref{fig:npu_tops} shows the growth trend across both chip families. The increase over the past five years puts transformer-based NLP on a smartphone within reach for production applications.
 
 \begin{figure}[h]
 \centering
@@ -130,7 +149,7 @@ Figure~\ref{fig:npu_tops} shows the growth trend across both chip families. The 
 
 \subsection{Implications for On-Device NLP}
 
-The compute available on modern NPUs is sufficient for real-time inference of lightweight transformer models. All three embedding models used in GJournal run on the Neural Engine: all-MiniLM-L6-v2 takes approximately 120\,ms per entry, nomic-embed-text-v1.5 at 256 dimensions takes approximately 20\,ms, and Apple NLEmbedding uses the system model with no additional cost. The MobileBERT emotion classifier runs in approximately 200\,ms. All inference steps complete before the user leaves the entry editor.
+The compute available on modern NPUs is sufficient for real-time inference of lightweight transformer models. All three embedding models used in GJournal run on the Neural Engine. On-device latency and cold-start measurements are reported in Section~\ref{sec:efficiency}; the fastest model (all-MiniLM-L6-v2) reaches 5.4\,ms mean warm latency, and all inference steps complete well before the user navigates away from the entry editor.
 
 \subsection{Privacy and Energy Considerations}
 

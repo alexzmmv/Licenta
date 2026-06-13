@@ -1,8 +1,3 @@
-//
-//  SemanticUtils.swift
-//  GJournal
-//
-
 import Foundation
 import Accelerate
 
@@ -10,7 +5,6 @@ enum SemanticUtils {
 
     // MARK: - Core similarity
 
-    /// Cosine similarity in [0, 1]. Assumes vectors are already L2-normalised.
     nonisolated static func cosineSimilarity(_ a: [Float], _ b: [Float]) -> Float {
         guard a.count == b.count, !a.isEmpty else { return 0 }
         var dot: Float = 0
@@ -20,8 +14,6 @@ enum SemanticUtils {
 
     // MARK: - Related entries
 
-    /// Returns up to `limit` entries from `pool` most semantically similar to `source`,
-    /// excluding `source` itself. Only considers entries with embeddings.
     nonisolated static func relatedBits(to source: Bit, in pool: [Bit], limit: Int = 3) -> [(bit: Bit, similarity: Float)] {
         guard let srcEmb = normalised(source.embedding) else { return [] }
 

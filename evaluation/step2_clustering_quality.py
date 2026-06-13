@@ -49,38 +49,9 @@ print("Loading TwentyNewsgroupsClustering...")
 task = mteb.get_tasks(tasks=["TwentyNewsgroupsClustering"])[0]
 task.load_data()
 
-# Navigate the dataset structure with fallbacks
-try:
-    test_data = task.dataset["test"][0]
-    sentences = test_data["sentences"]
-    labels    = test_data["labels"]
-except (KeyError, TypeError, IndexError) as exc:
-    print(f"  Primary access failed ({exc}), trying alternatives...")
-    try:
-        # Some MTEB versions expose .dataset differently
-        ds = task.dataset["test"]
-        if hasattr(ds, "features"):
-            sentences = ds["sentences"]
-            labels    = ds["labels"]
-        else:
-            # Might be a list of dicts
-            sentences = ds[0]["sentences"]
-            labels    = ds[0]["labels"]
-    except Exception as exc2:
-        print(f"  Alternative access also failed ({exc2}).")
-        print(f"  Dataset structure: {type(task.dataset)}")
-        if hasattr(task.dataset, "keys"):
-            print(f"  Keys: {list(task.dataset.keys())}")
-            for k in task.dataset:
-                v = task.dataset[k]
-                print(f"    [{k}] type={type(v)}, len={len(v) if hasattr(v, '__len__') else '?'}")
-                if hasattr(v, '__getitem__') and len(v) > 0:
-                    print(f"      first item type={type(v[0])}")
-                    if isinstance(v[0], dict):
-                        print(f"      first item keys={list(v[0].keys())}")
-        raise SystemExit("Could not load dataset. See debug info above.")
-
-labels = np.array(labels)
+test_data = task.dataset["test"][0]
+sentences = test_data["sentences"]
+labels    = np.array(test_data["labels"])
 print(f"  {len(sentences)} sentences, {len(np.unique(labels))} unique labels.\n")
 
 
@@ -173,14 +144,13 @@ def evaluate_nomic(dim: int) -> dict:
 
 APPLE_JSON = Path("datasets/apple_nlp_embeddings_clustering.json")
 
-def evaluate_apple() -> dict | None:
+def evaluate_apple() -> dict:
     print("── Apple NLEmbedding ────────────────────────────────────────────")
     if not APPLE_JSON.exists():
-        print(f"  ⚠  {APPLE_JSON} not found.")
-        print("  Export from Swift with JSON format:")
-        print('  {"embeddings": [[...], ...]}')
-        print("  Then re-run this script.\n")
-        return None
+        raise FileNotFoundError(
+            f"{APPLE_JSON} not found. Export it first by running the Swift "
+            f"script embed_apple_nlp_clustering.swift, then re-run this script."
+        )
 
     with open(APPLE_JSON, "r") as f:
         data = json.load(f)
@@ -207,9 +177,7 @@ if __name__ == "__main__":
     rows.append(evaluate_nomic(256))
     rows.append(evaluate_nomic(768))
 
-    apple_row = evaluate_apple()
-    if apple_row is not None:
-        rows.append(apple_row)
+    rows.append(evaluate_apple())
 
     # ── Pretty-print table ────────────────────────────────────────────────
     header = (f"{'Model':<22}  {'Dim':>5}  {'V-measure':>10}  "

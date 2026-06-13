@@ -30,6 +30,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import v_measure_score, adjusted_rand_score, homogeneity_score, completeness_score
+import hdbscan
 
 # ── adaptive_dbscan must be importable (sibling module or on sys.path) ───────
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -70,14 +71,11 @@ def compute_metrics(true_labels, pred_labels, embeddings):
         homog = homogeneity_score(true_labels[valid_mask], pred_labels[valid_mask])
         compl = completeness_score(true_labels[valid_mask], pred_labels[valid_mask])
 
-    # DBCV (best-effort)
-    dbcv = None
-    try:
-        import hdbscan as _hdb
-        if n_clusters >= 2:
-            dbcv = _hdb.validity_index(embeddings.astype(np.float64), pred_labels, metric="cosine")
-    except (ImportError, Exception) as exc:
-        dbcv = None
+    # DBCV requires at least 2 clusters
+    if n_clusters >= 2:
+        dbcv = hdbscan.validity_index(embeddings.astype(np.float64), pred_labels, metric="cosine")
+    else:
+        dbcv = float("nan")
 
     return {
         "V-measure": round(v_measure, 4),
@@ -85,7 +83,7 @@ def compute_metrics(true_labels, pred_labels, embeddings):
         "Homog":     round(homog, 4),
         "Compl":     round(compl, 4),
         "Noise%":    round(noise_ratio * 100, 2),
-        "DBCV":      round(dbcv, 4) if dbcv is not None else "N/A",
+        "DBCV":      round(dbcv, 4),
         "Clusters":  n_clusters,
     }
 
@@ -96,43 +94,8 @@ def load_dataset():
 
     task = mteb.get_tasks(tasks=["TwentyNewsgroupsClustering"])[0]
     task.load_data()
-
-    # Try primary access pattern
-    try:
-        test_data = task.dataset["test"][0]
-        sentences = test_data["sentences"]
-        labels = test_data["labels"]
-        return sentences, labels
-    except (KeyError, IndexError, TypeError):
-        pass
-
-    # Alternative: dataset might be a DatasetDict with a 'test' split directly
-    try:
-        test_split = task.dataset["test"]
-        sentences = test_split["sentences"]
-        labels = test_split["labels"]
-        # If sentences is a list of lists, take the first
-        if sentences and isinstance(sentences[0], list):
-            return sentences[0], labels[0]
-        return sentences, labels
-    except (KeyError, TypeError):
-        pass
-
-    # Alternative: iterate and grab first item
-    try:
-        for item in task.dataset["test"]:
-            return item["sentences"], item["labels"]
-    except Exception:
-        pass
-
-    # Last resort: check metadata / samples
-    try:
-        samples = task.dataset["test"].to_list()
-        first = samples[0]
-        return first["sentences"], first["labels"]
-    except Exception as exc:
-        print(f"ERROR: Could not load dataset. Last exception: {exc}")
-        sys.exit(1)
+    test_data = task.dataset["test"][0]
+    return test_data["sentences"], test_data["labels"]
 
 
 def embed_nomic_768(sentences):
@@ -201,17 +164,13 @@ def main():
     pred_mrl = db_mrl.fit_predict(embeddings)
     results["MRL-Adapted"] = compute_metrics(labels, pred_mrl, embeddings)
 
-    # ── Variant 4: HDBSCAN (bonus) ──
-    try:
-        import hdbscan
-        from scipy.spatial.distance import cdist as _cdist
-        print("\n  ▸ HDBSCAN (min_cluster_size=3, cosine)")
-        dist_mat = _cdist(embeddings, embeddings, metric="cosine").astype(np.float64)
-        clusterer = hdbscan.HDBSCAN(min_cluster_size=3, metric="precomputed")
-        hdb_labels = clusterer.fit_predict(dist_mat)
-        results["HDBSCAN"] = compute_metrics(labels, hdb_labels, embeddings)
-    except ImportError:
-        print("\n  ▸ HDBSCAN — skipped (hdbscan not installed)")
+    # ── Variant 4: HDBSCAN ──
+    from scipy.spatial.distance import cdist as _cdist
+    print("\n  ▸ HDBSCAN (min_cluster_size=3, cosine)")
+    dist_mat = _cdist(embeddings, embeddings, metric="cosine").astype(np.float64)
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=3, metric="precomputed")
+    hdb_labels = clusterer.fit_predict(dist_mat)
+    results["HDBSCAN"] = compute_metrics(labels, hdb_labels, embeddings)
 
     # ── Display results ──
     print("\n" + "=" * 70)

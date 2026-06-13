@@ -1,10 +1,3 @@
-//
-//  CalendarView.swift
-//  GJournal
-//
-//  Created by Constantin-Alexandru Dumitrascu on 21.10.2025.
-//
-
 import SwiftUI
 
 struct CalendarView: View {
@@ -39,12 +32,10 @@ struct CalendarView: View {
         
         let firstWeekday = calendar.component(.weekday, from: monthInterval.start)
         
-        // Add empty days before month starts
         for _ in 1..<firstWeekday {
             days.append(nil)
         }
         
-        // Add all days in month
         var currentDate = monthInterval.start
         while currentDate < monthInterval.end {
             days.append(currentDate)
@@ -56,7 +47,6 @@ struct CalendarView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // Month/Year header with navigation
             HStack {
                 Button {
                     changeMonth(by: -1)
@@ -94,7 +84,6 @@ struct CalendarView: View {
                 }
             }
             
-            // Days of week
             HStack(spacing: 0) {
                 ForEach(daysOfWeek.indices, id: \.self) { index in
                     Text(daysOfWeek[index])
@@ -105,7 +94,6 @@ struct CalendarView: View {
                 }
             }
             
-            // Calendar grid
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 8) {
                 ForEach(days.indices, id: \.self) { index in
                     if let date = days[index] {
@@ -132,10 +120,8 @@ struct CalendarView: View {
                 .onEnded { value in
                     let horizontalSwipe = value.translation.width
                     if horizontalSwipe < -50 {
-                        // Swipe left - go to next month
                         changeMonth(by: 1)
                     } else if horizontalSwipe > 50 {
-                        // Swipe right - go to previous month
                         changeMonth(by: -1)
                     }
                 }
@@ -163,14 +149,12 @@ struct DayCell: View {
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
-                // Selected: filled rounded rectangle
                 RoundedRectangle(cornerRadius: 9)
                     .fill(isSelected
                           ? Color(red: 0.42, green: 0.26, blue: 0.88)
                           : Color.clear)
                     .frame(width: 36, height: 36)
 
-                // Today (unselected): subtle outline rectangle
                 if isToday && !isSelected {
                     RoundedRectangle(cornerRadius: 9)
                         .stroke(Color.white.opacity(0.35), lineWidth: 1.5)
@@ -182,7 +166,6 @@ struct DayCell: View {
                     .foregroundColor(.white)
             }
 
-            // Entry indicator: small square, not a period-tracker dot
             RoundedRectangle(cornerRadius: 1.5)
                 .fill(hasBits
                       ? (isSelected ? Color.white.opacity(0.85) : Color(red: 0.55, green: 0.4, blue: 0.95))
@@ -211,14 +194,12 @@ struct MonthYearPickerView: View {
         self._tempMonth = State(initialValue: components.month ?? 1)
         self._tempYear = State(initialValue: components.year ?? Calendar.current.component(.year, from: Date()))
         
-        // Create range of years from 2020 to 2030
-        self.years = Array(2020...2030)
+        self.years = Array(2020...2080)
     }
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Month picker
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Select Month")
                         .font(.headline)
@@ -252,7 +233,6 @@ struct MonthYearPickerView: View {
                 
                 Divider()
                 
-                // Year picker
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Select Year")
                         .font(.headline)

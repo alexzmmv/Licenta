@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.6)  10 JUN 2026 22:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.6)  13 JUN 2026 20:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -777,19 +777,30 @@ s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
 
 {/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2026/texmf-dist/fonts/enc/dvips/base/8r.enc}]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <17.28> on input line 14.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 14.
+
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.18 \newpage
+l.14 \maketitleRO
+                  [1]
+pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.19 \newpage
               [1]
-Overfull \hbox (1.90543pt too wide) in paragraph at lines 28--29
+Overfull \hbox (1.90543pt too wide) in paragraph at lines 29--30
 []\OT1/ppl/m/n/12 A cen-tral con-tri-bu-tion is an em-pir-i-cal study of Ma-try
 oshka Rep-re-sen-ta-tion Learn-
  []
 
 
-Overfull \hbox (5.94136pt too wide) in paragraph at lines 28--29
+Overfull \hbox (5.94136pt too wide) in paragraph at lines 29--30
 \OT1/ppl/m/n/12 trained with MRL, which al-lows its 768-dimensional out-put to 
 be trun-cated to smaller
  []
@@ -797,8 +808,6 @@ be trun-cated to smaller
 [1
 
 ] (./main.toc
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 4.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 4.
 LaTeX Font Info:    External font `cmex10' loaded for size
@@ -808,229 +817,295 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.32 ...el Selection and Formats}{12}{section.3.8}
+l.32 ...plementation Milestones}{14}{section.3.13}
                                                   % [1
 
 
-] [2])
+])
 \tf@toc=\write5
 \openout5 = `main.toc'.
 
- [3]
+ [2]
 (./chapters/chapter1_introduction.tex
 Chapter 1.
 
-Overfull \hbox (2.8762pt too wide) in paragraph at lines 8--9
-\OT1/ppl/m/n/12 former ar-chi-tec-tures such as Mo-bile-BERT [[]], Dis-til-BERT
- [[]], and Tiny-
- []
+LaTeX Warning: Citation `Pandelea2021EmotionEdge' on page 1 undefined on input 
+line 8.
 
 
-Overfull \hbox (12.98009pt too wide) in paragraph at lines 8--9
-\OT1/ppl/m/n/12 BERT [[]] demon-strate that high-quality lan-guage un-der-stand
--ing can be achieved
- []
+LaTeX Warning: Citation `awad2022improved' on page 1 undefined on input line 8.
+
+
+
+LaTeX Warning: Citation `10351450' on page 1 undefined on input line 8.
+
+
+LaTeX Warning: Citation `sun2020mobilebert' on page 1 undefined on input line 8
+.
+
+
+LaTeX Warning: Citation `sanh2019distilbert' on page 1 undefined on input line 
+8.
+
+
+LaTeX Warning: Citation `jiao2020tinybert' on page 1 undefined on input line 8.
+
+
+
+LaTeX Warning: Citation `kusupati2022matryoshka' on page 1 undefined on input l
+ine 10.
+
+
+LaTeX Warning: Citation `nussbaum2024nomic' on page 1 undefined on input line 1
+0.
+
+
+LaTeX Warning: Citation `reimers2019sentencebert' on page 1 undefined on input 
+line 10.
 
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.11 
+l.13 
       [1
 
 
 ]) (./chapters/chapter2_background.tex [2]
 Chapter 2.
 
-Overfull \hbox (12.92557pt too wide) in paragraph at lines 9--10
-\OT1/ppl/m/n/12 shows that struc-tured jour-nal-ing can im-prove emo-tional reg
--u-la-tion and self-awareness
- []
+LaTeX Warning: Citation `pennebaker1997writing' on page 3 undefined on input li
+ne 8.
 
 
-Overfull \hbox (8.46701pt too wide) in paragraph at lines 13--13
+LaTeX Warning: Citation `Sivaram2022HealthyMe' on page 3 undefined on input lin
+e 8.
+
+
+LaTeX Warning: Citation `10351450' on page 3 undefined on input line 10.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Overfull \hbox (8.46701pt too wide) in paragraph at lines 32--32
 []\OT1/ppl/b/n/17.28 Natural Lan-guage Pro-cess-ing in Per-sonal Well-Being 
  []
+
+
+LaTeX Warning: Citation `devlin2019bert' on page 3 undefined on input line 34.
+
+
+LaTeX Warning: Citation `sun2020mobilebert' on page 3 undefined on input line 3
+4.
 
 [3
 
 ]
-Overfull \hbox (15.55171pt too wide) in paragraph at lines 24--25
-[]\OT1/ppl/b/n/12 nomic-embed-text-v1.5 \OT1/ppl/m/n/12 [[]] pro-duces 768-dime
-nsional em-bed-dings trained
- []
 
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
-6.
+LaTeX Warning: Citation `reimers2019sentencebert' on page 4 undefined on input 
+line 41.
+
+
+LaTeX Warning: Citation `nussbaum2024nomic' on page 4 undefined on input line 4
+3.
+
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 4
+3.
 (/usr/local/texlive/2026/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-Overfull \hbox (52.17516pt too wide) in paragraph at lines 26--27
+Overfull \hbox (52.17516pt too wide) in paragraph at lines 45--46
 []\OT1/ppl/b/n/12 Apple NLEm-bed-ding \OT1/ppl/m/n/12 is the sen-tence em-bed-d
 ing pro-vided by the iOS \OT1/pcr/m/n/12 NaturalLanguage
  []
 
 
-Overfull \hbox (0.67836pt too wide) in paragraph at lines 35--36
-\OT1/ppl/m/n/12 [[]] avoids this by train-ing the model with a nested loss: the
- full $\OML/cmm/m/it/12 d$\OT1/ppl/m/n/12 -dimensional
- []
+LaTeX Warning: Citation `demszky2020goemotions' on page 4 undefined on input li
+ne 49.
 
 [4]
-Overfull \hbox (3.68504pt too wide) in paragraph at lines 37--38
-\OT1/ppl/m/n/12 mul-ti-ple accuracy-versus-storage trade-offs with-out re-train
--ing. The 768-dimensional
+
+LaTeX Warning: Citation `kusupati2022matryoshka' on page 5 undefined on input l
+ine 54.
+
+
+Overfull \hbox (3.16632pt too wide) in paragraph at lines 58--59
+[]\OT1/ppl/m/n/12 For on-device de-ploy-ment this means a sin-gle model can ser
+ve mul-ti-ple accuracy-
  []
 
 
-Overfull \hbox (0.17929pt too wide) in paragraph at lines 53--54
+LaTeX Warning: Citation `Pandelea2021EmotionEdge' on page 5 undefined on input 
+line 62.
+
+
+LaTeX Warning: Citation `awad2022improved' on page 5 undefined on input line 62
+.
+
+
+LaTeX Warning: Citation `ester1996density' on page 5 undefined on input line 64
+.
+
+[5]
+
+LaTeX Warning: Citation `apple2023neuralengine' on page 6 undefined on input li
+ne 72.
+
+
+LaTeX Warning: Citation `qualcomm2023hexagon' on page 6 undefined on input line
+ 72.
+
+
+Overfull \hbox (0.17929pt too wide) in paragraph at lines 72--73
 []\OT1/ppl/m/n/12 Early smart-phones used CPUs and GPUs for ma-chine learn-ing 
 work-loads, which
  []
 
-[5]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[6]) (./chapters/chapter2.tex [7]
+[6]) (./chapters/chapter2.tex [7] [8]
 Chapter 3.
 LaTeX Font Info:    Trying to load font information for TS1+ppl on input line 1
 1.
 (/usr/local/texlive/2026/texmf-dist/tex/latex/psnfss/ts1ppl.fd
 File: ts1ppl.fd 2001/06/04 font definitions for TS1/ppl.
-) [8
+) [9
 
-] [9]
+] [10]
 
-LaTeX Warning: File `figures/architecture.pdf' not found on input line 56.
-
-
-! Package pdftex.def Error: File `figures/architecture.pdf' not found: using dr
-aft setting.
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.56 ...=0.85\textwidth]{figures/architecture.pdf}
-                                                  
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
+pdfTeX warning: pdflatex (file ./figures/architecture.pdf): PDF inclusion: foun
+d PDF version <2.0>, but at most version <1.7> allowed
+<figures/architecture.pdf, id=424, 1391.36818pt x 505.13719pt>
+File: figures/architecture.pdf Graphic file (type pdf)
+<use figures/architecture.pdf>
+Package pdftex.def Info: figures/architecture.pdf  used on input line 54.
+(pdftex.def)             Requested size: 374.86775pt x 136.09596pt.
+[11 <./figures/architecture.pdf>]
+Underfull \hbox (badness 3792) in paragraph at lines 86--86
+\OT1/ppl/m/n/12 and Ac-tion fields and
+ []
 
 
-LaTeX Warning: `!h' float specifier changed to `!ht'.
+Underfull \hbox (badness 7649) in paragraph at lines 89--89
+[]\OT1/ppl/m/n/12 UC2 View
+ []
 
-[10] [11]
-LaTeX Font Info:    Trying to load font information for OMS+ppl on input line 9
-0.
- (/usr/local/texlive/2026/texmf-dist/tex/latex/psnfss/omsppl.fd
+
+Underfull \hbox (badness 4569) in paragraph at lines 91--92
+\OT1/ppl/m/n/12 en-tries and emo-tion dis-tri-bu-tion.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 93--93
+[]\OT1/ppl/m/n/12 UC3 Edit
+ []
+
+LaTeX Font Info:    Trying to load font information for OMS+ppl on input line 1
+05.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/psnfss/omsppl.fd
 File: omsppl.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ppl/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 90.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 105.
 
-Overfull \hbox (28.25958pt too wide) in paragraph at lines 90--91
+Overfull \hbox (28.25958pt too wide) in paragraph at lines 105--106
 []\OT1/ppl/m/n/12 Three em-bed-ding strate-gies are im-ple-mented be-hind a com
 -mon \OT1/pcr/m/n/12 EmbeddingService
  []
 
 [12]
-Overfull \hbox (7.88177pt too wide) in paragraph at lines 99--100
+Overfull \hbox (7.88177pt too wide) in paragraph at lines 114--115
 []\OT1/ppl/m/n/12 Interactive in-fer-ence (em-bed-ding + emo-tion clas-si-fi-ca
 -tion) should com-plete within
  []
 
-
-Overfull \hbox (9.93544pt too wide) in paragraph at lines 107--108
-\OT1/ppl/m/n/12 embed-text-v1.5 MRL em-bed-ding, Ap-ple NLEm-bed-ding, and Mo-b
-ile-BERT emo-
+[13]
+Overfull \hbox (2.25613pt too wide) in paragraph at lines 123--124
+\OT1/ppl/m/n/12 v1.5 MRL, Ap-ple NLEm-bed-ding, and Mo-bile-BERT emo-tion clas-
+si-fier; protocol-
  []
 
 
-Overfull \hbox (1.89645pt too wide) in paragraph at lines 108--109
-[]\OT1/ppl/m/n/12 Clustering en-gine: adap-tive DB-SCAN, in-cre-men-tal up-date
- on en-try save, back-
+Overfull \hbox (14.5469pt too wide) in paragraph at lines 123--124
+\OT1/ppl/m/n/12 based \OT1/pcr/m/n/12 EmbeddingService \OT1/ppl/m/n/12 and \OT1
+/pcr/m/n/12 EmotionService \OT1/ppl/m/n/12 ab-strac-tions for in-ter-change-
  []
 
 
-Overfull \hbox (12.2644pt too wide) in paragraph at lines 109--110
-[]\OT1/ppl/m/n/12 Graph vi-su-al-iza-tion: force-directed lay-out, hub-and-spok
-e ren-der-ing, pan/zoom
- []
-
-
-Overfull \hbox (1.42314pt too wide) in paragraph at lines 121--121
+Overfull \hbox (1.42314pt too wide) in paragraph at lines 137--137
 []\OT1/ppl/b/n/12 Requirement| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 123--123
+Underfull \hbox (badness 10000) in paragraph at lines 139--139
 []\OT1/ppl/m/n/12 FR1 Cre-ate
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 124--124
+Underfull \hbox (badness 10000) in paragraph at lines 140--140
 []\OT1/ppl/m/n/12 FR2 En-try
  []
 
 
-Underfull \hbox (badness 1748) in paragraph at lines 124--125
+Underfull \hbox (badness 1748) in paragraph at lines 140--141
 []\OT1/ppl/m/n/12 New en-try ap-pears in all
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 125--125
+Underfull \hbox (badness 10000) in paragraph at lines 141--141
 []\OT1/ppl/m/n/12 FR3
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 125--125
+Underfull \hbox (badness 10000) in paragraph at lines 141--141
 \OT1/ppl/m/n/12 On[]device
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 125--125
+Underfull \hbox (badness 10000) in paragraph at lines 141--141
 []\OT1/pcr/m/n/12 AIProcessingManager\OT1/ppl/m/n/12 ,
  []
 
 
-Underfull \hbox (badness 1430) in paragraph at lines 126--126
+Underfull \hbox (badness 1430) in paragraph at lines 142--142
 []\OT1/ppl/m/n/12 FR4 Clus-ter-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 126--126
+Underfull \hbox (badness 10000) in paragraph at lines 142--142
 []\OT1/pcr/m/n/12 DBSCANClusterer\OT1/ppl/m/n/12 ,
  []
 
 
-Underfull \hbox (badness 2547) in paragraph at lines 126--127
+Underfull \hbox (badness 2547) in paragraph at lines 142--143
 []\OT1/ppl/m/n/12 Entry as-signed to clus-ter;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 127--127
+Underfull \hbox (badness 10000) in paragraph at lines 143--143
 []\OT1/ppl/m/n/12 FR5
  []
 
 
-Underfull \hbox (badness 3872) in paragraph at lines 127--128
+Underfull \hbox (badness 3872) in paragraph at lines 143--144
 []\OT1/ppl/m/n/12 Filtering by emo-tion and
  []
 
 
-Underfull \hbox (badness 1859) in paragraph at lines 127--128
+Underfull \hbox (badness 1859) in paragraph at lines 143--144
 \OT1/ppl/m/n/12 clus-ter re-turns cor-rect en-
  []
 
-[13]) (./chapters/chapter3.tex
-Overfull \hbox (20.09753pt too wide) in paragraph at lines 137--1
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+) (./chapters/chapter3.tex
+Overfull \hbox (20.09753pt too wide) in paragraph at lines 154--1
 []\OT1/ppl/m/n/12 This chap-ter spec-i-fied the func-tional and non[]functional
  re-quire-ments, the high[]level
  []
 
-[14]
+[14] [15]
 Chapter 4.
 
 Overfull \hbox (6.24995pt too wide) in paragraph at lines 8--9
@@ -1046,71 +1121,109 @@ T1/ppl/b/n/12 Per-sis-tence (Swift-Data)\OT1/ppl/m/n/12 . Ser-
  []
 
 
-Overfull \hbox (141.33969pt too wide) in paragraph at lines 17--18
+Overfull \hbox (10.20648pt too wide) in paragraph at lines 15--16
+[]\OT1/pcr/m/n/12 id, title, feel, event, action, createdAt, lastModified 
+ []
+
+
+Overfull \hbox (1.58945pt too wide) in paragraph at lines 16--17
 []\OT1/ppl/m/n/12 User se-lec-tions: \OT1/pcr/m/n/12 feelEmotionRawValue, event
-EmotionRawValue, actionEmotionRawValue,
+EmotionRawValue,
  []
 
 
-Overfull \hbox (10.0442pt too wide) in paragraph at lines 18--19
-[]\OT1/ppl/m/n/12 AI out-puts: \OT1/pcr/m/n/12 embeddingJSON \OT1/ppl/m/n/12 (v
-ariable-length float ar-ray; 384 floats for MiniLM,
- []
-
-
-Overfull \hbox (101.95566pt too wide) in paragraph at lines 19--20
+Overfull \hbox (127.80534pt too wide) in paragraph at lines 18--19
 []\OT1/ppl/m/n/12 Flags/timestamps: \OT1/pcr/m/n/12 isHidden, isSafeContent, de
 letedAt, embeddingGeneratedAt,
  []
 
-[15
 
-]
-Overfull \hbox (11.47304pt too wide) in paragraph at lines 24--25
+Overfull \hbox (10.24728pt too wide) in paragraph at lines 21--22
 []\OT1/ppl/m/n/12 Relational model with \OT1/pcr/m/n/12 @Relationship(deleteRul
-e:.nullify) \OT1/ppl/m/n/12 to \OT1/pcr/m/n/12 Bit\OT1/ppl/m/n/12 . Clus-
+e:.nullify) \OT1/ppl/m/n/12 to \OT1/pcr/m/n/12 Bit\OT1/ppl/m/n/12 .
  []
 
+[16
 
-Overfull \hbox (17.39095pt too wide) in paragraph at lines 38--39
+]
+Overfull \hbox (17.39095pt too wide) in paragraph at lines 34--35
 \OT1/ppl/m/n/12 ser-vices be-hind the \OT1/pcr/m/n/12 EmbeddingService \OT1/ppl
 /m/n/12 pro-to-col: \OT1/pcr/m/n/12 CoreMLEmbeddingService
  []
 
 
-Overfull \hbox (107.48087pt too wide) in paragraph at lines 38--39
-\OT1/ppl/m/n/12 (all-MiniLM-L6-v2, 384-dim, mean pool-ing, 43MB Core ML pack-ag
+Overfull \hbox (107.48087pt too wide) in paragraph at lines 34--35
+\OT1/ppl/m/n/12 (all-MiniLM-L6-v2, 384-dim, mean pool-ing, 45MB Core ML pack-ag
 e), \OT1/pcr/m/n/12 NomicEmbeddingService
  []
 
 
-Overfull \hbox (3.66199pt too wide) in paragraph at lines 38--39
+Overfull \hbox (3.66199pt too wide) in paragraph at lines 34--35
 \OT1/ppl/m/n/12 ML pack-age), or \OT1/pcr/m/n/12 NLEmbeddingService \OT1/ppl/m/
 n/12 (Ap-ple's built-in \OT1/pcr/m/n/12 NLEmbedding\OT1/ppl/m/n/12 , 512-
  []
 
-[16] [17]
-Overfull \hbox (80.51035pt too wide) in paragraph at lines 56--57
+[17]
+<figures/app/1.png, id=480, 591.71063pt x 1207.51125pt>
+File: figures/app/1.png Graphic file (type png)
+<use figures/app/1.png>
+Package pdftex.def Info: figures/app/1.png  used on input line 52.
+(pdftex.def)             Requested size: 242.5611pt x 494.99069pt.
+ [18] [19 <./figures/app/1.png>]
+<figures/app/2.png, id=499, 591.71063pt x 1202.99437pt>
+File: figures/app/2.png Graphic file (type png)
+<use figures/app/2.png>
+Package pdftex.def Info: figures/app/2.png  used on input line 66.
+(pdftex.def)             Requested size: 202.87111pt x 412.44528pt.
+<figures/app/3.png, id=500, 591.71063pt x 1205.00188pt>
+File: figures/app/3.png Graphic file (type png)
+<use figures/app/3.png>
+Package pdftex.def Info: figures/app/3.png  used on input line 73.
+(pdftex.def)             Requested size: 202.87111pt x 413.13356pt.
+<figures/app/4.png, id=501, 591.71063pt x 1204.5pt>
+File: figures/app/4.png Graphic file (type png)
+<use figures/app/4.png>
+Package pdftex.def Info: figures/app/4.png  used on input line 83.
+(pdftex.def)             Requested size: 202.87111pt x 412.96149pt.
+<figures/app/5.png, id=502, 591.71063pt x 1200.485pt>
+File: figures/app/5.png Graphic file (type png)
+<use figures/app/5.png>
+Package pdftex.def Info: figures/app/5.png  used on input line 90.
+(pdftex.def)             Requested size: 202.87111pt x 411.58495pt.
+
+Overfull \hbox (80.51035pt too wide) in paragraph at lines 97--98
 \OT1/ppl/m/n/12 three con-fig-u-ra-tions: \OT1/pcr/m/n/12 makeMock() \OT1/ppl/m
 /n/12 (de-vel-op-ment), mixed de-vice test-ing, and \OT1/pcr/m/n/12 makeProduct
 ion()
  []
 
-
-Overfull \hbox (12.14684pt too wide) in paragraph at lines 61--62
+[20 <./figures/app/2.png> <./figures/app/3.png>] [21 <./figures/app/4.png> <./f
+igures/app/5.png>]
+Overfull \hbox (12.14684pt too wide) in paragraph at lines 102--103
 \OT1/ppl/m/n/12 saved. The en-try ap-peared in the cal-en-dar im-me-di-ately. T
 he \OT1/pcr/m/n/12 AIProcessingManager
  []
 
-[18]) (./chapters/chapter4.tex [19]
+<figures/app/6.png, id=521, 591.71063pt x 1200.485pt>
+File: figures/app/6.png Graphic file (type png)
+<use figures/app/6.png>
+Package pdftex.def Info: figures/app/6.png  used on input line 108.
+(pdftex.def)             Requested size: 242.5611pt x 492.11046pt.
+) (./chapters/chapter4.tex [22] [23 <./figures/app/6.png>] [24]
 Chapter 5.
 
-Overfull \hbox (6.62402pt too wide) in paragraph at lines 23--24
-[]\OT1/ppl/b/n/12 ARI \OT1/ppl/m/n/12 (Ad-justed Rand In-dex): agree-ment be-tw
-een pre-dicted clus-ters and ground-
- []
+LaTeX Warning: Citation `cer2017semeval' on page 25 undefined on input line 11.
 
-[20
+
+
+LaTeX Warning: Citation `rosenberg2007vmeasure' on page 25 undefined on input l
+ine 22.
+
+
+LaTeX Warning: Citation `hubert1985comparing' on page 25 undefined on input lin
+e 23.
+
+[25
 
 ]
 Overfull \hbox (57.1451pt too wide) in paragraph at lines 36--37
@@ -1119,88 +1232,106 @@ g pro-vided by the iOS \OT1/pcr/m/n/12 NaturalLanguage
  []
 
 
-Overfull \hbox (7.65704pt too wide) in paragraph at lines 37--38
-[]\OT1/ppl/b/n/12 all-MiniLM-L6-v2 \OT1/ppl/m/n/12 [[]]: a 6-layer MiniLM model
- pro-duc-ing 384-dimensional
+LaTeX Warning: Citation `reimers2019sentencebert' on page 26 undefined on input
+ line 37.
+
+
+LaTeX Warning: Citation `nussbaum2024nomic' on page 26 undefined on input line 
+38.
+
+
+Overfull \hbox (0.74565pt too wide) in paragraph at lines 38--39
+[]\OT1/ppl/b/n/12 nomic-embed-text-v1.5 \OT1/ppl/m/n/12 [[]]: a 768-dimensional
+ model trained with Ma-tryoshka
  []
 
-[21]
+
+Overfull \hbox (98.76332pt too wide) in paragraph at lines 38--39
+\OT1/ppl/m/n/12 ported pre-fixes in-clude \OT1/pcr/m/n/12 "search[]query: "\OT1
+/ppl/m/n/12 , \OT1/pcr/m/n/12 "search[]document: "\OT1/ppl/m/n/12 , \OT1/pcr/m/
+n/12 "classification:
+ []
+
+
+LaTeX Warning: Citation `kusupati2022matryoshka' on page 26 undefined on input 
+line 44.
+
+[26]
+
+LaTeX Warning: Citation `rousseeuw1987silhouettes' on page 27 undefined on inpu
+t line 46.
+
+
 Underfull \hbox (badness 1178) in paragraph at lines 50--50
 []\OT1/ppl/m/n/12 Table 5.1: []Nomic-v1.5 MRL di-men-sion trade-off on STS-B (c
 lus-ter-ing pre-fix,
  []
 
-[22]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[27]
 Overfull \hbox (15.05144pt too wide) in paragraph at lines 99--109
  [][] 
  []
 
 
+LaTeX Warning: Citation `moulavi2014dbcv' on page 28 undefined on input line 11
+5.
+
+
+LaTeX Warning: Citation `campello2013hdbscan' on page 28 undefined on input lin
+e 128.
+
+
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[23] [24]
+[28] [29]
+
+LaTeX Warning: Citation `sun2020mobilebert' on page 30 undefined on input line 
+165.
+
+
+LaTeX Warning: Citation `demszky2020goemotions' on page 30 undefined on input l
+ine 165.
+
+
 Overfull \hbox (2.59477pt too wide) in paragraph at lines 193--194
 \OT1/ppl/m/n/12 tude has 352 test sam-ples and achieves F1 0.813; Anx-i-ety has
  23 sam-ples and achieves
  []
 
-
-Overfull \hbox (42.00331pt too wide) in paragraph at lines 204--215
- [][] 
- []
-
+[30]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 217.
+(Font)              <7> on input line 219.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 217.
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[25] [26]) (./chapters/chapter5_conclusions.tex [27]
+(Font)              <5> on input line 219.
+ [31]) (./chapters/chapter5_conclusions.tex [32]
 Chapter 6.
-[28
+[33
 
-]) (./main.bbl [29]
-Underfull \hbox (badness 1199) in paragraph at lines 17--21
-[]\OT1/ppl/m/n/12 Martin Es-ter, Hans-Peter Kriegel, J[]org Sander, and Xi-aowe
-i Xu.
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 23--27
-[]\OT1/ppl/m/n/12 Apple Inc.  Ap-ple neu-ral en-gine per-for-mance overview,
- []
-
-
-Underfull \hbox (badness 5954) in paragraph at lines 23--27
-\OT1/ppl/m/n/12 2023.  Avail-able on-line: []$\OT1/pcr/m/n/12 https : / / devel
-oper . apple . com /
- []
-
-
-Underfull \hbox (badness 1057) in paragraph at lines 29--32
-\OT1/ppl/m/n/12 per-for-mance overview, 2023.  Avail-able on-line: []$\OT1/pcr/
-m/n/12 https : / / www .
- []
-
-[30
-
-]) [31] (./main.aux)
+])
+No file main.bbl.
+[34] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
+
+
+LaTeX Warning: There were undefined references.
+
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 0A93B2D7BF6B6E4CB750DC6D8EAF0E56;12561.
+(rerunfilecheck)             Checksum: 71A0DB9C4DCE3FD7E039A65B70649B7A;11125.
  ) 
 Here is how much of TeX's memory you used:
- 31660 strings out of 467525
- 750471 string characters out of 5418983
- 1269928 words of memory out of 5000000
- 59906 multiletter control sequences out of 15000+600000
- 642287 words of font info for 75 fonts, out of 8000000 for 9000
+ 31653 strings out of 467525
+ 749986 string characters out of 5418983
+ 1265928 words of memory out of 5000000
+ 59913 multiletter control sequences out of 15000+600000
+ 643125 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,19n,118p,1149b,2275s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,19n,118p,1178b,2275s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 ></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb>
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></
@@ -1213,10 +1344,10 @@ texlive/2026/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/
 2026/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></usr/local/texlive/2026/te
 xmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></usr/local/texlive/2026/texmf-dis
 t/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on main.pdf (37 pages, 234791 bytes).
+Output written on main.pdf (40 pages, 1516584 bytes).
 PDF statistics:
- 730 PDF objects out of 1000 (max. 8388607)
- 658 compressed objects within 7 object streams
- 152 named destinations out of 1000 (max. 500000)
- 597 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 686 PDF objects out of 1000 (max. 8388607)
+ 598 compressed objects within 6 object streams
+ 140 named destinations out of 1000 (max. 500000)
+ 560 words of extra memory for PDF output out of 10000 (max. 10000000)
 

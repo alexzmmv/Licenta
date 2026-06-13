@@ -22,7 +22,6 @@ struct ContentView: View {
     @State private var selectedEmotion: Emotion?
     @State private var showingEmotionSheet = false
 
-    // Section appear animations
     @State private var headerAppeared = false
     @State private var moodCardAppeared = false
     @State private var weekStripAppeared = false
@@ -142,7 +141,6 @@ struct ContentView: View {
 
                 ScrollView {
                     VStack(spacing: 28) {
-                        // Header
                         headerSection
                             .opacity(headerAppeared ? 1 : 0)
                             .offset(y: headerAppeared ? 0 : -12)
@@ -150,13 +148,11 @@ struct ContentView: View {
                         if isFirstTimeUser {
                             FirstTimeWelcomeView { showingAddBit = true }
                         } else {
-                            // Today mood card
                             TodayMoodCard(emotion: todayEmotion)
                                 .padding(.horizontal, 20)
                                 .opacity(moodCardAppeared ? 1 : 0)
                                 .offset(y: moodCardAppeared ? 0 : 20)
 
-                            // Week strip
                             WeekMoodStrip(weekData: weekData) { date in
                                 selectedDate = date
                                 selectedDateForSheet = IdentifiableDate(date: date)
@@ -164,7 +160,6 @@ struct ContentView: View {
                             .opacity(weekStripAppeared ? 1 : 0)
                             .offset(y: weekStripAppeared ? 0 : 20)
 
-                            // Calendar
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Your Journey")
                                     .font(.title3)
@@ -187,12 +182,10 @@ struct ContentView: View {
                             .opacity(calendarAppeared ? 1 : 0)
                             .offset(y: calendarAppeared ? 0 : 20)
 
-                            // Recent entries
                             recentEntriesSection
                                 .opacity(recentAppeared ? 1 : 0)
                                 .offset(y: recentAppeared ? 0 : 20)
 
-                            // Top emotions
                             TopEmotionsView(topEmotions: topEmotions) { emotion in
                                 selectedEmotion = emotion
                                 showingEmotionSheet = true
@@ -206,7 +199,6 @@ struct ContentView: View {
                     .padding(.vertical, 20)
                 }
 
-                // Floating Action Button
                 if canCreateToday {
                     Button {
                         let impact = UIImpactFeedbackGenerator(style: .medium)

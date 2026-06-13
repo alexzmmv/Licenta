@@ -1,18 +1,9 @@
-//
-//  WordPieceTokenizer.swift
-//  GJournal
-//
-//  BERT WordPiece tokenizer in Swift. MUST produce identical token IDs to
-//  HuggingFace AutoTokenizer — validate with training/backup/verify_tokenizer.py
-//  before running on-device (see 09_AI_PITFALLS.md Pitfall 2.1).
-//
-
 import Foundation
 
 struct TokenizerOutput {
     let inputIDs: [Int32]
     let attentionMask: [Int32]
-    /// Number of real (non-padding) tokens including [CLS] and [SEP]
+
     let realTokenCount: Int
 }
 
@@ -40,7 +31,6 @@ final class WordPieceTokenizer {
         self.padID = vocab["[PAD]"] ?? 0
     }
 
-    /// Load vocab.txt from the main bundle (bundled alongside the .mlpackage)
     convenience init(vocabResource: String = "vocab") throws {
         guard let url = Bundle.main.url(forResource: vocabResource, withExtension: "txt") else {
             throw TokenizerError.vocabFileNotFound(vocabResource)
@@ -52,7 +42,7 @@ final class WordPieceTokenizer {
         var tokenIDs: [Int] = [clsID]
 
         let lowercased = text.lowercased()
-        // Basic tokenization: split on whitespace and punctuation
+
         let tokens = basicTokenize(lowercased)
 
         for token in tokens {
@@ -65,7 +55,6 @@ final class WordPieceTokenizer {
         tokenIDs.append(sepID)
         let realCount = tokenIDs.count
 
-        // Pad to maxLength
         while tokenIDs.count < Self.maxLength {
             tokenIDs.append(padID)
         }
@@ -133,7 +122,6 @@ final class WordPieceTokenizer {
             let isFirst = (remaining == word)
             let prefix = isFirst ? "" : "##"
 
-            // Try longest prefix first
             for end in stride(from: remaining.count, through: 1, by: -1) {
                 let candidate = prefix + String(remaining.prefix(end))
                 if vocab[candidate] != nil {
@@ -147,8 +135,6 @@ final class WordPieceTokenizer {
                 result.append(vocab[match]!)
                 remaining = String(remaining.dropFirst(longestLen))
             } else {
-                // No match found — emit [UNK] for single character and continue
-                // (this handles truly unknown characters that aren't in vocab)
                 result.append(unkID)
                 remaining = String(remaining.dropFirst(1))
             }

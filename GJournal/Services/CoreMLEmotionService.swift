@@ -1,17 +1,7 @@
-//
-//  CoreMLEmotionService.swift
-//  GJournal
-//
-//  Runs the GoEmotions fine-tuned classifier on-device.
-//  Emotion detection is background-only — no UI shown during entry creation.
-//  (See 00_OVERVIEW.md design-principle callout.)
-//
-
 import Foundation
 import CoreML
 
 final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
-    // Must match TARGET_LABELS order in train_emotion_classifier.py
     static let targetLabels = [
         "Joy", "Sadness", "Anger", "Fear", "Love", "Surprise",
         "Disgust", "Anxiety", "Excitement", "Gratitude", "Hope", "Guilt",

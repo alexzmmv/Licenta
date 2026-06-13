@@ -1,20 +1,8 @@
-//
-//  AIProcessingManager.swift
-//  GJournal
-//
-//  Orchestrates the full AI processing pipeline for journal entries:
-//  Text Flattening → Safety Check → Embedding → Emotion Detection →
-//  Storage → DBSCAN Clustering
-//
-
 import Foundation
 import SwiftData
 import Combine
 import UIKit
 
-/// Orchestrates the AI processing pipeline. Isolated to MainActor so all
-/// published state and SwiftData access are safe without explicit hops.
-/// CPU-heavy ML inference is offloaded via Task.detached.
 @MainActor
 final class AIProcessingManager: ObservableObject {
     private let services: ServiceContainer
@@ -144,7 +132,6 @@ final class AIProcessingManager: ObservableObject {
 
         AppLogger.log("[AI] Step 6 — Clustering \(clusterableEntries.count) entries…")
 
-        // Determine whether calibration is needed
         var needsCalibration = forceRecalibrate || needsInitialCalibration
         if entriesSinceLastCalibration >= calibrationInterval {
             entriesSinceLastCalibration = 0

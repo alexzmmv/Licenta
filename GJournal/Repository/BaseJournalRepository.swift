@@ -1,10 +1,3 @@
-//
-//  BaseJournalRepository.swift
-//  GJournal
-//
-//  Base repository protocol implementation
-//
-
 import Foundation
 import Combine
 import SwiftData
@@ -17,7 +10,7 @@ open class BaseJournalRepository: ObservableObject {
     var modelContext: ModelContext?
 
     init(bool loadSampleDataInit: Bool = false) {
-        // Subclasses should override to implement their own loading
+        // Override in subclass
     }
     
     open func configure(with modelContext: ModelContext) {

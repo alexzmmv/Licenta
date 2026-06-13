@@ -1,8 +1,3 @@
-//
-//  ClusteringStrategyChoice.swift
-//  GJournal
-//
-
 import Foundation
 
 enum ClusteringStrategyChoice: String, CaseIterable, Identifiable {

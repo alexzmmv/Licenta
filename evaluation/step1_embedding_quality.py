@@ -98,14 +98,13 @@ def evaluate_nomic(dim: int) -> dict:
 
 APPLE_JSON = Path("datasets/apple_nlp_embeddings.json")
 
-def evaluate_apple() -> dict | None:
+def evaluate_apple() -> dict:
     print("── Apple NLEmbedding ────────────────────────────────────────────")
     if not APPLE_JSON.exists():
-        print(f"  ⚠  {APPLE_JSON} not found.")
-        print("  Export from Swift with the following JSON format:")
-        print('  {"sentence1_embeddings": [[...], ...], "sentence2_embeddings": [[...], ...]}')
-        print("  Then re-run this script.\n")
-        return None
+        raise FileNotFoundError(
+            f"{APPLE_JSON} not found. Export it first by running the Swift "
+            f"script embed_apple_nlp.swift, then re-run this script."
+        )
 
     with open(APPLE_JSON, "r") as f:
         data = json.load(f)
@@ -134,9 +133,7 @@ if __name__ == "__main__":
     rows.append(evaluate_nomic(256))
     rows.append(evaluate_nomic(768))
 
-    apple_row = evaluate_apple()
-    if apple_row is not None:
-        rows.append(apple_row)
+    rows.append(evaluate_apple())
 
     # ── Pretty-print table ────────────────────────────────────────────────
     header = f"{'Model':<22}  {'Dim':>5}  {'Spearman':>9}"

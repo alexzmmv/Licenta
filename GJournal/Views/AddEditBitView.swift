@@ -1,12 +1,3 @@
-//
-//  AddEditBitView.swift
-//  GJournal
-//
-//  Micro-journaling entry wizard (Feel → Event → Action).
-//  Emotion detection is AI-background-only — no emotion picker shown here.
-//  The AI classifies emotions after the entry is saved (see CoreMLEmotionService).
-//
-
 import SwiftUI
 import SwiftData
 
@@ -26,7 +17,6 @@ struct AddEditBitView: View {
     @State private var intensity: Double = 2.0
     @State private var showingRepoError = false
 
-    // Layout — updated by GeometryReader to avoid deprecated UIScreen.main.bounds
     @State private var slideWidth: CGFloat = 400
     @State private var slideOffset: CGFloat = 400
     @State private var currentStepOpacity: Double = 0

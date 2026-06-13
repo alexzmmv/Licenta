@@ -8,7 +8,7 @@
 Two standard datasets cover different aspects of embedding quality:
 
 \begin{itemize}
-  \item \textbf{STS-B} (Semantic Textual Similarity Benchmark): 1500 sentence pairs scored by human annotators on a 0--5 similarity scale. Spearman rank correlation between model-predicted cosine similarities and the gold scores measures how well a model captures semantic meaning.
+  \item \textbf{STS-B} \cite{cer2017semeval} (Semantic Textual Similarity Benchmark): 1500 sentence pairs scored by human annotators on a 0--5 similarity scale. Spearman rank correlation between model-predicted cosine similarities and the gold scores measures how well a model captures semantic meaning.
   \item \textbf{TwentyNewsgroupsClustering}: 1000 sentences drawn from 20 newsgroup topic categories. Ground-truth topic labels allow direct measurement of clustering quality.
 \end{itemize}
 
@@ -19,8 +19,8 @@ Domain validation uses 100 manually labelled journal entries written during the 
 Embedding quality is measured with Spearman rank correlation ($r_s$) on STS-B. Clustering quality uses:
 
 \begin{itemize}
-  \item \textbf{V-measure}: harmonic mean of homogeneity and completeness. A cluster has high homogeneity if it contains entries from only one ground-truth class; high completeness if all members of a class land in the same cluster.
-  \item \textbf{ARI} (Adjusted Rand Index): agreement between predicted clusters and ground-truth labels, corrected for chance. Values range from 0 (random) to 1 (perfect).
+  \item \textbf{V-measure} \cite{rosenberg2007vmeasure}: harmonic mean of homogeneity and completeness. A cluster has high homogeneity if it contains entries from only one ground-truth class; high completeness if all members of a class land in the same cluster.
+  \item \textbf{ARI} (Adjusted Rand Index) \cite{hubert1985comparing}: agreement between predicted clusters and ground-truth labels, corrected for chance. Values range from 0 (random) to 1 (perfect).
   \item \textbf{Noise fraction}: the share of points DBSCAN marks as noise and leaves unclustered. High noise can mean over-strict parameters or genuinely sparse embeddings.
 \end{itemize}
 
@@ -34,8 +34,8 @@ Three strategies are implemented in GJournal behind the \texttt{EmbeddingService
 
 \begin{itemize}
   \item \textbf{Apple NLEmbedding}: the sentence embedding provided by the iOS \texttt{NaturalLanguage} framework via \texttt{NLEmbedding.sentenceEmbedding(for: .english)}. It produces 512-dimensional vectors with no additional bundle cost; the model weights are part of the operating system. Because this API is only callable from Swift, a standalone macOS Swift script (\texttt{embed\_apple\_nlp.swift}) was written to embed all benchmark sentences and export them to JSON for the Python evaluation pipeline. This approach allowed Apple NLEmbedding to participate in all three evaluation steps under the same metrics and DBSCAN configuration used for the other models.
-  \item \textbf{all-MiniLM-L6-v2} \cite{reimers2019sentencebert}: a 6-layer MiniLM model producing 384-dimensional mean-pooled embeddings. Converted to a 43\,MB Core ML package. This model is the default in GJournal.
-  \item \textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic}: a 768-dimensional model trained with Matryoshka Representation Learning (Section~\ref{sec:mrl}). Converted to a 261\,MB Core ML package. Each input requires the prefix \texttt{"clustering: "}. The GJournal default configuration uses 256-dimensional MRL truncation.
+  \item \textbf{all-MiniLM-L6-v2} \cite{reimers2019sentencebert}: a 6-layer MiniLM model producing 384-dimensional mean-pooled embeddings. Converted to a 45\,MB Core ML package. This model is the default in GJournal.
+  \item \textbf{nomic-embed-text-v1.5} \cite{nussbaum2024nomic}: a 768-dimensional model trained with Matryoshka Representation Learning (Section~\ref{sec:mrl}). Converted to a 274\,MB Core ML package. The model is instruction-tuned: it was trained with task-specific text prefixes that condition the embedding space for a stated downstream task. Supported prefixes include \texttt{"search\_query: "}, \texttt{"search\_document: "}, \texttt{"classification: "}, and \texttt{"clustering: "}. GJournal prepends \texttt{"clustering: "} to every input so the model produces embeddings whose geometry is optimised for grouping similar texts, rather than a generic representation. The GJournal default configuration uses 256-dimensional MRL truncation.
 \end{itemize}
 
 \section{Matryoshka Representation Learning}
@@ -43,7 +43,7 @@ Three strategies are implemented in GJournal behind the \texttt{EmbeddingService
 
 Standard embedding models fix output dimensionality at training time. Reducing it after training typically requires retraining from scratch or post-hoc compression, both of which degrade quality. Matryoshka Representation Learning \cite{kusupati2022matryoshka} avoids this by training the model with a nested loss: the full $d$-dimensional output optimises a similarity objective, and simultaneously each prefix sub-vector of length $d' < d$ optimises the same objective independently. The result is that any prefix of the output vector is itself a competitive embedding.
 
-For GJournal, the practical consequence is that the 261\,MB nomic model can produce embeddings at \{64, 128, 256, 512, 768\} dimensions by truncating its output after inference. No additional models or fine-tuning are needed. Table~\ref{tab:mrl_tradeoff} shows how Spearman correlation, silhouette score, and latency change across dimensions.
+For GJournal, the practical consequence is that the 274\,MB nomic model can produce embeddings at \{64, 128, 256, 512, 768\} dimensions by truncating its output after inference. No additional models or fine-tuning are needed. Table~\ref{tab:mrl_tradeoff} shows how Spearman correlation, silhouette score \cite{rousseeuw1987silhouettes}, and latency change across dimensions.
 
 \begin{table}[h]
 \centering
@@ -64,7 +64,7 @@ For GJournal, the practical consequence is that the 261\,MB nomic model can prod
 
 Latency is flat across all dimensions in the Python benchmark: inference takes approximately 20\,ms on Apple MPS regardless of output size because the transformer forward pass dominates and the output slice is cheap. On-device Core ML numbers are reported in Section~\ref{sec:efficiency}. The Spearman gap from 128-dim (0.8521) to full 768-dim (0.8596) is 0.0075, so the accuracy cost of $6\times$ compression is small. Quality drops more noticeably below 128 dimensions: going from 128 to 64 loses 0.0113 Spearman.
 
-The scaled $\varepsilon$ column shows the DBSCAN neighbourhood radius after MRL adjustment: $\varepsilon_d = \varepsilon_{768} \cdot \sqrt{d / 768}$. This compensates for the fact that cosine distances in lower-dimensional spaces tend to be smaller on average, which would otherwise cause DBSCAN to over-cluster at short dimensions.
+The scaled $\varepsilon$ column shows the DBSCAN neighbourhood radius after MRL adjustment: $\varepsilon_d = \varepsilon_{768} \cdot \sqrt{d / 768}$. This compensates because cosine distances in lower-dimensional spaces tend to be smaller on average, which would otherwise cause DBSCAN to over-cluster at short dimensions.
 
 \section{Embedding Quality on STS-B}
 
@@ -86,7 +86,7 @@ Apple NLEmbedding & 512 & 0.7171 \\
 \end{tabular}
 \end{table}
 
-MiniLM leads by 0.023 over Nomic at full dimensionality. Increasing Nomic from 256 to 768 dimensions recovers 0.0044 Spearman, a marginal improvement that does not close the gap to MiniLM. Apple NLEmbedding scores 0.717, which is 0.150 below MiniLM and 0.127 below Nomic-768. The gap reflects the fact that Apple's on-device model is optimised for breadth of language tasks rather than semantic similarity specifically.
+MiniLM leads by 0.023 over Nomic at full dimensionality. Increasing Nomic from 256 to 768 dimensions recovers 0.0044 Spearman, a marginal improvement that does not close the gap to MiniLM. Apple NLEmbedding scores 0.717, which is 0.150 below MiniLM and 0.127 below Nomic-768. The gap reflects Apple's choice to optimise the on-device model for breadth of language tasks rather than semantic similarity specifically.
 
 \section{Clustering Quality on TwentyNewsgroups}
 
@@ -108,11 +108,11 @@ Apple NLEmbedding & 512 & 0.020          & 0.001          & 0.010 & 0.585 & 22.3
 \end{tabular}
 \end{table}
 
-MiniLM achieves the best V-measure (0.584) and ARI (0.249). Its noise fraction is higher (56\%) because its tighter clusters leave borderline points unclaimed. Nomic-256 assigns 77\% of sentences to clusters but homogeneity drops to 0.23, meaning its clusters mix topics. Nomic-768 sits between the two on most metrics. Apple NLEmbedding collapses all 1000 sentences into 2 clusters with near-zero V-measure (0.020) and ARI (0.001). Its cosine-distance geometry at 512 dimensions is too flat for DBSCAN to find meaningful topic structure on this benchmark.
+MiniLM achieves the best V-measure (0.584) and ARI (0.249). Its noise fraction is higher (56\%) because its tighter clusters leave borderline points unclaimed. Nomic-256 assigns 77\% of sentences to clusters but homogeneity drops to 0.23, meaning its clusters mix topics. Nomic-768 sits between the two on most metrics. Apple NLEmbedding collapses all 1000 sentences into 2 clusters with near-zero V-measure (0.020) and ARI (0.001). Its cosine-distance geometry at 512 dimensions is too flat for DBSCAN to recover the topic structure in this benchmark.
 
 \section{Algorithm Comparison}
 
-Four DBSCAN variants were compared on TwentyNewsgroups using Nomic-768 embeddings. Table~\ref{tab:algorithm_comparison} shows the results.
+Four DBSCAN variants were compared on TwentyNewsgroups using Nomic-768 embeddings. DBCV (Density-Based Clustering Validation) \cite{moulavi2014dbcv} is included as an additional quality measure suited to density-based methods. Table~\ref{tab:algorithm_comparison} shows the results.
 
 \begin{table}[h]
 \centering
@@ -125,7 +125,7 @@ Four DBSCAN variants were compared on TwentyNewsgroups using Nomic-768 embedding
 Vanilla DBSCAN   & 0.009          & 0.000          & 0.004          & 0.496 &  1.8\% &  2 \\
 Classic Adaptive & 0.477          & 0.121          & 0.322          & 0.924 & 40.4\% &  5 \\
 MRL-Adapted      & 0.183          & 0.017          & 0.106          & 0.685 & 27.2\% &  5 \\
-HDBSCAN          & \textbf{0.737} & \textbf{0.421} & \textbf{0.832} & 0.661 & 63.3\% & 52 \\
+HDBSCAN \cite{campello2013hdbscan} & \textbf{0.737} & \textbf{0.421} & \textbf{0.832} & 0.661 & 63.3\% & 52 \\
 \hline
 \end{tabular}
 \end{table}
@@ -162,7 +162,7 @@ Apple NLEmbedding reaches V-measure 0.459 on the journal domain, ranking last am
 \section{Emotion Classification}
 \label{sec:emotion}
 
-The emotion classifier is MobileBERT \cite{sun2020mobilebert} fine-tuned for three epochs on GoEmotions \cite{demszky2020goemotions}, with 28 original labels collapsed to 12 classes: Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, and Guilt. The trained model was converted to a 94\,MB Core ML package.
+The emotion classifier is MobileBERT \cite{sun2020mobilebert} fine-tuned for three epochs on GoEmotions \cite{demszky2020goemotions}, with 28 original labels collapsed to 12 classes: Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, and Guilt. The trained model was converted to a 99\,MB Core ML package.
 
 Overall accuracy on the 4542-sample test set is \textbf{59.5\%}. Table~\ref{tab:emotion_results} shows per-class results sorted by F1.
 
@@ -190,7 +190,7 @@ Anxiety    & 0.306 & 0.478 & 0.373          &  23 \\
 \end{tabular}
 \end{table}
 
-Performance varies across classes mostly because of dataset imbalance. Gratitude has 352 test samples and achieves F1 0.813; Anxiety has 23 samples and achieves F1 0.373. The model has not seen enough Anxiety examples to separate it reliably from adjacent classes like Fear and Sadness. For the journaling use case this trade-off is acceptable: Joy, Sadness, Anger, Love, and Gratitude account for the majority of everyday entries, and all of them score above F1 0.57. Rare-class misclassifications fall through to the keyword-based \texttt{SafetyFilter} as a fallback.
+Performance varies across classes mostly because of dataset imbalance. Gratitude has 352 test samples and achieves F1 0.813; Anxiety has 23 samples and achieves F1 0.373. The model has not seen enough Anxiety examples to separate it reliably from adjacent classes like Fear and Sadness. For the journaling use case the trade-off is acceptable: Joy (F1 0.576), Anger (0.616), Love (0.663), and Gratitude (0.813) cover the majority of everyday entries and all sit above F1 0.57. Sadness is the weakest of the common emotions at F1 0.504, most often confused with Anger and Guilt. Rare-class misclassifications fall through to the keyword-based \texttt{SafetyFilter} as a fallback.
 
 \section{On-Device Efficiency}
 \label{sec:efficiency}
@@ -201,6 +201,7 @@ Table~\ref{tab:efficiency} reports cold-start time, warm inference latency, and 
 \centering
 \caption{On-device efficiency (iPhone, iOS 26.5, Core ML, Neural Processing Unit)}
 \label{tab:efficiency}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{|l|c|r|r|r|r|r|}
 \hline
 \textbf{Model} & \textbf{Dim} & \textbf{Cold (ms)} & \textbf{Mean (ms)} & \textbf{p50 (ms)} & \textbf{p95 (ms)} & \textbf{Size (MB)} \\
@@ -211,7 +212,8 @@ Nomic-v1.5 (256d)  & 256 &  345$^\dagger$ & 32.2 & 31.0 & 35.8 & 273.9 \\
 Apple NLEmbedding  & 512 &  704 & 10.0 &  9.6 & 12.3 &   0.0 \\
 MobileBERT emotion & 12c & 1366 & 15.9 & 15.8 & 18.2 &  98.6 \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 
 \smallskip
 {\footnotesize $^\dagger$ Nomic-256d and Nomic-768d load the same \texttt{.mlmodelc} file. The 345\,ms figure reflects OS model caching from the preceding 768d run in the benchmark sequence. The actual cold start from a clean process is comparable to the 3560\,ms figure.}
@@ -221,7 +223,7 @@ MiniLM has the lowest warm latency at 5.4\,ms, about six times faster than eithe
 
 Cold starts are significant. MiniLM takes 1.9\,s on its first call; Nomic takes 3.6\,s. Both are handled by lazy loading: models load on the first entry save, not at app launch, so the user does not wait at startup. Apple NLEmbedding has a 704\,ms cold start despite no bundle file; this is the cost of the first call into the \texttt{NLEmbedding} framework.
 
-The three Core ML bundles total 417\,MB (MiniLM 45\,MB + Nomic 274\,MB + emotion 99\,MB). GJournal ships all three so the user can switch models without a download. Apple NLEmbedding adds nothing to the bundle because its weights are part of iOS.
+The three Core ML bundles total 418\,MB (MiniLM 45\,MB + Nomic 274\,MB + emotion 99\,MB). GJournal ships all three so the user can switch models without a download. Apple NLEmbedding adds nothing to the bundle because its weights are part of iOS.
 
 \section{Discussion}
 
@@ -229,6 +231,6 @@ MiniLM outperforms all other models on clustering metrics across both the standa
 
 Apple NLEmbedding scores 0.717 Spearman on STS-B, usable for rough semantic similarity but 0.15 below MiniLM. Its clustering performance is much weaker: V-measure 0.020 on TwentyNewsgroups and 0.459 on journal entries. The poor clustering result reflects the API's design: \texttt{NLEmbedding.sentenceEmbedding} is a general-purpose on-device model trained across many language tasks, not for dense retrieval or clustering. Its advantage is zero bundle cost; the weights ship with the OS. That makes it a reasonable fallback when storage is the binding constraint, but not the primary embedding strategy.
 
-MRL truncation reduces storage without affecting inference time. At 256 dimensions each embedding occupies $256 \times 4 = 1{,}024$ bytes versus $768 \times 4 = 3{,}072$ bytes at full size; over 1000 journal entries that is roughly 2\,MB saved in the SwiftData store. The Spearman cost is 0.0044, a drop of 0.52\%. The on-device benchmark (Table~\ref{tab:efficiency}) confirms that Core ML inference time is flat at approximately 32\,ms regardless of output dimension, so there is no speed reason to choose 256d over 768d. The only benefit is storage.
+MRL truncation reduces storage without affecting inference time. At 256 dimensions each embedding occupies $256 \times 4 = 1{,}024$ bytes versus $768 \times 4 = 3{,}072$ bytes at full size; over 1000 journal entries that is roughly 2\,MB saved in the SwiftData store. The Spearman cost on the MRL benchmark (Table~\ref{tab:mrl_tradeoff}) is 0.0025, a drop of 0.29\%. The on-device benchmark (Table~\ref{tab:efficiency}) confirms that Core ML inference time is flat at approximately 32\,ms regardless of output dimension, so there is no speed reason to choose 256d over 768d. The only benefit is storage.
 
 The practical outcome for GJournal is that MiniLM is the default: best clustering quality, smallest dedicated bundle at 45\,MB, fastest warm inference at 5.4\,ms per entry, no prefix requirement. Nomic at 256 dimensions is available as a user-selectable option. Apple NLEmbedding remains available as a zero-cost fallback for devices where storage is the binding constraint.

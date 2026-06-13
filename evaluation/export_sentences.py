@@ -41,19 +41,9 @@ def export_twentynews():
     task = mteb.get_tasks(tasks=["TwentyNewsgroupsClustering"])[0]
     task.load_data()
 
-    try:
-        test_data = task.dataset["test"][0]
-        sentences = list(test_data["sentences"])
-        labels    = [int(l) for l in test_data["labels"]]
-    except (KeyError, TypeError, IndexError) as exc:
-        print(f"  Primary access failed ({exc}), trying alternative...")
-        ds = task.dataset["test"]
-        if hasattr(ds, "features"):
-            sentences = list(ds["sentences"])
-            labels    = [int(l) for l in ds["labels"]]
-        else:
-            sentences = list(ds[0]["sentences"])
-            labels    = [int(l) for l in ds[0]["labels"]]
+    test_data = task.dataset["test"][0]
+    sentences = list(test_data["sentences"])
+    labels    = [int(l) for l in test_data["labels"]]
 
     out = {"sentences": sentences, "labels": labels}
     path = Path("datasets/twentynews_sentences.json")

@@ -1,19 +1,9 @@
-//
-//  ClusterGraphView.swift
-//  GJournal
-//
-//  Obsidian-style knowledge graph visualization for journal entry clusters.
-//  Uses SwiftUI Canvas for O(1) rendering regardless of node count.
-//  Force-directed layout with convergence detection and coordinate persistence.
-//
-
 import SwiftUI
 import SwiftData
 import Combine
 
 // MARK: - Graph Data Models
 
-/// A node in the knowledge graph representing a single Bit
 struct GraphNode: Identifiable {
     let id: UUID
     let title: String
@@ -29,7 +19,6 @@ struct GraphNode: Identifiable {
     var velocity: CGPoint = .zero
 }
 
-/// An edge connecting two nodes in the same cluster
 struct GraphEdge: Identifiable {
     let id = UUID()
     let sourceID: UUID
@@ -40,8 +29,6 @@ struct GraphEdge: Identifiable {
 
 // MARK: - Force-Directed Layout Engine
 
-/// Force-directed graph layout: Coulomb repulsion + Hooke attraction + cluster gravity.
-/// Runs a background Task and stops early when max per-step movement < 0.5 px (convergence).
 class ForceDirectedLayout: ObservableObject {
     @Published var nodes: [GraphNode] = []
     @Published var edges: [GraphEdge] = []
@@ -75,9 +62,6 @@ class ForceDirectedLayout: ObservableObject {
             for (bitIndex, bit) in clusterBits.enumerated() {
                 let position: CGPoint
                 if let gx = bit.graphX, let gy = bit.graphY, !similarityEdges {
-                    // Restore cached position for the full graph only.
-                    // Filtered (single-cluster) views skip this: cached positions are from the
-                    // full-graph canvas and would place nodes off-center in the filtered view.
                     position = CGPoint(x: CGFloat(gx), y: CGFloat(gy))
                 } else {
                     let bitAngle = (CGFloat(bitIndex) / CGFloat(max(1, clusterBits.count))) * 2 * .pi
@@ -116,7 +100,6 @@ class ForceDirectedLayout: ObservableObject {
             }
 
             if similarityEdges {
-                // All-pairs edges weighted by cosine similarity — only above threshold
                 let threshold: Float = 0.65
                 for i in 0..<clusterNodes.count {
                     for j in (i + 1)..<clusterNodes.count {
@@ -137,7 +120,6 @@ class ForceDirectedLayout: ObservableObject {
                     }
                 }
             } else {
-                // Hub-spoke for the full graph (no embedding lookups needed)
                 if clusterNodes.count > 1 {
                     let hub = clusterNodes[0]
                     for i in 1..<clusterNodes.count {
@@ -303,20 +285,17 @@ struct ClusterGraphView: View {
             Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea()
 
             GeometryReader { geometry in
-                // Single Canvas — no SwiftUI view tree per node, no layout passes at 60fps
                 Canvas { context, size in
                     let cx = size.width / 2
                     let cy = size.height / 2
                     let tx = offset.width + dragOffset.width
                     let ty = offset.height + dragOffset.height
-                    // Replicate .scaleEffect(scale).offset(tx, ty) as an affine transform
                     context.transform = CGAffineTransform(
                         a: scale, b: 0, c: 0, d: scale,
                         tx: cx * (1 - scale) + tx,
                         ty: cy * (1 - scale) + ty
                     )
 
-                    // Edges
                     for edge in layout.edges {
                         guard let src = layout.nodes.first(where: { $0.id == edge.sourceID }),
                               let dst = layout.nodes.first(where: { $0.id == edge.targetID }) else { continue }
@@ -327,7 +306,6 @@ struct ClusterGraphView: View {
                         context.stroke(path, with: .color(colorForCluster(edge.clusterID).opacity(edgeOpacity)), lineWidth: 1)
                     }
 
-                    // Nodes
                     for node in layout.nodes {
                         let isSelected = node.id == selectedNodeID
                         let isNoise = node.clusterID == nil || node.clusterID == -1
@@ -348,7 +326,6 @@ struct ClusterGraphView: View {
                         )
                     }
 
-                    // Cluster labels (drawn above nodes)
                     for center in clusterCenters {
                         let name = layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)"
                         context.draw(
@@ -367,7 +344,6 @@ struct ClusterGraphView: View {
                             let t = value.translation
                             dragOffset = .zero
                             if hypot(t.width, t.height) < 8 {
-                                // Short movement — treat as tap
                                 let graphPoint = adjustPoint(value.startLocation)
                                 let hitID = hitTest(at: graphPoint)
                                 withAnimation(.spring(response: 0.3)) {
@@ -378,7 +354,6 @@ struct ClusterGraphView: View {
                                     }
                                 }
                             } else {
-                                // Long movement — pan the canvas
                                 offset.width += t.width
                                 offset.height += t.height
                             }
@@ -443,7 +418,6 @@ struct ClusterGraphView: View {
         .onChange(of: layout.isSimulating) { _, isNowSimulating in
             guard !isNowSimulating else { return }
             if filterClusterID == nil {
-                // Persist positions only for the full graph — filtered views rebuild fresh each time
                 for node in layout.nodes {
                     if let bit = repository.bits.first(where: { $0.id == node.id }) {
                         bit.graphX = Double(node.position.x)
@@ -452,7 +426,6 @@ struct ClusterGraphView: View {
                 }
                 try? modelContext.save()
             } else {
-                // Auto-center camera on the cluster after simulation settles
                 centerOnNodes()
             }
         }
@@ -460,7 +433,6 @@ struct ClusterGraphView: View {
 
     // MARK: - Camera
 
-    /// Pan so the centroid of all nodes sits at the screen centre.
     private func centerOnNodes() {
         guard !layout.nodes.isEmpty, !graphSize.width.isZero else { return }
         let cx = graphSize.width / 2
@@ -474,7 +446,6 @@ struct ClusterGraphView: View {
 
     // MARK: - Manual Hit-Testing
 
-    /// Convert a screen-space point to graph-space, accounting for current scale + offset.
     private func adjustPoint(_ point: CGPoint) -> CGPoint {
         let cx = graphSize.width / 2
         let cy = graphSize.height / 2

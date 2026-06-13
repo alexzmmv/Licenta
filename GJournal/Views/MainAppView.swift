@@ -1,10 +1,3 @@
-//
-//  MainAppView.swift
-//  GJournal
-//
-//  Main authenticated app view with service container injection
-//
-
 import SwiftUI
 
 struct MainAppView: View {

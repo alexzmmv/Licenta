@@ -1,10 +1,3 @@
-//
-//  LocalJournalRepository.swift
-//  GJournal
-//
-//  Local-only repository implementation with no backend integration
-//
-
 import Foundation
 import Combine
 import SwiftData
@@ -12,7 +5,6 @@ import SwiftData
 class LocalJournalRepository: BaseJournalRepository {
     private var cancellables = Set<AnyCancellable>()
 
-    /// AI processing manager for background embedding/clustering
     var aiProcessingManager: AIProcessingManager?
 
     init() {
@@ -23,7 +15,6 @@ class LocalJournalRepository: BaseJournalRepository {
         super.configure(with: modelContext)
         aiProcessingManager?.configure(with: modelContext)
         
-        // Ensure UI stays in sync when background clustering finishes
         aiProcessingManager?.onClusteringComplete = { [weak self] in
             DispatchQueue.main.async {
                 self?.loadBitsFromContext()
@@ -122,7 +113,6 @@ class LocalJournalRepository: BaseJournalRepository {
         }
     }
 
-    /// Restore a soft-deleted bit
     override func restoreBit(id: UUID) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
@@ -149,7 +139,6 @@ class LocalJournalRepository: BaseJournalRepository {
         }
     }
 
-    /// Permanently delete a single bit
     override func permanentlyDeleteBit(id: UUID) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"
@@ -172,7 +161,6 @@ class LocalJournalRepository: BaseJournalRepository {
         }
     }
 
-    /// Permanently delete entries past the 3-day retention period
     func purgeExpiredBits() {
         guard let modelContext = modelContext else { return }
 

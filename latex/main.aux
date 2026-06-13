@@ -19,8 +19,10 @@
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \newlabel{ch:introduction}{{1}{1}{Introduction}{chapter.1}{}}
+\citation{pennebaker1997writing}
 \citation{Sivaram2022HealthyMe}
 \citation{10351450}
+\citation{devlin2019bert}
 \citation{sun2020mobilebert}
 \@writefile{toc}{\contentsline {chapter}{\numberline {2}Background and Related Work}{3}{chapter.2}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
@@ -31,142 +33,141 @@
 \citation{reimers2019sentencebert}
 \citation{nussbaum2024nomic}
 \citation{demszky2020goemotions}
-\citation{kusupati2022matryoshka}
+\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces Feature comparison of journaling applications.}}{4}{table.2.1}\protected@file@percent }
+\newlabel{tab:app_comparison}{{2.1}{4}{Feature comparison of journaling applications}{table.2.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2.1}Sentence Embedding Models}{4}{subsection.2.2.1}\protected@file@percent }
 \newlabel{sec:sentence_embeddings}{{2.2.1}{4}{Sentence Embedding Models}{subsection.2.2.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2.2}Emotion Classification}{4}{subsection.2.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2.3}Matryoshka Representation Learning}{4}{section.2.3}\protected@file@percent }
-\newlabel{sec:mrl_background}{{2.3}{4}{Matryoshka Representation Learning}{section.2.3}{}}
+\citation{kusupati2022matryoshka}
 \citation{Pandelea2021EmotionEdge}
 \citation{awad2022improved}
 \citation{ester1996density}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2.2}Emotion Classification}{5}{subsection.2.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.3}Matryoshka Representation Learning}{5}{section.2.3}\protected@file@percent }
+\newlabel{sec:mrl_background}{{2.3}{5}{Matryoshka Representation Learning}{section.2.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.4}On-Device NLP and Clustering for Personal Data}{5}{section.2.4}\protected@file@percent }
 \citation{apple2023neuralengine}
 \citation{qualcomm2023hexagon}
-\@writefile{toc}{\contentsline {section}{\numberline {2.4}On-Device Machine Learning}{5}{section.2.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2.5}Clustering and Semantic Analysis}{5}{section.2.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2.6}Mobile Hardware for On-Device AI}{5}{section.2.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.6.1}Evolution of Mobile NPUs}{5}{subsection.2.6.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces NPU performance in Apple A-series chips (2019--2025).}}{6}{table.2.1}\protected@file@percent }
-\newlabel{tab:apple_npu}{{2.1}{6}{NPU performance in Apple A-series chips (2019--2025)}{table.2.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2.2}{\ignorespaces NPU performance in Qualcomm Snapdragon flagship chips (2021--2025).}}{6}{table.2.2}\protected@file@percent }
-\newlabel{tab:qualcomm_npu}{{2.2}{6}{NPU performance in Qualcomm Snapdragon flagship chips (2021--2025)}{table.2.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.6.2}Implications for On-Device NLP}{6}{subsection.2.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.5}Mobile Hardware for On-Device AI}{6}{section.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5.1}Evolution of Mobile NPUs}{6}{subsection.2.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.2}{\ignorespaces NPU performance in Apple A-series chips (2019--2025).}}{6}{table.2.2}\protected@file@percent }
+\newlabel{tab:apple_npu}{{2.2}{6}{NPU performance in Apple A-series chips (2019--2025)}{table.2.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2.3}{\ignorespaces NPU performance in Qualcomm Snapdragon flagship chips (2021--2025).}}{6}{table.2.3}\protected@file@percent }
+\newlabel{tab:qualcomm_npu}{{2.3}{6}{NPU performance in Qualcomm Snapdragon flagship chips (2021--2025)}{table.2.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces Growth of NPU performance (TOPS) across recent Apple and Qualcomm chipsets. Data from public specifications; estimated values marked in Tables~\ref {tab:apple_npu} and~\ref {tab:qualcomm_npu}.}}{7}{figure.2.1}\protected@file@percent }
 \newlabel{fig:npu_tops}{{2.1}{7}{Growth of NPU performance (TOPS) across recent Apple and Qualcomm chipsets. Data from public specifications; estimated values marked in Tables~\ref {tab:apple_npu} and~\ref {tab:qualcomm_npu}}{figure.2.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.6.3}Privacy and Energy Considerations}{7}{subsection.2.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2.7}Summary}{7}{section.2.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {3}System Requirements and Specification}{8}{chapter.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5.2}Implications for On-Device NLP}{7}{subsection.2.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5.3}Privacy and Energy Considerations}{7}{subsection.2.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.6}Summary}{7}{section.2.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {3}System Requirements and Specification}{9}{chapter.3}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{ch:requirements}{{3}{8}{System Requirements and Specification}{chapter.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.1}Scope and Objectives}{8}{section.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.2}Assumptions and Constraints}{8}{section.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.3}Functional Requirements}{9}{section.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}Core Functionality}{9}{subsection.3.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Editing and Deletion Policies}{9}{subsection.3.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.4}Non‑Functional Requirements}{9}{section.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.5}System Architecture}{10}{section.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Components}{10}{subsection.3.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Architecture Diagram}{10}{subsection.3.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.6}Data Flow and Processing Pipeline}{10}{section.3.6}\protected@file@percent }
+\newlabel{ch:requirements}{{3}{9}{System Requirements and Specification}{chapter.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}Scope and Objectives}{9}{section.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}Assumptions and Constraints}{9}{section.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Functional Requirements}{10}{section.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}Core Functionality}{10}{subsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Editing and Deletion Policies}{10}{subsection.3.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}Non‑Functional Requirements}{10}{section.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}System Architecture}{11}{section.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Components}{11}{subsection.3.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Architecture Diagram}{11}{subsection.3.5.2}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces High‑level system architecture showing major components and data flow.}}{11}{figure.3.1}\protected@file@percent }
 \newlabel{fig:architecture}{{3.1}{11}{High‑level system architecture showing major components and data flow}{figure.3.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.7}Use Cases and User Flows}{11}{section.3.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.1}Use Case UC1: Create Entry}{11}{subsection.3.7.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.2}Use Case UC2: View Insights}{12}{subsection.3.7.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.3}Use Case UC3: Edit Entry}{12}{subsection.3.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.4}Use Case UC4: Delete Entry}{12}{subsection.3.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}Data Flow and Processing Pipeline}{11}{section.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.7}Use Cases and User Flows}{12}{section.3.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Primary use cases.}}{12}{table.3.1}\protected@file@percent }
+\newlabel{tab:use_cases}{{3.1}{12}{Primary use cases}{table.3.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {3.8}Model Selection and Formats}{12}{section.3.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.9}Clustering Strategy}{12}{section.3.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.9}Clustering Strategy}{13}{section.3.9}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3.10}Privacy}{13}{section.3.10}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3.11}Performance Targets and Testing}{13}{section.3.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.12}Acceptance Criteria}{13}{section.3.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.13}Implementation Plan and Milestones}{13}{section.3.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.12}Acceptance Criteria}{14}{section.3.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.13}Implementation Milestones}{14}{section.3.13}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3.14}Traceability Matrix}{14}{section.3.14}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Requirement traceability.}}{14}{table.3.1}\protected@file@percent }
-\newlabel{tab:traceability}{{3.1}{14}{Requirement traceability}{table.3.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.15}Open Issues and Decisions}{14}{section.3.15}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.16}Summary}{14}{section.3.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}Design, Implementation, and Testing}{15}{chapter.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.15}Open Issues}{14}{section.3.15}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Requirement traceability.}}{15}{table.3.2}\protected@file@percent }
+\newlabel{tab:traceability}{{3.2}{15}{Requirement traceability}{table.3.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.16}Summary}{15}{section.3.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}Design, Implementation, and Testing}{16}{chapter.4}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{ch:implementation}{{4}{15}{Design, Implementation, and Testing}{chapter.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Scope and Objectives}{15}{section.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}High‑level Architecture}{15}{section.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Data Model}{15}{section.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}Bit}{15}{subsection.4.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}Cluster}{16}{subsection.4.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.3}Retention}{16}{subsection.4.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.4}Repository and UI Synchronization}{16}{section.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.5}AI Processing Pipeline}{16}{section.4.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.6}Clustering}{17}{section.4.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.7}Knowledge Graph Visualization}{17}{section.4.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.8}User Interface}{17}{section.4.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.9}Dependency Injection and Testability}{18}{section.4.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.10}Functional Test F1}{18}{section.4.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.11}Limitations and Next Steps}{18}{section.4.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.12}Acceptance Criteria (for this chapter)}{19}{section.4.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.13}Summary}{19}{section.4.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}Evaluation}{20}{chapter.5}\protected@file@percent }
+\newlabel{ch:implementation}{{4}{16}{Design, Implementation, and Testing}{chapter.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Scope and Objectives}{16}{section.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}High‑level Architecture}{16}{section.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Data Model}{16}{section.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}Repository and UI Synchronization}{17}{section.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.5}AI Processing Pipeline}{17}{section.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.6}Clustering}{18}{section.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.7}Knowledge Graph Visualization}{18}{section.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.8}User Interface}{18}{section.4.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces GJournal knowledge graph. Nodes are journal entries; edges group entries that belong to the same DBSCAN cluster. The cluster label appears at the centroid. Tapping a node opens a detail card showing the entry text and top emotion.}}{19}{figure.4.1}\protected@file@percent }
+\newlabel{fig:graph}{{4.1}{19}{GJournal knowledge graph. Nodes are journal entries; edges group entries that belong to the same DBSCAN cluster. The cluster label appears at the centroid. Tapping a node opens a detail card showing the entry text and top emotion}{figure.4.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces Dashboard view. The activity heatmap shows entry density per day; the top emotions strip summarises the last 30 days.}}{20}{figure.4.2}\protected@file@percent }
+\newlabel{fig:dashboard}{{4.2}{20}{Dashboard view. The activity heatmap shows entry density per day; the top emotions strip summarises the last 30 days}{figure.4.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Calendar view. Each day with at least one entry shows a dot coloured by the dominant emotion for that day. Tapping a day opens a list of its entries.}}{20}{figure.4.3}\protected@file@percent }
+\newlabel{fig:calendar}{{4.3}{20}{Calendar view. Each day with at least one entry shows a dot coloured by the dominant emotion for that day. Tapping a day opens a list of its entries}{figure.4.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.9}Dependency Injection and Testability}{20}{section.4.9}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Entry editor. The user fills in three short fields (Feel, Event, Action) and selects an intensity level. The AI pipeline runs in the background after saving.}}{21}{figure.4.4}\protected@file@percent }
+\newlabel{fig:editor}{{4.4}{21}{Entry editor. The user fills in three short fields (Feel, Event, Action) and selects an intensity level. The AI pipeline runs in the background after saving}{figure.4.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces List view with filter chips for emotion and cluster. Each entry card shows the top detected emotion and the cluster it belongs to.}}{21}{figure.4.5}\protected@file@percent }
+\newlabel{fig:list}{{4.5}{21}{List view with filter chips for emotion and cluster. Each entry card shows the top detected emotion and the cluster it belongs to}{figure.4.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.10}Functional Test F1}{22}{section.4.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.11}Limitations and Next Steps}{22}{section.4.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.12}Acceptance Criteria (for this chapter)}{22}{section.4.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.13}Summary}{22}{section.4.13}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces An entry card after the AI pipeline has run. The top detected emotion appears as a badge, and the cluster name links the entry to related journal entries. In the debug view, the embedding dimension and generation timestamp are also visible.}}{23}{figure.4.6}\protected@file@percent }
+\newlabel{fig:processed-entry}{{4.6}{23}{An entry card after the AI pipeline has run. The top detected emotion appears as a badge, and the cluster name links the entry to related journal entries. In the debug view, the embedding dimension and generation timestamp are also visible}{figure.4.6}{}}
+\citation{cer2017semeval}
+\citation{rosenberg2007vmeasure}
+\citation{hubert1985comparing}
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Evaluation}{25}{chapter.5}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chap:evaluation}{{5}{20}{Evaluation}{chapter.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.1}Evaluation Setup}{20}{section.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1.1}Datasets}{20}{subsection.5.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1.2}Metrics}{20}{subsection.5.1.2}\protected@file@percent }
+\newlabel{chap:evaluation}{{5}{25}{Evaluation}{chapter.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.1}Evaluation Setup}{25}{section.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1.1}Datasets}{25}{subsection.5.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1.2}Metrics}{25}{subsection.5.1.2}\protected@file@percent }
 \citation{reimers2019sentencebert}
 \citation{nussbaum2024nomic}
 \citation{kusupati2022matryoshka}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1.3}Hardware}{21}{subsection.5.1.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.2}Embedding Models}{21}{section.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.3}Matryoshka Representation Learning}{21}{section.5.3}\protected@file@percent }
-\newlabel{sec:mrl}{{5.3}{21}{Matryoshka Representation Learning}{section.5.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix, Python/MPS benchmark)}}{22}{table.5.1}\protected@file@percent }
-\newlabel{tab:mrl_tradeoff}{{5.1}{22}{Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix, Python/MPS benchmark)}{table.5.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.4}Embedding Quality on STS-B}{22}{section.5.4}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5.2}{\ignorespaces Embedding quality on STS-B (1500 pairs, MPS device)}}{22}{table.5.2}\protected@file@percent }
-\newlabel{tab:embedding_quality}{{5.2}{22}{Embedding quality on STS-B (1500 pairs, MPS device)}{table.5.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.5}Clustering Quality on TwentyNewsgroups}{23}{section.5.5}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5.3}{\ignorespaces Clustering quality on TwentyNewsgroupsClustering (1000 sentences, adaptive DBSCAN)}}{23}{table.5.3}\protected@file@percent }
-\newlabel{tab:clustering_quality}{{5.3}{23}{Clustering quality on TwentyNewsgroupsClustering (1000 sentences, adaptive DBSCAN)}{table.5.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.6}Algorithm Comparison}{23}{section.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1.3}Hardware}{26}{subsection.5.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.2}Embedding Models}{26}{section.5.2}\protected@file@percent }
+\citation{rousseeuw1987silhouettes}
+\@writefile{toc}{\contentsline {section}{\numberline {5.3}Matryoshka Representation Learning}{27}{section.5.3}\protected@file@percent }
+\newlabel{sec:mrl}{{5.3}{27}{Matryoshka Representation Learning}{section.5.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix, Python/MPS benchmark)}}{27}{table.5.1}\protected@file@percent }
+\newlabel{tab:mrl_tradeoff}{{5.1}{27}{Nomic-v1.5 MRL dimension trade-off on STS-B (clustering prefix, Python/MPS benchmark)}{table.5.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.4}Embedding Quality on STS-B}{27}{section.5.4}\protected@file@percent }
+\citation{moulavi2014dbcv}
+\citation{campello2013hdbscan}
+\@writefile{lot}{\contentsline {table}{\numberline {5.2}{\ignorespaces Embedding quality on STS-B (1500 pairs, MPS device)}}{28}{table.5.2}\protected@file@percent }
+\newlabel{tab:embedding_quality}{{5.2}{28}{Embedding quality on STS-B (1500 pairs, MPS device)}{table.5.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.5}Clustering Quality on TwentyNewsgroups}{28}{section.5.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.3}{\ignorespaces Clustering quality on TwentyNewsgroupsClustering (1000 sentences, adaptive DBSCAN)}}{28}{table.5.3}\protected@file@percent }
+\newlabel{tab:clustering_quality}{{5.3}{28}{Clustering quality on TwentyNewsgroupsClustering (1000 sentences, adaptive DBSCAN)}{table.5.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.6}Algorithm Comparison}{28}{section.5.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.4}{\ignorespaces Algorithm comparison on TwentyNewsgroupsClustering (Nomic-768, 1000 sentences)}}{29}{table.5.4}\protected@file@percent }
+\newlabel{tab:algorithm_comparison}{{5.4}{29}{Algorithm comparison on TwentyNewsgroupsClustering (Nomic-768, 1000 sentences)}{table.5.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.7}Domain Validation on Journal Entries}{29}{section.5.7}\protected@file@percent }
+\newlabel{sec:domain_validation}{{5.7}{29}{Domain Validation on Journal Entries}{section.5.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Domain validation on 100 custom journal entries (adaptive DBSCAN)}}{29}{table.5.5}\protected@file@percent }
+\newlabel{tab:domain_validation}{{5.5}{29}{Domain validation on 100 custom journal entries (adaptive DBSCAN)}{table.5.5}{}}
 \citation{sun2020mobilebert}
 \citation{demszky2020goemotions}
-\@writefile{lot}{\contentsline {table}{\numberline {5.4}{\ignorespaces Algorithm comparison on TwentyNewsgroupsClustering (Nomic-768, 1000 sentences)}}{24}{table.5.4}\protected@file@percent }
-\newlabel{tab:algorithm_comparison}{{5.4}{24}{Algorithm comparison on TwentyNewsgroupsClustering (Nomic-768, 1000 sentences)}{table.5.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.7}Domain Validation on Journal Entries}{24}{section.5.7}\protected@file@percent }
-\newlabel{sec:domain_validation}{{5.7}{24}{Domain Validation on Journal Entries}{section.5.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Domain validation on 100 custom journal entries (adaptive DBSCAN)}}{24}{table.5.5}\protected@file@percent }
-\newlabel{tab:domain_validation}{{5.5}{24}{Domain validation on 100 custom journal entries (adaptive DBSCAN)}{table.5.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.8}Emotion Classification}{25}{section.5.8}\protected@file@percent }
-\newlabel{sec:emotion}{{5.8}{25}{Emotion Classification}{section.5.8}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5.6}{\ignorespaces Emotion classifier per-class results (MobileBERT, GoEmotions 12-class, 4542 test samples)}}{25}{table.5.6}\protected@file@percent }
-\newlabel{tab:emotion_results}{{5.6}{25}{Emotion classifier per-class results (MobileBERT, GoEmotions 12-class, 4542 test samples)}{table.5.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.9}On-Device Efficiency}{25}{section.5.9}\protected@file@percent }
-\newlabel{sec:efficiency}{{5.9}{25}{On-Device Efficiency}{section.5.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5.7}{\ignorespaces On-device efficiency (iPhone, iOS 26.5, Core ML, Neural Processing Unit)}}{26}{table.5.7}\protected@file@percent }
-\newlabel{tab:efficiency}{{5.7}{26}{On-device efficiency (iPhone, iOS 26.5, Core ML, Neural Processing Unit)}{table.5.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.10}Discussion}{26}{section.5.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Conclusions}{28}{chapter.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.8}Emotion Classification}{30}{section.5.8}\protected@file@percent }
+\newlabel{sec:emotion}{{5.8}{30}{Emotion Classification}{section.5.8}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.6}{\ignorespaces Emotion classifier per-class results (MobileBERT, GoEmotions 12-class, 4542 test samples)}}{30}{table.5.6}\protected@file@percent }
+\newlabel{tab:emotion_results}{{5.6}{30}{Emotion classifier per-class results (MobileBERT, GoEmotions 12-class, 4542 test samples)}{table.5.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.9}On-Device Efficiency}{31}{section.5.9}\protected@file@percent }
+\newlabel{sec:efficiency}{{5.9}{31}{On-Device Efficiency}{section.5.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.7}{\ignorespaces On-device efficiency (iPhone, iOS 26.5, Core ML, Neural Processing Unit)}}{31}{table.5.7}\protected@file@percent }
+\newlabel{tab:efficiency}{{5.7}{31}{On-device efficiency (iPhone, iOS 26.5, Core ML, Neural Processing Unit)}{table.5.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.10}Discussion}{31}{section.5.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Conclusions}{33}{chapter.6}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{conclusions}{{6}{28}{Conclusions}{chapter.6}{}}
+\newlabel{conclusions}{{6}{33}{Conclusions}{chapter.6}{}}
 \citation{*}
 \bibdata{references}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Future Work}{29}{section.6.1}\protected@file@percent }
-\bibcite{awad2022improved}{AH22}
-\bibcite{demszky2020goemotions}{DMAK{$^{+}$}20}
-\bibcite{ester1996density}{EKSX96}
-\bibcite{apple2023neuralengine}{Inc23a}
-\bibcite{qualcomm2023hexagon}{Inc23b}
-\bibcite{jiao2020tinybert}{JYS{$^{+}$}20}
-\bibcite{kusupati2022matryoshka}{KBR{$^{+}$}22}
-\bibcite{10351450}{MBS{$^{+}$}23}
-\bibcite{nussbaum2024nomic}{NMDM24}
-\@writefile{toc}{\contentsline {chapter}{Bibliography}{30}{chapter*.2}\protected@file@percent }
-\bibcite{Pandelea2021EmotionEdge}{PRA{$^{+}$}21}
-\bibcite{reimers2019sentencebert}{RG19}
-\bibcite{sanh2019distilbert}{SDCW19}
-\bibcite{Sivaram2022HealthyMe}{Siv22}
-\bibcite{sun2020mobilebert}{SYS{$^{+}$}20}
-\gdef \@abspage@last{37}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Future Work}{34}{section.6.1}\protected@file@percent }
+\gdef \@abspage@last{40}

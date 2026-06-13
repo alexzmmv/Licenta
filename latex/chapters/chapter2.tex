@@ -2,7 +2,7 @@
 \label{ch:requirements}
 \section{Scope and Objectives}
 
-The application targets iOS and performs all natural language processing locally on the device. It provides a privacy-first micro‑journaling experience with short text entries, generates semantic embeddings and emotion labels for each entry on device, groups entries into semantically coherent clusters presented via list, calendar, and graph views, preserves user privacy by avoiding cloud storage or remote inference, and maintains acceptable interactive performance on devices from iPhone 14 and newer.
+The application targets iOS and performs all natural language processing on the device. It stores short journal entries locally, generates semantic embeddings and emotion labels for each entry, and groups entries into clusters shown in list, calendar, and graph views. No user text leaves the device. The minimum target hardware is iPhone 14.
 
 
 \section{Assumptions and Constraints}
@@ -38,7 +38,7 @@ The following assumptions and constraints are used throughout the specification:
 \begin{description}
   \item[NFR1] \textbf{Privacy.} No user text or embeddings leave the device. No cloud services are used for inference or storage.
   \item[NFR2] \textbf{Performance.} Interactive analysis latency should be under five seconds on the minimum target device for a single entry; background batch clustering may take longer.
-  \item[NFR3] \textbf{Model footprint.} Individual on‑device models should be quantized and kept as small as practical; a soft target is under 100 MB combined for core models.
+  \item[NFR3] \textbf{Model footprint.} Individual on‑device models should be quantized and kept as small as practical. The default configuration (MiniLM + emotion classifier) occupies 144\,MB; the full bundle including the Nomic model adds 274\,MB.
   \item[NFR4] \textbf{Battery and resource usage.} Background processing must be scheduled to minimize battery impact; heavy tasks should run when the device is idle or charging.
   \item[NFR5] \textbf{Accessibility.} The UI must follow platform accessibility guidelines (dynamic type, VoiceOver support).
 \end{description}
@@ -49,8 +49,6 @@ The following assumptions and constraints are used throughout the specification:
 The UI Layer (SwiftUI) covers the entry editor, calendar, list, graph, and settings screens. The Persistence Layer (SwiftData) is a local database for entries, embeddings, cluster metadata, and user settings. The Inference Engine (Core ML) loads and runs on‑device models for embedding generation and emotion classification. The Clustering Engine implements a density‑aware algorithm (DBSCAN or similar) optimized for small datasets and incremental updates. A Scheduler and Background Worker manages periodic batch clustering, model updates, and low‑priority maintenance tasks.
 
 \subsection{Architecture Diagram}
-TODO: add architecture diagram (figures/architecture.pdf) showing UI, Persistence, Inference Engine, Clustering Engine, and Background Worker
-TODO: update digram for dataflow (am folosit doar pt materia de Licenta)
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/architecture.pdf}
@@ -74,40 +72,58 @@ A periodic batch job re‑computes clusters and cluster summaries during idle ti
 
 \section{Use Cases and User Flows}
 
-\subsection{Use Case UC1: Create Entry}
-The user opens the entry editor, types a short entry (up to 400 characters total, 150 per field), and taps Save. The system stores the entry, runs on‑device inference, updates cluster assignments, and refreshes the calendar, list, and graph views so the new entry appears with its detected emotion and cluster.
+Table~\ref{tab:use_cases} summarises the four primary use cases.
 
-\subsection{Use Case UC2: View Insights}
-From the Insights or Graph view, the user sees clusters, representative entries, and an emotion distribution. Tapping a cluster reveals its member entries.
-
-\subsection{Use Case UC3: Edit Entry}
-Editing is permitted only for entries created on the same calendar day. When the user edits an entry, the system re‑computes the embedding and updates the cluster membership accordingly.
-
-\subsection{Use Case UC4: Delete Entry}
-A deleted entry is soft‑deleted and retained for a configurable grace period (default three days) before permanent removal.
+\begin{table}[h!]
+\centering
+\caption{Primary use cases.}
+\label{tab:use_cases}
+\begin{tabular}{p{0.14\textwidth} p{0.30\textwidth} p{0.44\textwidth}}
+\hline
+\textbf{Use Case} & \textbf{Trigger} & \textbf{System Response} \\
+\hline
+UC1 Create Entry &
+  User fills in Feel, Event, and Action fields and taps Save &
+  Entry stored; embedding and emotion label generated on device; cluster assignments updated; calendar, list, and graph views refreshed. \\
+\hline
+UC2 View Insights &
+  User opens the Graph or Insights screen &
+  Clusters shown with representative entries and emotion distribution. Tapping a cluster reveals its members. \\
+\hline
+UC3 Edit Entry &
+  User edits an entry created on the same calendar day &
+  Text updated; embedding and emotion label recomputed; cluster membership reassigned. \\
+\hline
+UC4 Delete Entry &
+  User deletes an entry &
+  Entry soft-deleted and hidden immediately; permanently removed after the three-day grace period. \\
+\hline
+\end{tabular}
+\end{table}
 
 \section{Model Selection and Formats}
-Three embedding strategies are implemented behind a common \texttt{EmbeddingService} protocol. all-MiniLM-L6-v2 produces 384-dimensional mean-pooled embeddings and is packaged as a 43\,MB Core ML bundle; it is the default. nomic-embed-text-v1.5 is trained with Matryoshka Representation Learning and produces embeddings at \{64, 128, 256, 512, 768\} dimensions by truncating its output; the default truncation is 256 dimensions and the Core ML package is 261\,MB. Apple NLEmbedding ships with the operating system (zero bundle cost) and produces 512-dimensional vectors. The emotion classifier is MobileBERT fine-tuned for three epochs on GoEmotions, with 28 original labels collapsed to 12 classes (Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, Guilt), packaged as a 94\,MB Core ML bundle. All models are converted using coremltools on a Python workstation.
+Three embedding strategies are implemented behind a common \texttt{EmbeddingService} protocol. all-MiniLM-L6-v2 produces 384-dimensional mean-pooled embeddings and is packaged as a 45\,MB Core ML bundle; it is the default. nomic-embed-text-v1.5 is trained with Matryoshka Representation Learning and produces embeddings at \{64, 128, 256, 512, 768\} dimensions by truncating its output; the default truncation is 256 dimensions and the Core ML package is 274\,MB. Apple NLEmbedding ships with the operating system (zero bundle cost) and produces 512-dimensional vectors. The emotion classifier is MobileBERT fine-tuned for three epochs on GoEmotions, with 28 original labels collapsed to 12 classes (Joy, Sadness, Anger, Fear, Love, Surprise, Disgust, Anxiety, Excitement, Gratitude, Hope, Guilt), packaged as a 99\,MB Core ML bundle. All models are converted using coremltools on a Python workstation.
 
 \section{Clustering Strategy}
-The system uses DBSCAN with adaptive parameters. Epsilon is calibrated per corpus as the 10th percentile of pairwise cosine distances; \texttt{minPoints} scales with corpus size between a minimum of 3 and a maximum of 11. For MRL-truncated embeddings, epsilon is further scaled by $\sqrt{d/768}$ to compensate for the compressed distance range at lower dimensions. Cluster names are derived by extracting frequent nouns and adjectives from member entries, with a fallback to the dominant emotion label. A background batch job re-runs clustering when the device is idle.
+The system uses DBSCAN with adaptive parameters. Epsilon is calibrated per corpus as the 10th percentile of pairwise cosine distances; \texttt{minPoints} scales with corpus size between a minimum of 3 and a maximum of 11. For MRL-truncated embeddings, epsilon is further scaled by $\sqrt{d/768}$ to compensate for the compressed distance range at lower dimensions. Each cluster is named by extracting frequent nouns and adjectives from its member entries; if no clear content words emerge, the dominant emotion label is used instead. A background batch job re-runs clustering when the device is idle.
 
 \section{Privacy}
 By design, the app does not transmit journal text, embeddings, or cluster metadata off device. No cloud services are involved in any part of the pipeline.
 
 \section{Performance Targets and Testing}
-Interactive inference (embedding + emotion classification) should complete within 5 seconds on iPhone 14; incremental cluster membership updates should complete within 2 seconds per new entry. Batch re‑clustering is acceptable to run for several minutes during idle or charging periods. Combined model size should stay under 100 MB where possible, and the journal database should remain responsive up to 200 MB of stored entries. Testing covers latency, memory, and battery impact on representative devices (iPhone 14 Plus, iPhone 15), and clustering quality via silhouette and ARI metrics on synthetic and anonymized sample data.
+Interactive inference (embedding + emotion classification) should complete within 5 seconds on iPhone 14; incremental cluster membership updates should complete within 2 seconds per new entry. Batch re‑clustering is acceptable to run for several minutes during idle or charging periods. The default model bundle (MiniLM + emotion classifier) targets under 200 MB; the optional Nomic model adds a further 274 MB. The journal database should remain responsive up to 200 MB of stored entries. Testing covers latency, memory, and battery impact on representative devices (iPhone 14 Plus, iPhone 15), and clustering quality via silhouette and ARI metrics on synthetic and anonymized sample data.
 
 \section{Acceptance Criteria}
 The prototype is acceptable when FR1--FR7 are implemented and demonstrable, on‑device inference meets the performance targets on the minimum device, data remains local with no off-device transmission, and clustering produces coherent groups visible in the graph view.
 
-\section{Implementation Plan and Milestones}
+\section{Implementation Milestones}
+The prototype was developed in five stages:
 \begin{enumerate}
-  \item Project scaffolding: SwiftUI screens for editor, calendar, list, graph, and settings; SwiftData schema for \texttt{Bit} and \texttt{Cluster} entities.
-  \item AI pipeline: Core ML integration for all-MiniLM-L6-v2 embedding, nomic-embed-text-v1.5 MRL embedding, Apple NLEmbedding, and MobileBERT emotion classifier; protocol-based \texttt{EmbeddingService} and \texttt{EmotionService} abstractions.
-  \item Clustering engine: adaptive DBSCAN, incremental update on entry save, background batch re-clustering, cluster naming.
-  \item Graph visualization: force-directed layout, hub-and-spoke rendering, pan/zoom interaction.
-  \item Evaluation: Python benchmarks on STS-B and TwentyNewsgroups; domain validation on 100 labelled journal entries.
+  \item \textbf{Scaffolding:} SwiftUI screens for the editor, calendar, list, graph, and settings; SwiftData schema for \texttt{Bit} and \texttt{Cluster} entities.
+  \item \textbf{AI pipeline:} Core ML integration for all-MiniLM-L6-v2, nomic-embed-text-v1.5 MRL, Apple NLEmbedding, and MobileBERT emotion classifier; protocol-based \texttt{EmbeddingService} and \texttt{EmotionService} abstractions for interchangeable backends.
+  \item \textbf{Clustering engine:} adaptive DBSCAN with epsilon calibration, incremental update on entry save, background batch re-clustering, and TF-IDF cluster naming.
+  \item \textbf{Graph visualisation:} force-directed layout, hub-and-spoke edge rendering, pan/zoom gesture handling.
+  \item \textbf{Evaluation:} Python benchmarks on STS-B and TwentyNewsgroups; domain validation on 100 labelled journal entries; on-device efficiency benchmark via an in-app measurement tool.
 \end{enumerate}
 
 \section{Traceability Matrix}
@@ -131,7 +147,8 @@ FR7 Deletion          & Soft-delete flag, maintenance pass                     &
 \end{tabular}
 \end{table}
 
-\section{Open Issues and Decisions}
-TODO: 
+\section{Open Issues}
+The main open issue is SwiftData schema migration: the current implementation wipes stored data on model changes during development. A versioned migration policy is required before any production deployment.
+
 \section{Summary}
 This chapter specified the functional and non‑functional requirements, the high‑level architecture, data flow, and acceptance criteria for the on‑device microjournaling system. The next chapter will describe the implementation details, model conversion steps, and the evaluation methodology used to validate the prototype.

@@ -1,12 +1,3 @@
-//
-//  CoreMLEmbeddingService.swift
-//  GJournal
-//
-//  Generates sentence embeddings from a BERT .mlpackage.
-//  Supports mean pooling (all-MiniLM) and CLS pooling (BGE).
-//  Pooling mode must match the model's training objective.
-//
-
 import Foundation
 import CoreML
 
@@ -89,7 +80,6 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
 
             switch self.poolingMode {
             case .mean:
-                // Average over all real (non-padding) token positions
                 let realLen = tokens.realTokenCount
                 var sum = [Double](repeating: 0, count: embeddingDim)
                 for pos in 0..<realLen {
@@ -100,7 +90,6 @@ final class CoreMLEmbeddingService: EmbeddingServiceProtocol {
                 embedding = sum.map { Float($0 / Double(realLen)) }
 
             case .cls:
-                // Take the [CLS] token at position 0 — required for BGE contrastive models
                 embedding = (0..<embeddingDim).map { Float(hiddenState[$0 * dimStride].doubleValue) }
             }
 

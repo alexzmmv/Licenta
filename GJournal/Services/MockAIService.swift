@@ -1,12 +1,3 @@
-//
-//  MockAIService.swift
-//  GJournal
-//
-//  Lightweight mock implementations of AI service protocols for
-//  SwiftUI Previews and unit tests. Value types (struct) — no
-//  reference semantics needed since these carry no shared state.
-//
-
 import Foundation
 
 // MARK: - Mock Embedding Service
@@ -74,7 +65,6 @@ struct MockClusteringService: ClusteringServiceProtocol {
 
 // MARK: - Seeded Random Number Generator
 
-/// Deterministic RNG for reproducible mock embeddings.
 struct SeededRandomNumberGenerator: RandomNumberGenerator {
     private var state: UInt64
 
@@ -83,7 +73,6 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
     }
 
     mutating func next() -> UInt64 {
-        // xorshift64 algorithm
         state ^= state << 13
         state ^= state >> 7
         state ^= state << 17

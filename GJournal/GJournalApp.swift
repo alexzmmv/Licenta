@@ -1,10 +1,3 @@
-//
-//  GJournalApp.swift
-//  GJournal
-//
-//  Created by Constantin-Alexandru Dumitrascu on 21.10.2025.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -19,8 +12,6 @@ struct GJournalApp: App {
         modelContainer = Self.makeModelContainer()
     }
 
-    /// Creates the SwiftData ModelContainer, wiping the store on schema-migration failure.
-    /// Safe for development — no production data exists yet.
     private static func makeModelContainer() -> ModelContainer {
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
 
@@ -29,7 +20,6 @@ struct GJournalApp: App {
                 for: Bit.self, Cluster.self,
                 configurations: config
             )
-            // Encrypt the store file at rest
             let storeURL = config.url
             try? (storeURL as NSURL).setResourceValue(
                 URLFileProtection.completeUnlessOpen,
@@ -41,7 +31,6 @@ struct GJournalApp: App {
         do {
             return try tryCreate()
         } catch {
-            // Schema changed (e.g. new fields added) — destroy the store and rebuild
             let storeURL = config.url
             let dir = storeURL.deletingLastPathComponent()
             let name = storeURL.lastPathComponent
@@ -62,11 +51,9 @@ struct GJournalApp: App {
         WindowGroup {
             Group {
                 if authManager.isAuthenticated {
-                    // User is logged in - show biometric lock screen or main app
                     BiometricLockView()
                         .environmentObject(authManager)
                 } else {
-                    // User not logged in - show login screen
                     LoginView()
                         .environmentObject(authManager)
                 }
@@ -75,7 +62,6 @@ struct GJournalApp: App {
         .modelContainer(modelContainer)
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .background {
-                // Mark session as requiring re-authentication when app enters background
                 authManager.requireSessionAuthentication()
             }
         }

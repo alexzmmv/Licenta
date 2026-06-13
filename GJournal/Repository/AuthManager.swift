@@ -1,10 +1,3 @@
-//
-//  AuthManager.swift
-//  GJournal
-//
-//  Local-only authentication: name identifier + app PIN + biometrics.
-//
-
 import Foundation
 import Combine
 import LocalAuthentication
@@ -39,7 +32,6 @@ class AuthManager: ObservableObject {
 
     // MARK: - Registration & Login
 
-    /// First-time setup: stores name + PIN atomically, marks session authenticated.
     func completeRegistration(name: String, pin: String) throws {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard isValidName(trimmed) else { throw AuthError.invalidName }
@@ -55,8 +47,6 @@ class AuthManager: ObservableObject {
         isSessionAuthenticated = true
     }
 
-    /// Re-login after logout. Name must match stored name.
-    /// Session is NOT authenticated — BiometricLockView handles that.
     func loginWithNameOnly(name: String) throws {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard isValidName(trimmed) else { throw AuthError.invalidName }

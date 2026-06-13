@@ -1,11 +1,3 @@
-//
-//  ServiceContainer.swift
-//  GJournal
-//
-//  Dependency injection container that holds all service instances.
-//  Provides factory methods for mock and production configurations.
-//
-
 import Foundation
 import Combine
 

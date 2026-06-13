@@ -1,14 +1,5 @@
-//
-//  EmbeddingModelChoice.swift
-//  GJournal
-//
-//  Enum representing the user's choice of embedding model.
-//  Persisted via UserDefaults so the selection survives app launches.
-//
-
 import Foundation
 
-/// The three embedding backends compared in the thesis.
 enum EmbeddingModelChoice: String, CaseIterable, Identifiable {
     case appleNLP  = "appleNLP"
     case miniLM    = "miniLM"

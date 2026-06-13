@@ -1,12 +1,3 @@
-//
-//  EfficiencyBenchmark.swift
-//  GJournal
-//
-//  Measures cold-start, warm latency, and model size for all
-//  embedding services and the emotion classifier.
-//  Used for thesis Task 10 — on-device efficiency table.
-//
-
 import Foundation
 #if canImport(UIKit)
 import UIKit
@@ -97,7 +88,7 @@ actor EfficiencyBenchmark {
 
         await progress("Benchmarking emotion classifier…")
 
-        let emotionService = CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
+        let emotionService = await CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
         let emotionSizeMB = bundleSize(forResource: "GJournalEmotionClassifier")
 
         let emotionColdMs = try await measureOnce { _ = try await emotionService.detectEmotions(for: self.testText) }
@@ -130,8 +121,8 @@ actor EfficiencyBenchmark {
         #endif
 
         #if canImport(UIKit)
-        let deviceModel = UIDevice.current.model
-        let iosVersion = UIDevice.current.systemVersion
+        let deviceModel = await UIDevice.current.model
+        let iosVersion = await UIDevice.current.systemVersion
         #else
         let deviceModel = "Mac"
         let iosVersion = ProcessInfo.processInfo.operatingSystemVersionString

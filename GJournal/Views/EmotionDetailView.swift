@@ -32,9 +32,7 @@ struct EmotionDetailView: View {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
                 VStack(spacing: 16) {
-                    // Emotion icon
                     ZStack {
                         Circle()
                             .fill(emotion.color.opacity(0.2))
@@ -80,7 +78,6 @@ struct EmotionDetailView: View {
                     }
                     Spacer()
                 } else {
-                    // Stats section
                     HStack(spacing: 32) {
                         VStack(spacing: 4) {
                             Text("\(bits.count)")
@@ -160,7 +157,6 @@ struct EmotionDetailView: View {
             updateData()
         }
         .overlay(alignment: .topLeading) {
-            // Custom back button
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
                     .font(.title3)
@@ -192,5 +188,3 @@ struct EmotionDetailView: View {
         }
     }
 }
-
-// Note: Preview removed as it requires authentication context

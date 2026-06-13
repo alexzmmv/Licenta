@@ -1,10 +1,3 @@
-//
-//  ChangePINView.swift
-//  GJournal
-//
-//  Three-step sheet: verify current PIN, enter new PIN, confirm new PIN.
-//
-
 import SwiftUI
 
 private enum ChangePINStep {

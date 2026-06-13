@@ -1,10 +1,3 @@
-//
-//  PINKeypadView.swift
-//  GJournal
-//
-//  Reusable 6-digit numeric PIN keypad used for setup and unlock.
-//
-
 import SwiftUI
 
 struct PINKeypadView: View {
@@ -19,7 +12,6 @@ struct PINKeypadView: View {
 
     var body: some View {
         VStack(spacing: 36) {
-            // Header
             VStack(spacing: 8) {
                 Text(title)
                     .font(.title2)
@@ -33,7 +25,6 @@ struct PINKeypadView: View {
                 }
             }
 
-            // Dot indicator
             HStack(spacing: 20) {
                 ForEach(0..<pinLength, id: \.self) { i in
                     Circle()
@@ -43,7 +34,6 @@ struct PINKeypadView: View {
                 }
             }
 
-            // Error
             if let error = errorMessage {
                 Text(error)
                     .font(.caption)
@@ -52,7 +42,6 @@ struct PINKeypadView: View {
                     .animation(.easeInOut, value: errorMessage)
             }
 
-            // Keypad grid
             VStack(spacing: 16) {
                 ForEach([[1, 2, 3], [4, 5, 6], [7, 8, 9]], id: \.self) { row in
                     HStack(spacing: 24) {
@@ -62,7 +51,6 @@ struct PINKeypadView: View {
                     }
                 }
                 HStack(spacing: 24) {
-                    // Bottom-left: cancel or blank
                     if let cancel = onCancel {
                         Button("Cancel", action: cancel)
                             .frame(width: 76, height: 76)
@@ -72,7 +60,6 @@ struct PINKeypadView: View {
                         Color.clear.frame(width: 76, height: 76)
                     }
                     digitButton(0)
-                    // Delete
                     Button {
                         if !pin.isEmpty { pin.removeLast() }
                     } label: {

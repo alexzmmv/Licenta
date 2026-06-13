@@ -1,12 +1,3 @@
-//
-//  RecentlyDeletedView.swift
-//  GJournal
-//
-//  Displays soft-deleted micro-journal bits.
-//  Enables users to restore entries or permanently purge them before
-//  automatic 72-hour system retention sweeps.
-//
-
 import SwiftUI
 
 struct RecentlyDeletedView: View {
@@ -38,7 +29,6 @@ struct RecentlyDeletedView: View {
                         
                     Spacer()
                     
-                    // Invisible spacer to balance back button
                     HStack {
                         Image(systemName: "chevron.left").opacity(0)
                         Text("Back").opacity(0)
@@ -54,7 +44,6 @@ struct RecentlyDeletedView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 16) {
-                            // Advisory banner
                             HStack(alignment: .top, spacing: 12) {
                                 Image(systemName: "clock.badge.exclamationmark")
                                     .font(.title3)
@@ -183,7 +172,6 @@ struct DeletedEntryRow: View {
                 .padding(.vertical, 2)
             
             HStack(spacing: 12) {
-                // Restore button
                 Button {
                     let impact = UIImpactFeedbackGenerator(style: .light)
                     impact.impactOccurred()
@@ -204,7 +192,6 @@ struct DeletedEntryRow: View {
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.12), lineWidth: 1))
                 }
                 
-                // Delete permanently button
                 Button {
                     showingConfirmDelete = true
                 } label: {

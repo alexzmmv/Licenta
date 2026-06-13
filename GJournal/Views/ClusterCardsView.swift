@@ -1,8 +1,3 @@
-//
-//  ClusterCardsView.swift
-//  GJournal
-//
-
 import SwiftUI
 
 struct ClusterCardsView: View {
@@ -109,7 +104,6 @@ private struct ClusterCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Emotion emojis row
             HStack(spacing: 4) {
                 ForEach(Array(uniqueEmotions.prefix(4)), id: \.rawValue) { e in
                     Text(e.emoji).font(.title3)
@@ -121,21 +115,18 @@ private struct ClusterCard: View {
                     .foregroundColor(.gray)
             }
 
-            // Cluster name
             Text(cluster.name)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
                 .lineLimit(2)
 
-            // Span label
             if !spanLabel.isEmpty {
                 Text(spanLabel)
                     .font(.caption2)
                     .foregroundColor(.gray)
             }
 
-            // Temporal bar
             if let dominant = dominantEmotion {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {

@@ -1,10 +1,3 @@
-//
-//  SettingsView.swift
-//  GJournal
-//
-//  Settings and account management
-//
-
 import SwiftUI
 import SwiftData
 
@@ -73,7 +66,6 @@ struct SettingsView: View {
     }
 
     private var noiseBits: Int {
-        // Bits with embeddings but no cluster
         repository.bits.filter { !$0.isDeleted && $0.embedding != nil && !($0.embedding?.isEmpty ?? true) && $0.clusterID == nil }.count
     }
 
@@ -88,7 +80,6 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             List {
-                // Profile Section
                 Section {
                     HStack {
                         Image(systemName: "person.circle.fill")
@@ -107,7 +98,6 @@ struct SettingsView: View {
                     Text("Profile")
                 }
 
-                // Security Section
                 Section {
                     if authManager.canUseBiometric() {
                         Toggle(isOn: Binding(
@@ -144,7 +134,6 @@ struct SettingsView: View {
                         .environmentObject(authManager)
                 }
                 
-                // AI Model Section
                 Section {
                     Picker(selection: selectedModel) {
                         ForEach(EmbeddingModelChoice.allCases) { model in
@@ -193,7 +182,6 @@ struct SettingsView: View {
 
                 // MARK: - Debug & Development
                 Section {
-                    // Status indicator
                     if isRunningDebugTask {
                         HStack {
                             ProgressView()
@@ -220,7 +208,6 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Recluster All
                     Button {
                         reclusterAll()
                     } label: {
@@ -237,7 +224,6 @@ struct SettingsView: View {
                     }
                     .disabled(isRunningDebugTask || bitsWithEmbeddings == 0)
 
-                    // Re-embed All
                     Button {
                         reEmbedAll()
                     } label: {
@@ -254,7 +240,6 @@ struct SettingsView: View {
                     }
                     .disabled(isRunningDebugTask || totalBits == 0)
 
-                    // Process Unprocessed Only
                     Button {
                         processUnprocessed()
                     } label: {
@@ -271,7 +256,6 @@ struct SettingsView: View {
                     }
                     .disabled(isRunningDebugTask || bitsWithoutEmbeddings == 0)
 
-                    // Clear Embeddings
                     Button(role: .destructive) {
                         showingClearEmbeddingsAlert = true
                     } label: {
@@ -287,7 +271,6 @@ struct SettingsView: View {
                     }
                     .disabled(isRunningDebugTask || bitsWithEmbeddings == 0)
 
-                    // Clear Clusters
                     Button(role: .destructive) {
                         showingClearClustersAlert = true
                     } label: {
@@ -304,7 +287,6 @@ struct SettingsView: View {
                     .disabled(isRunningDebugTask || uniqueClusterCount == 0)
 
                     #if DEBUG
-                    // Generate Seed Data
                     Button {
                         SeedDataManager.generateSeedData(context: modelContext)
                         (repository as? LocalJournalRepository)?.loadBitsFromContext()
@@ -323,7 +305,9 @@ struct SettingsView: View {
                     }
                     .disabled(isRunningDebugTask)
 
-                    // Log Embedding Sample
+
+
+
                     Button {
                         logEmbeddingSample()
                     } label: {
@@ -380,13 +364,8 @@ struct SettingsView: View {
                         }
                     }
                     .disabled(isBenchmarking)
-                } header: {
-                    Text("Thesis")
-                } footer: {
-                    Text("Run on device (not Simulator) for representative Neural Engine timings.")
                 }
 
-                // Trash Section
                 Section {
                     NavigationLink(destination: RecentlyDeletedView(repository: repository)) {
                         HStack {
@@ -410,7 +389,6 @@ struct SettingsView: View {
                     Text("Data Management")
                 }
 
-                // Actions Section
                 Section {
                     Button {
                         Task { await generateExportFile() }
@@ -533,7 +511,6 @@ struct SettingsView: View {
         Task {
             do {
                 try await manager.runClustering(forceRecalibrate: true)
-                // onClusteringComplete already calls loadBitsFromContext — no need to repeat
                 await MainActor.run {
                     debugStatusMessage = "Reclustering complete — \(uniqueClusterCount) clusters"
                     isRunningDebugTask = false
@@ -565,7 +542,7 @@ struct SettingsView: View {
                 await MainActor.run {
                     debugStatusMessage = "Re-embedding… \(processed)/\(bitsToProcess.count)"
                 }
-                // Small delay to avoid overwhelming the system
+                // Small delay to avoid "burnout"
                 try? await Task.sleep(nanoseconds: 200_000_000)
             }
             await MainActor.run {
@@ -694,7 +671,6 @@ struct SettingsView: View {
         let model = EmbeddingModelChoice.current
         let strategy = ClusteringStrategyChoice.current
 
-        // Build bits array
         var bitsJSON: [[String: Any]] = []
         for bit in repository.bits {
             var entry: [String: Any] = [

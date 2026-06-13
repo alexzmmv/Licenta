@@ -1,11 +1,3 @@
-//
-//  LoginView.swift
-//  GJournal
-//
-//  First-launch: enter name, then set a 6-digit PIN.
-//  Returning users: enter name to re-link, then BiometricLockView handles auth.
-//
-
 import SwiftUI
 
 private enum LoginStep {
@@ -23,7 +15,6 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            // Background
             LinearGradient(
                 colors: [
                     Color(red: 0.05, green: 0.05, blue: 0.08),
@@ -97,7 +88,6 @@ struct LoginView: View {
             }
             .padding(.bottom, 52)
 
-            // Form
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("What's your name?")
@@ -229,10 +219,8 @@ struct LoginView: View {
 
         do {
             if authManager.isUserRegistered() {
-                // Returning user: verify name, then BiometricLockView handles auth
                 try authManager.loginWithNameOnly(name: name)
             } else {
-                // New user: go to PIN setup
                 withAnimation { step = .pinSetup }
             }
         } catch let error as AuthError {

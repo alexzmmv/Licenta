@@ -1,10 +1,3 @@
-//
-//  DayDetailView.swift
-//  GJournal
-//
-//  Created by Constantin-Alexandru Dumitrascu on 21.10.2025.
-//
-
 import SwiftUI
 
 struct DayDetailView: View {

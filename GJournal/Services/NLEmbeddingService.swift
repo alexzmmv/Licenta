@@ -1,11 +1,3 @@
-//
-//  NLEmbeddingService.swift
-//  GJournal
-//
-//  Apple NLEmbedding baseline — zero bundle size, ships with iOS.
-//  Used as Backup C when no .mlpackage is present (see 09_AI_PITFALLS.md §8.1).
-//
-
 import Foundation
 import NaturalLanguage
 
