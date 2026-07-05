@@ -5,61 +5,60 @@ import SwiftData
 struct GJournalApp: App {
     @StateObject private var authManager = AuthManager()
     @Environment(\.scenePhase) var scenePhase
-    
-    let modelContainer: ModelContainer
-    
+
+    /// Holds either a successfully created ModelContainer or the error that
+    /// prevented creation. The wipe-and-retry fallback has been intentionally
+    /// removed — on failure we show a recovery UI instead of silently
+    /// destroying the user's journal data.
+    private let containerResult: Result<ModelContainer, Error>
+
     init() {
-        modelContainer = Self.makeModelContainer()
+        containerResult = Result { try Self.makeModelContainer() }
     }
 
-    private static func makeModelContainer() -> ModelContainer {
+    private static func makeModelContainer() throws -> ModelContainer {
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
 
-        func tryCreate() throws -> ModelContainer {
-            let container = try ModelContainer(
-                for: Bit.self, Cluster.self,
-                configurations: config
-            )
-            let storeURL = config.url
-            try? (storeURL as NSURL).setResourceValue(
-                URLFileProtection.completeUnlessOpen,
-                forKey: .fileProtectionKey
-            )
-            return container
-        }
+        // Use the versioned schema + migration plan so that future schema
+        // changes (SchemaV2+) are handled via lightweight/custom migration
+        // stages instead of crashing or wiping.
+        let schema = Schema(versionedSchema: SchemaV1.self)
+        let container = try ModelContainer(
+            for: schema,
+            migrationPlan: GJournalMigrationPlan.self,
+            configurations: config
+        )
 
-        do {
-            return try tryCreate()
-        } catch {
-            let storeURL = config.url
-            let dir = storeURL.deletingLastPathComponent()
-            let name = storeURL.lastPathComponent
-            for suffix in ["", "-wal", "-shm"] {
-                try? FileManager.default.removeItem(
-                    at: dir.appendingPathComponent(name + suffix)
-                )
-            }
-            do {
-                return try tryCreate()
-            } catch {
-                fatalError("Cannot create ModelContainer after store reset: \(error)")
-            }
-        }
+        // File-level encryption: data is accessible while the device is
+        // unlocked or while our process holds a file handle.
+        let storeURL = config.url
+        try? (storeURL as NSURL).setResourceValue(
+            URLFileProtection.completeUnlessOpen,
+            forKey: .fileProtectionKey
+        )
+
+        return container
     }
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if authManager.isAuthenticated {
-                    BiometricLockView()
-                        .environmentObject(authManager)
-                } else {
-                    LoginView()
-                        .environmentObject(authManager)
+            switch containerResult {
+            case .success(let container):
+                Group {
+                    if authManager.isAuthenticated {
+                        BiometricLockView()
+                            .environmentObject(authManager)
+                    } else {
+                        LoginView()
+                            .environmentObject(authManager)
+                    }
                 }
+                .modelContainer(container)
+
+            case .failure(let error):
+                StoreRecoveryView(error: error)
             }
         }
-        .modelContainer(modelContainer)
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .background {
                 authManager.requireSessionAuthentication()
@@ -69,4 +68,3 @@ struct GJournalApp: App {
 }
 
 // Note: ContentView preview removed as it requires authentication context
-

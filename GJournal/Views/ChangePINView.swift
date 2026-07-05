@@ -26,11 +26,16 @@ struct ChangePINView: View {
                             errorMessage: errorMessage,
                             onCancel: { dismiss() }
                         ) { pin in
-                            if authManager.verifyPIN(pin) {
+                            let result = authManager.verifyPIN(pin)
+                            switch result {
+                            case .correct:
                                 errorMessage = nil
                                 withAnimation { step = .enterNew }
-                            } else {
+                            case .incorrect:
                                 errorMessage = "Incorrect PIN — try again"
+                            case .lockedOut(let seconds):
+                                errorMessage = "Too many attempts — try again in \(seconds)s"
+                                authManager.refreshLockoutState()
                             }
                         }
 

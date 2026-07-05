@@ -105,20 +105,51 @@ struct BiometricLockView: View {
         VStack {
             Spacer()
 
-            PINKeypadView(
-                title: "Enter PIN",
-                subtitle: authManager.currentUser.map { "Welcome back, \($0)" },
-                errorMessage: pinError,
-                onCancel: (authManager.isBiometricEnabled && biometricAvailable) ? {
-                    pinError = nil
-                    withAnimation { showPINEntry = false }
-                } : nil
-            ) { pin in
-                if authManager.verifyPIN(pin) {
-                    pinError = nil
-                    authManager.completeSessionAuthentication()
-                } else {
-                    pinError = "Incorrect PIN — try again"
+            if authManager.lockoutRemainingSeconds > 0 {
+                // ── Lockout state ──
+                VStack(spacing: 24) {
+                    Image(systemName: "lock.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundColor(.orange)
+
+                    Text("Too many attempts")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+
+                    Text("Try again in \(formattedLockout(authManager.lockoutRemainingSeconds))")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                        .monospacedDigit()
+
+                    Text("For your security, PIN entry is temporarily disabled.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+            } else {
+                PINKeypadView(
+                    title: "Enter PIN",
+                    subtitle: authManager.currentUser.map { "Welcome back, \($0)" },
+                    errorMessage: pinError,
+                    onCancel: (authManager.isBiometricEnabled && biometricAvailable) ? {
+                        pinError = nil
+                        withAnimation { showPINEntry = false }
+                    } : nil
+                ) { pin in
+                    let result = authManager.verifyPIN(pin)
+                    switch result {
+                    case .correct:
+                        pinError = nil
+                        authManager.completeSessionAuthentication()
+                    case .incorrect:
+                        pinError = "Incorrect PIN — try again"
+                    case .lockedOut(let seconds):
+                        pinError = nil
+                        authManager.refreshLockoutState()
+                        // lockout UI will show automatically via published property
+                        _ = seconds  // suppress unused warning
+                    }
                 }
             }
 
@@ -133,12 +164,24 @@ struct BiometricLockView: View {
             }
             .padding(.bottom, 32)
         }
+        .onAppear {
+            authManager.refreshLockoutState()
+        }
         .confirmationDialog("Log Out", isPresented: $showLogoutConfirmation) {
             Button("Log Out", role: .destructive) { authManager.logout() }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("This will remove your session. Your journal data stays on the device.")
         }
+    }
+
+    private func formattedLockout(_ seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        if m > 0 {
+            return String(format: "%d:%02d", m, s)
+        }
+        return "\(s)s"
     }
 
     // MARK: - Biometric attempt
