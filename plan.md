@@ -26,7 +26,7 @@ GJournal (`/Users/constantin-alexandrudumitrascu/Desktop/Licenta`) is a working 
 3. Versioned JSON backup/export (schema tag + entries; embeddings optional) in `LocalJournalRepository` + `SettingsView`.
 
 ### 1.2 Security
-4. `AuthManager.swift`: PIN unsalted SHA-256 → **PBKDF2** (CommonCrypto `CCKeyDerivationPBKDF` with `kCCPRFHmacAlgSHA256`, ~210k iterations, 16-byte cryptographically random salt, salt + derived key stored in Keychain); silent re-hash on next successful unlock. Escalating lockout (30 s after 5 fails → 1 min → 5 min → 15 min; counter + timestamp persisted in Keychain). Keep `completeUnlessOpen` file protection. *(Note: CryptoKit lacks native PBKDF2 — CommonCrypto is required.)*
+4. ~~`AuthManager.swift`: PIN unsalted SHA-256 → **PBKDF2** (CommonCrypto `CCKeyDerivationPBKDF` with `kCCPRFHmacAlgSHA256`, ~210k iterations, 16-byte cryptographically random salt, salt + derived key stored in Keychain); silent re-hash on next successful unlock. Escalating lockout (30 s after 5 fails → 1 min → 5 min → 15 min; counter + timestamp persisted in Keychain). Keep `completeUnlessOpen` file protection. *(Note: CryptoKit lacks native PBKDF2 — CommonCrypto is required.)*~~ **DONE**
 
 ### 1.3 Bundle & config
 5. **Dead model cleanup** (full checklist):

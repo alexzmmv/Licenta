@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Shown when the SwiftData store fails to open (e.g., schema migration error).
 ///

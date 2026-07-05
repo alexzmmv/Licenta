@@ -17,7 +17,7 @@ import CryptoKit
 // MARK: - Extracted testable functions (mirror AuthManager internals)
 // ============================================================================
 
-let pbkdf2Iterations: UInt32 = 210_000
+let pbkdf2Iterations: UInt32 = 350_000
 let saltLength = 16
 let derivedKeyLength = 32
 
@@ -157,17 +157,16 @@ do {
     let elapsed = CFAbsoluteTimeGetCurrent() - start
     let elapsedMs = elapsed * 1000
     assert(elapsedMs > 50, "PBKDF2 takes >\(Int(50))ms (actual: \(Int(elapsedMs))ms) — resistant to brute-force")
-    print("    ℹ️  Single derivation: \(String(format: "%.1f", elapsedMs))ms")
+    print("    ℹ  Single derivation: \(String(format: "%.1f", elapsedMs))ms")
     
     // Estimate time to brute-force 6-digit PIN space (10^6 = 1,000,000)
     let bruteForceSeconds = elapsed * 1_000_000
     let bruteForceHours = bruteForceSeconds / 3600
-    print("    ℹ️  Estimated brute-force of 6-digit space: \(String(format: "%.1f", bruteForceHours)) hours")
+    print("    ℹ  Estimated brute-force of 6-digit space: \(String(format: "%.1f", bruteForceHours)) hours")
     assert(bruteForceHours > 1, "Brute-force 6-digit PIN takes >1 hour")
 }
 print()
 
-// ── Test 7: Lockout tier escalation ──
 print("▸ Lockout escalation tiers")
 do {
     assert(lockoutDuration(failCount: 0) == nil, "0 fails → no lockout")
@@ -185,7 +184,7 @@ print("▸ Edge cases")
 do {
     let salt = generateRandomSalt()
     let emptyKey = derivePBKDF2(pin: "", salt: salt)
-    assert(!emptyKey.isEmpty, "Empty PIN still produces a derived key (valid input)")
+    assert(emptyKey.isEmpty, "Empty PIN produces an empty derived key (invalid input)")
     
     let shortPin = derivePBKDF2(pin: "1", salt: salt)
     assert(!shortPin.isEmpty, "Single-digit PIN produces a valid key")
@@ -193,7 +192,7 @@ do {
     let longPin = derivePBKDF2(pin: "123456789012345678901234567890", salt: salt)
     assert(!longPin.isEmpty, "Long PIN produces a valid key")
     
-    // Verify all three are different
+    // Verify valid keys are different
     assert(emptyKey != shortPin, "Empty vs single-digit → different keys")
     assert(shortPin != longPin, "Short vs long → different keys")
 }
@@ -230,9 +229,9 @@ print()
 
 print("═══════════════════════════════════════════════════════")
 if failCount == 0 {
-    print("✅ All \(passCount) tests passed!")
+    print(" All \(passCount) tests passed!")
 } else {
-    print("❌ \(failCount) test(s) failed out of \(passCount + failCount)")
+    print(" \(failCount) test(s) failed out of \(passCount + failCount)")
 }
 print("═══════════════════════════════════════════════════════")
 

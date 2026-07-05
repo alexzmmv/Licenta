@@ -31,7 +31,7 @@ class AuthManager: ObservableObject {
     private let keychainService = "com.gjournal.auth"
 
     // MARK: - PBKDF2 parameters
-    private static let pbkdf2Iterations: UInt32 = 210_000
+    private static let pbkdf2Iterations: UInt32 = 350_000
     private static let saltLength = 16       // bytes
     private static let derivedKeyLength = 32 // bytes (256-bit)
 
