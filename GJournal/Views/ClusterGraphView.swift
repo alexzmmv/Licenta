@@ -353,15 +353,25 @@ struct ClusterGraphView: View {
     private func nodeDetailCard(_ node: GraphNode) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(node.emotion.emoji).font(.title2)
+                if node.isHub {
+                    Image(systemName: "circle.grid.hex.fill")
+                        .font(.title2)
+                        .foregroundColor(colorForCluster(node.clusterID))
+                } else {
+                    Text(node.emotion.emoji).font(.title2)
+                }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(node.title).font(.headline).foregroundColor(.white).lineLimit(1)
 
                     HStack(spacing: 8) {
-                        Text(node.emotion.rawValue).font(.caption).foregroundColor(node.emotion.color)
-                        Text("\u{2022}").foregroundColor(.gray)
-                        Text(node.createdAt.dayMonth).font(.caption).foregroundColor(.gray)
+                        if node.isHub {
+                            Text("Cluster Centroid Hub").font(.caption).foregroundColor(.gray)
+                        } else {
+                            Text(node.emotion.rawValue).font(.caption).foregroundColor(node.emotion.color)
+                            Text("\u{2022}").foregroundColor(.gray)
+                            Text(node.createdAt.dayMonth).font(.caption).foregroundColor(.gray)
+                        }
 
                         if let clusterID = node.clusterID, clusterID >= 0 {
                             Text("\u{2022}").foregroundColor(.gray)
@@ -376,22 +386,24 @@ struct ClusterGraphView: View {
 
                 Spacer()
 
-                HStack(spacing: 2) {
-                    ForEach(1...4, id: \.self) { level in
-                        Circle()
-                            .fill(level <= node.intensity ? Color.pink : Color.gray.opacity(0.3))
-                            .frame(width: 6, height: 6)
+                if !node.isHub {
+                    HStack(spacing: 2) {
+                        ForEach(1...4, id: \.self) { level in
+                            Circle()
+                                .fill(level <= node.intensity ? Color.pink : Color.gray.opacity(0.3))
+                                .frame(width: 6, height: 6)
+                        }
                     }
-                }
 
-                Button {
-                    if let bit = repository.bits.first(where: { $0.id == node.id }) {
-                        bitToEdit = bit
+                    Button {
+                        if let bit = repository.bits.first(where: { $0.id == node.id }) {
+                            bitToEdit = bit
+                        }
+                    } label: {
+                        Image(systemName: "chevron.right.circle.fill").font(.title2).foregroundColor(.pink)
                     }
-                } label: {
-                    Image(systemName: "chevron.right.circle.fill").font(.title2).foregroundColor(.pink)
+                    .padding(.leading, 8)
                 }
-                .padding(.leading, 8)
             }
         }
         .padding(16)
@@ -424,6 +436,14 @@ struct ClusterGraphView: View {
                                     height: effectiveScale * (graphSize.height / 2 - center.position.y)
                                 )
                             }
+                            if clusterID >= 0 {
+                                let hubID = uuidForCluster(id: clusterID)
+                                selectedNodeID = hubID
+                                layout.updateFocus(to: hubID)
+                            } else {
+                                selectedNodeID = nil
+                                layout.updateFocus(to: nil)
+                            }
                         }
                     }
                 }
@@ -434,6 +454,11 @@ struct ClusterGraphView: View {
     }
 
     // MARK: - Helpers
+
+    private func uuidForCluster(id: Int) -> UUID {
+        let hex = String(format: "%012lx", id)
+        return UUID(uuidString: "00000000-0000-0000-0000-\(hex)") ?? UUID()
+    }
 
     private var clusterCount: Int {
         Set(layout.nodes.compactMap { $0.clusterID }).filter { $0 >= 0 }.count
