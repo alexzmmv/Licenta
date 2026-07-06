@@ -11,15 +11,42 @@ struct ClusterGraphView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) var dismiss
 
+    // MARK: - Interaction State
+
     @State private var selectedNodeID: UUID?
     @State private var draggedNodeID: UUID?
+
+    // Camera state (committed values)
     @State private var scale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
-    @State private var dragOffset: CGSize = .zero
+
+    // In-progress gesture deltas (not yet committed)
+    @State private var gestureScale: CGFloat = 1.0      // Magnification delta
+    @State private var gesturePanOffset: CGSize = .zero  // Pan delta
+
+    // Multi-touch detection
+    @State private var isPinching = false
+
+    // View state
     @State private var isLoading = true
     @State private var isSpinning = false
     @State private var bitToEdit: Bit?
     @State private var graphSize: CGSize = .zero
+
+    // MARK: - Computed Camera
+
+    /// The effective scale combining committed + in-progress gesture
+    private var effectiveScale: CGFloat {
+        max(0.3, min(3.0, scale * gestureScale))
+    }
+
+    /// The effective offset combining committed + in-progress pan
+    private var effectiveOffset: CGSize {
+        CGSize(
+            width: offset.width + gesturePanOffset.width,
+            height: offset.height + gesturePanOffset.height
+        )
+    }
 
     private var selectedNode: GraphNode? {
         layout.nodes.first { $0.id == selectedNodeID }
@@ -43,18 +70,18 @@ struct ClusterGraphView: View {
                 Canvas { context, size in
                     let cx = size.width / 2
                     let cy = size.height / 2
-                    let tx = offset.width + dragOffset.width
-                    let ty = offset.height + dragOffset.height
+                    let s = effectiveScale
+                    let o = effectiveOffset
                     context.transform = CGAffineTransform(
-                        a: scale, b: 0, c: 0, d: scale,
-                        tx: cx * (1 - scale) + tx,
-                        ty: cy * (1 - scale) + ty
+                        a: s, b: 0, c: 0, d: s,
+                        tx: cx * (1 - s) + o.width,
+                        ty: cy * (1 - s) + o.height
                     )
 
                     let activeFocus = !layout.focusedNeighborIDs.isEmpty
                     let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
 
-                    // PASS 1: BACKGROUND (Dimmed)
+                    // PASS 1: BACKGROUND (Dimmed when focus is active)
                     for edge in layout.edges {
                         if activeFocus && layout.focusedEdgeIDs.contains(edge.id) { continue }
                         guard let src = nodesByID[edge.sourceID],
@@ -71,7 +98,7 @@ struct ClusterGraphView: View {
                         drawNode(node, context: &context, isSelected: false, isDimmed: activeFocus, isFocused: false)
                     }
 
-                    // PASS 2: FOREGROUND (Focused)
+                    // PASS 2: FOREGROUND (Focused nodes + edges drawn on top)
                     if activeFocus {
                         for edge in layout.edges {
                             if !layout.focusedEdgeIDs.contains(edge.id) { continue }
@@ -90,6 +117,7 @@ struct ClusterGraphView: View {
                         }
                     }
 
+                    // Cluster labels
                     for center in clusterCenters {
                         let name = layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)"
                         context.draw(
@@ -99,35 +127,64 @@ struct ClusterGraphView: View {
                         )
                     }
                 }
+                // MARK: - Gestures
+                .simultaneousGesture(
+                    MagnificationGesture()
+                        .onChanged { value in
+                            isPinching = true
+                            // If a drag-focus was active, cancel it immediately
+                            if draggedNodeID != nil {
+                                draggedNodeID = nil
+                                layout.updateFocus(to: selectedNodeID)
+                            }
+                            gestureScale = value
+                        }
+                        .onEnded { value in
+                            scale = max(0.3, min(3.0, scale * value))
+                            gestureScale = 1.0
+                            isPinching = false
+                        }
+                )
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            // On the very first change event, determine if we started on a node
-                            if draggedNodeID == nil && dragOffset == .zero {
-                                let startGraphPoint = adjustPoint(value.startLocation)
+                            // Skip all drag logic while pinching
+                            guard !isPinching else { return }
+
+                            let t = value.translation
+
+                            // First event: determine if we started on a node
+                            if draggedNodeID == nil && gesturePanOffset == .zero && hypot(t.width, t.height) < 2 {
+                                let startGraphPoint = screenToGraph(value.startLocation)
                                 if let hitID = hitTest(at: startGraphPoint) {
                                     draggedNodeID = hitID
                                     layout.updateFocus(to: hitID)
                                 }
                             }
-                            
-                            // Only apply pan offset if we're NOT dragging a node
+
+                            // Pan only when NOT interacting with a node
                             if draggedNodeID == nil {
-                                dragOffset = value.translation
+                                gesturePanOffset = t
                             }
                         }
                         .onEnded { value in
+                            // If we were pinching, just clean up
+                            guard !isPinching else {
+                                gesturePanOffset = .zero
+                                draggedNodeID = nil
+                                return
+                            }
+
                             let t = value.translation
-                            dragOffset = .zero
-                            let graphPoint = adjustPoint(value.startLocation)
-                            let hitID = hitTest(at: graphPoint)
-                            
+                            let startGraphPoint = screenToGraph(value.startLocation)
+                            let hitID = hitTest(at: startGraphPoint)
+
                             if draggedNodeID != nil {
-                                // We were dragging a node — clear drag focus, keep selection unchanged
+                                // Was holding/dragging a node — clear temporary focus
                                 draggedNodeID = nil
                                 layout.updateFocus(to: selectedNodeID)
                             } else if hypot(t.width, t.height) < 8 {
-                                // Short movement on empty space or node = tap
+                                // Tap — select/deselect
                                 let newSelection: UUID? = {
                                     if let id = hitID {
                                         return (selectedNodeID == id) ? nil : id
@@ -139,16 +196,13 @@ struct ClusterGraphView: View {
                                 }
                                 layout.updateFocus(to: newSelection)
                             } else {
-                                // Pan gesture on empty space
+                                // Pan — commit the offset
                                 offset.width += t.width
                                 offset.height += t.height
                             }
+
+                            gesturePanOffset = .zero
                         }
-                )
-                .simultaneousGesture(
-                    MagnificationGesture().onChanged { value in
-                        scale = max(0.3, min(3.0, value))
-                    }
                 )
                 .onAppear {
                     graphSize = geometry.size
@@ -226,26 +280,45 @@ struct ClusterGraphView: View {
     private func drawNode(_ node: GraphNode, context: inout GraphicsContext, isSelected: Bool, isDimmed: Bool, isFocused: Bool) {
         let isNoise = node.clusterID == nil || node.clusterID == -1
         let clusterColor = colorForCluster(node.clusterID)
-        
-        let scale: CGFloat = isFocused ? 1.2 : (isDimmed ? 0.9 : (isSelected || !isDimmed && layout.focusedNeighborIDs.contains(node.id) ? 1.1 : 1.0))
+
+        let nodeScale: CGFloat
+        if isFocused {
+            nodeScale = 1.2
+        } else if isDimmed {
+            nodeScale = 0.9
+        } else if layout.focusedNeighborIDs.contains(node.id) {
+            nodeScale = 1.1
+        } else {
+            nodeScale = 1.0
+        }
         let opacity: Double = isDimmed ? 0.2 : 1.0
-        
-        let rect = CGRect(x: node.position.x - (70 * scale), y: node.position.y - (18 * scale), width: 140 * scale, height: 36 * scale)
-        let nodePath = Path(roundedRect: rect, cornerRadius: 12 * scale)
-        
-        var shadowContext = context
+
+        let rect = CGRect(
+            x: node.position.x - (70 * nodeScale),
+            y: node.position.y - (18 * nodeScale),
+            width: 140 * nodeScale,
+            height: 36 * nodeScale
+        )
+        let nodePath = Path(roundedRect: rect, cornerRadius: 12 * nodeScale)
+
+        var drawCtx = context
         if !isDimmed && layout.focusedNeighborIDs.contains(node.id) {
-            shadowContext.addFilter(.shadow(color: .black.opacity(isFocused ? 0.8 : 0.4), radius: isFocused ? 8 : 4, x: 0, y: isFocused ? 4 : 2))
+            drawCtx.addFilter(.shadow(
+                color: .black.opacity(isFocused ? 0.8 : 0.4),
+                radius: isFocused ? 8 : 4,
+                x: 0,
+                y: isFocused ? 4 : 2
+            ))
         }
 
-        shadowContext.fill(nodePath, with: .color(
+        drawCtx.fill(nodePath, with: .color(
             isSelected ? clusterColor.opacity(0.3 * opacity) : Color(red: 0.1, green: 0.1, blue: 0.12).opacity(opacity)
         ))
-        shadowContext.stroke(nodePath, with: .color(
+        drawCtx.stroke(nodePath, with: .color(
             isSelected ? Color.white.opacity(opacity) : clusterColor.opacity(isNoise ? (0.4 * opacity) : (0.8 * opacity))
         ), lineWidth: isSelected ? 2 : 1)
 
-        shadowContext.draw(
+        drawCtx.draw(
             Text("\(node.emotion.emoji) \(node.title)").font(.caption2).foregroundColor(Color.white.opacity(opacity)),
             in: CGRect(x: rect.minX + 6, y: rect.minY, width: rect.width - 12, height: rect.height)
         )
@@ -260,20 +333,25 @@ struct ClusterGraphView: View {
         let avgX = layout.nodes.reduce(0.0) { $0 + $1.position.x } / CGFloat(layout.nodes.count)
         let avgY = layout.nodes.reduce(0.0) { $0 + $1.position.y } / CGFloat(layout.nodes.count)
         withAnimation(.easeOut(duration: 0.45)) {
-            offset = CGSize(width: scale * (cx - avgX), height: scale * (cy - avgY))
+            offset = CGSize(width: effectiveScale * (cx - avgX), height: effectiveScale * (cy - avgY))
         }
     }
 
-    // MARK: - Manual Hit-Testing
+    // MARK: - Coordinate Transform
 
-    private func adjustPoint(_ point: CGPoint) -> CGPoint {
+    /// Converts a screen-space point to graph-space, accounting for all active transforms
+    private func screenToGraph(_ point: CGPoint) -> CGPoint {
         let cx = graphSize.width / 2
         let cy = graphSize.height / 2
+        let s = effectiveScale
+        let o = effectiveOffset
         return CGPoint(
-            x: (point.x - cx * (1 - scale) - offset.width) / scale,
-            y: (point.y - cy * (1 - scale) - offset.height) / scale
+            x: (point.x - cx * (1 - s) - o.width) / s,
+            y: (point.y - cy * (1 - s) - o.height) / s
         )
     }
+
+    // MARK: - Hit Testing
 
     private func hitTest(at graphPoint: CGPoint) -> UUID? {
         for node in layout.nodes.reversed() {
@@ -393,8 +471,8 @@ struct ClusterGraphView: View {
                         if let center = clusterCenters.first(where: { $0.clusterID == clusterID }) {
                             withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                                 offset = CGSize(
-                                    width: scale * (graphSize.width / 2 - center.position.x),
-                                    height: scale * (graphSize.height / 2 - center.position.y)
+                                    width: effectiveScale * (graphSize.width / 2 - center.position.x),
+                                    height: effectiveScale * (graphSize.height / 2 - center.position.y)
                                 )
                             }
                         }
