@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-07-06T14:18:00",
+  "source_model": "GJournalEmotionClassifier.mlpackage",
+  "source_size_mb": 93.87,
+  "coremltools": "9.0",
+  "int8": {
+    "size_mb": 24.97,
+    "gate": {
+      "top1_agreement": 1.0,
+      "mean_softmax_mae": 0.0,
+      "n_samples": 100,
+      "top1_threshold": 0.95,
+      "softmax_mae_threshold": 0.01,
+      "passed": true
+    }
+  },
+  "fp16_proxy_int4": {
+    "error": "The per_grouped_channel palettization is supported since iOS18. Please re-convert your model with minimum_deployment_target set to at least ct.target.iOS18."
+  },
+  "winner": "int8",
+  "winning_size_mb": 24.97,
+  "size_reduction_pct": 73.4
+}

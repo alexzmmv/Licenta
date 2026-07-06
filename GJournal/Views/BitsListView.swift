@@ -99,6 +99,8 @@ struct BitsListView: View {
                     ClusterCardsView(repository: repository)
                 }
             }
+            .frame(maxWidth: 700)
+            .frame(maxWidth: .infinity)
         }
         .navigationBarHidden(true)
         .onAppear { updateFilteredData() }
@@ -402,7 +404,7 @@ struct FilterSheetView: View {
     let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 4)
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
 

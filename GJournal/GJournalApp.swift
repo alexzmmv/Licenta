@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct GJournalApp: App {
     @StateObject private var authManager = AuthManager()
+    @State private var entitlementManager = EntitlementManager()
     @Environment(\.scenePhase) var scenePhase
 
     /// Holds either a successfully created ModelContainer or the error that
@@ -48,12 +49,15 @@ struct GJournalApp: App {
                     if authManager.isAuthenticated {
                         BiometricLockView()
                             .environmentObject(authManager)
+                            .environment(entitlementManager)
                     } else {
                         LoginView()
                             .environmentObject(authManager)
+                            .environment(entitlementManager)
                     }
                 }
                 .modelContainer(container)
+                .task { await entitlementManager.refreshEntitlements() }
 
             case .failure(let error):
                 StoreRecoveryView(error: error)

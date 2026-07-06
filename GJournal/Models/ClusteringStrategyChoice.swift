@@ -3,6 +3,7 @@ import Foundation
 enum ClusteringStrategyChoice: String, CaseIterable, Identifiable {
     case classic    = "classic"
     case mrlAdapted = "mrlAdapted"
+    case hdbscan    = "hdbscan"
 
     var id: String { rawValue }
 
@@ -10,6 +11,7 @@ enum ClusteringStrategyChoice: String, CaseIterable, Identifiable {
         switch self {
         case .classic:    return "Classic DBSCAN"
         case .mrlAdapted: return "MRL-Adapted DBSCAN"
+        case .hdbscan:    return "HDBSCAN"
         }
     }
 
@@ -17,6 +19,7 @@ enum ClusteringStrategyChoice: String, CaseIterable, Identifiable {
         switch self {
         case .classic:    return "Auto-calibrated ε with silhouette validation"
         case .mrlAdapted: return "Multi-minPts search — tuned for MRL truncations"
+        case .hdbscan:    return "Hierarchical density clustering — no ε needed"
         }
     }
 

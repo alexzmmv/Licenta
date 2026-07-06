@@ -93,23 +93,7 @@ struct BitCard: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(
-            ZStack {
-                Color.white.opacity(0.05)
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.2), Color.white.opacity(0.04)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        )
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 2)
+        .glassCard(cornerRadius: 16)
         .opacity(bit.isHidden ? 0.45 : 1)
     }
 }
@@ -192,11 +176,13 @@ import SwiftUI
 struct BitDetailView: View {
     @State private var currentBit: Bit
     var clusterName: String?
+    var allBits: [Bit] = []
     @Environment(\.dismiss) var dismiss
 
-    init(bit: Bit, clusterName: String? = nil) {
+    init(bit: Bit, clusterName: String? = nil, allBits: [Bit] = []) {
         _currentBit = State(initialValue: bit)
         self.clusterName = clusterName
+        self.allBits = allBits
     }
 
     private var clusterSpanLabel: String? {
@@ -279,10 +265,11 @@ struct BitDetailView: View {
                     }
                     .padding(.top, 8)
 
-                    let connected = SemanticUtils.relatedBits(
-                        to: currentBit,
-                        in: currentBit.cluster?.bits.filter { !$0.isDeleted && $0.id != currentBit.id } ?? []
-                    )
+                    let pool = allBits.isEmpty
+                        ? (currentBit.cluster?.bits.filter { !$0.isDeleted && $0.id != currentBit.id } ?? [])
+                        : allBits.filter { !$0.isDeleted && $0.id != currentBit.id }
+                    let connected = SemanticUtils.relatedBits(to: currentBit, in: pool, limit: 3)
+                        .filter { $0.similarity >= 0.45 }
                     if !connected.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Divider()

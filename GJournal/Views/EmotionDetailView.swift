@@ -148,6 +148,8 @@ struct EmotionDetailView: View {
                     }
                 }
             }
+            .frame(maxWidth: 700)
+            .frame(maxWidth: .infinity)
         }
         .navigationBarHidden(true)
         .onAppear {

@@ -1,0 +1,40 @@
+{
+  "identifier" : "6B4E0A12-3F8C-4D9E-B7A5-1234567890AB",
+  "nonConsumableProducts" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : true,
+      "internalID" : "7C5F1B23-4A9D-5E0F-C8B6-2345678901BC",
+      "localizations" : [
+        {
+          "description" : "Unlock the three insight pillars: Psychological Network Graph, Trajectory Analysis, and Smart Semantic Search. One-time purchase, family-shareable, 100% on-device.",
+          "displayName" : "GJournal Insights",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.gjournal.insights",
+      "referenceName" : "GJournal Insights",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_enableFamilySharingForAllProducts" : false,
+    "_failTransactionsEnabled" : false,
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      }
+    ]
+  },
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}

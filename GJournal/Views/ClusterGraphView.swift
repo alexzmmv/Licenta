@@ -154,17 +154,8 @@ struct ClusterGraphView: View {
             }
             .opacity(isLoading ? 0 : 1)
             .contentShape(Rectangle())
-            .background(
-                Color.clear
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.3)) {
-                            selectedNodeID = nil
-                        }
-                        layout.updateFocus(to: nil)
-                    }
-            )
             .gesture(
-                DragGesture(minimumDistance: 5)
+                DragGesture(minimumDistance: 0)
                     .onChanged { value in
                         guard !isPinching else { return }
                         gesturePanOffset = value.translation
@@ -174,8 +165,18 @@ struct ClusterGraphView: View {
                             gesturePanOffset = .zero
                             return
                         }
-                        offset.width += value.translation.width
-                        offset.height += value.translation.height
+                        let t = value.translation
+                        if hypot(t.width, t.height) < 8 {
+                            // Tap on empty space — clear selection
+                            withAnimation(.spring(response: 0.3)) {
+                                selectedNodeID = nil
+                            }
+                            layout.updateFocus(to: nil)
+                        } else {
+                            // Panning gesture — commit translate
+                            offset.width += t.width
+                            offset.height += t.height
+                        }
                         gesturePanOffset = .zero
                     }
             )

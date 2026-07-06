@@ -38,7 +38,8 @@ struct BenchmarkReport: Encodable {
 
 // MARK: - Runner
 
-actor EfficiencyBenchmark {
+@MainActor
+final class EfficiencyBenchmark {
 
     private let warmupRuns = 5
     private let measureRuns = 50
@@ -86,7 +87,7 @@ actor EfficiencyBenchmark {
 
         await progress("Benchmarking emotion classifier…")
 
-        let emotionService = await CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
+        let emotionService = CoreMLEmotionService(modelName: "GJournalEmotionClassifier")
         let emotionSizeMB = bundleSize(forResource: "GJournalEmotionClassifier")
 
         let emotionColdMs = try await measureOnce { _ = try await emotionService.detectEmotions(for: self.testText) }

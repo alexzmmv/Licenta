@@ -9,6 +9,7 @@ struct IdentifiableDate: Identifiable {
 struct ContentView: View {
     @ObservedObject var repository: BaseJournalRepository
     @EnvironmentObject var authManager: AuthManager
+    @Environment(EntitlementManager.self) var entitlementManager
     @Environment(\.modelContext) private var modelContext
     @State private var currentMonth = Date()
     @State private var selectedDate: Date?
@@ -18,6 +19,9 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var showingBitsList = false
     @State private var showingGraph = false
+    @State private var showingPaywall = false
+    @State private var showingNetworkGraph = false
+    @State private var insightEngine = InsightEngine()
     @State private var bitToEdit: Bit?
     @State private var selectedEmotion: Emotion?
     @State private var showingEmotionSheet = false
@@ -149,7 +153,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack(alignment: .bottomTrailing) {
                 // Background: black + subtle purple glow at bottom
                 ZStack(alignment: .bottom) {
@@ -223,7 +227,11 @@ struct ContentView: View {
                                 trajectoryProgress: trajectoryProgress,
                                 trajectoryUnlocked: trajectoryUnlocked,
                                 searchUnlocked: searchUnlocked,
-                                totalEntries: activeBitCount
+                                totalEntries: activeBitCount,
+                                isPurchased: entitlementManager.hasInsights,
+                                onUnlock: { showingPaywall = true },
+                                onOpenSearch: { showingBitsList = true },
+                                onOpenNetwork: { showingNetworkGraph = true }
                             )
                             .opacity(insightsAppeared ? 1 : 0)
                             .offset(y: insightsAppeared ? 0 : 20)
@@ -231,6 +239,8 @@ struct ContentView: View {
 
                         Color.clear.frame(height: 100)
                     }
+                    .frame(maxWidth: 700)
+                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
                 }
 
@@ -264,7 +274,7 @@ struct ContentView: View {
             }
             .navigationBarHidden(true)
             .sheet(item: $selectedDateForSheet) { id in
-                NavigationView { DayDetailView(repository: repository, date: id.date) }
+                NavigationStack { DayDetailView(repository: repository, date: id.date) }
             }
             .sheet(isPresented: $showingAddBit) {
                 AddEditBitView(repository: repository, bitToEdit: nil, date: Date())
@@ -276,15 +286,30 @@ struct ContentView: View {
                 AddEditBitView(repository: repository, bitToEdit: bit, date: bit.createdAt)
             }
             .fullScreenCover(isPresented: $showingBitsList) {
-                NavigationView { BitsListView(repository: repository) }
+                NavigationStack { BitsListView(repository: repository) }
             }
             .fullScreenCover(isPresented: $showingGraph) {
-                NavigationView { ClusterGraphView(repository: repository) }
+                NavigationStack { ClusterGraphView(repository: repository) }
             }
             .sheet(isPresented: $showingEmotionSheet) {
                 if let emotion = selectedEmotion {
-                    NavigationView { EmotionDetailView(repository: repository, emotion: emotion) }
+                    NavigationStack { EmotionDetailView(repository: repository, emotion: emotion) }
                 }
+            }
+            .sheet(isPresented: $showingPaywall) {
+                PaywallView()
+                    .environment(entitlementManager)
+            }
+            .sheet(isPresented: $showingNetworkGraph) {
+                if let net = insightEngine.network {
+                    NetworkGraphView(network: net)
+                } else {
+                    NetworkGraphLoadingView()
+                }
+            }
+            .onChange(of: showingNetworkGraph) { _, isShowing in
+                guard isShowing else { return }
+                Task { await insightEngine.compute(bits: repository.bits) }
             }
             .onReceive(repository.$errorMessage) { new in
                 showingRepoError = new != nil
@@ -352,20 +377,23 @@ extension View {
         self
             .background(
                 ZStack {
-                    Color.white.opacity(0.05)
-                    RoundedRectangle(cornerRadius: cornerRadius)
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .environment(\.colorScheme, .dark)
+                        
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .stroke(
                             LinearGradient(
-                                colors: [Color.white.opacity(0.25), Color.white.opacity(0.05)],
+                                colors: [Color.white.opacity(0.3), Color.white.opacity(0.05)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
                             lineWidth: 1
                         )
                 }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             )
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -630,8 +658,7 @@ struct FirstTimeWelcomeView: View {
 
 // MARK: - Insight Gating Section
 
-/// Shows locked "coming soon" cards for pillar features with progress rings.
-/// Each card unlocks (visually) once the user hits the required entry/day threshold.
+/// Shows locked/purchasable/unlocked cards for the three paid insight pillars.
 struct InsightGatingSection: View {
     let networkProgress: (entries: Int, days: Int)
     let networkUnlocked: Bool
@@ -639,6 +666,10 @@ struct InsightGatingSection: View {
     let trajectoryUnlocked: Bool
     let searchUnlocked: Bool
     let totalEntries: Int
+    let isPurchased: Bool
+    let onUnlock: () -> Void
+    let onOpenSearch: () -> Void
+    let onOpenNetwork: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -656,7 +687,6 @@ struct InsightGatingSection: View {
             }
             .padding(.horizontal, 20)
 
-            // Horizontal scroll — cards stay visible even locked to tease upcoming value
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
                     InsightGateCard(
@@ -665,7 +695,10 @@ struct InsightGatingSection: View {
                         description: "See how your emotions and behaviours connect across time.",
                         accentColor: Color(red: 0.55, green: 0.4, blue: 0.95),
                         isUnlocked: networkUnlocked,
-                        progressLabel: "\(networkProgress.entries)/30 entries · \(networkProgress.days)/14 days"
+                        isPurchased: isPurchased,
+                        progressLabel: "\(networkProgress.entries)/30 entries \u{00B7} \(networkProgress.days)/14 days",
+                        onUnlock: onUnlock,
+                        onOpen: onOpenNetwork
                     )
 
                     InsightGateCard(
@@ -674,7 +707,10 @@ struct InsightGatingSection: View {
                         description: "Track emotional loops, exploration and semantic recovery over time.",
                         accentColor: Color(red: 0.2, green: 0.7, blue: 0.9),
                         isUnlocked: trajectoryUnlocked,
-                        progressLabel: "\(trajectoryProgress.entries)/21 entries · \(trajectoryProgress.days)/21 days"
+                        isPurchased: isPurchased,
+                        progressLabel: "\(trajectoryProgress.entries)/21 entries \u{00B7} \(trajectoryProgress.days)/21 days",
+                        onUnlock: onUnlock,
+                        onOpen: nil
                     )
 
                     InsightGateCard(
@@ -683,7 +719,10 @@ struct InsightGatingSection: View {
                         description: "Find entries by meaning, not just keywords — hybrid AI search.",
                         accentColor: Color(red: 0.9, green: 0.55, blue: 0.25),
                         isUnlocked: searchUnlocked,
-                        progressLabel: "\(min(totalEntries, 10))/10 entries"
+                        isPurchased: isPurchased,
+                        progressLabel: "\(min(totalEntries, 10))/10 entries",
+                        onUnlock: onUnlock,
+                        onOpen: onOpenSearch
                     )
                 }
                 .padding(.horizontal, 20)
@@ -699,95 +738,103 @@ struct InsightGateCard: View {
     let description: String
     let accentColor: Color
     let isUnlocked: Bool
+    let isPurchased: Bool
     let progressLabel: String
+    let onUnlock: (() -> Void)?
+    let onOpen: (() -> Void)?
 
     @State private var ringProgress: CGFloat = 0
 
-    // Parse "n/total" from progressLabel to compute fraction for the ring
     private var fraction: CGFloat {
-        // Take the first "n/total" pair
-        let parts = progressLabel.split(separator: "·").first ?? Substring(progressLabel)
+        let parts = progressLabel.split(separator: "\u{00B7}").first ?? Substring(progressLabel)
         let nums = parts.split(separator: "/").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
         guard nums.count == 2, nums[1] > 0 else { return isUnlocked ? 1 : 0 }
         return CGFloat(min(nums[0], nums[1])) / CGFloat(nums[1])
     }
 
+    private var badgeLabel: String {
+        if !isUnlocked { return "Soon" }
+        if isPurchased { return onOpen != nil ? "Open" : "Ready" }
+        return "Unlock"
+    }
+
+    private var badgeColor: Color {
+        if !isUnlocked { return .gray }
+        if isPurchased { return accentColor }
+        return Color(red: 0.9, green: 0.7, blue: 0.2)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                // Icon + progress ring
-                ZStack {
-                    Circle()
-                        .stroke(accentColor.opacity(0.15), lineWidth: 3)
-                        .frame(width: 46, height: 46)
+        Button(action: {
+            if isUnlocked && isPurchased { onOpen?() }
+            else if isUnlocked { onUnlock?() }
+        }) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    ZStack {
+                        Circle()
+                            .stroke(accentColor.opacity(0.15), lineWidth: 3)
+                            .frame(width: 46, height: 46)
+                        Circle()
+                            .trim(from: 0, to: ringProgress)
+                            .stroke(accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .frame(width: 46, height: 46)
+                        Image(systemName: isUnlocked ? icon : "lock.fill")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(isUnlocked ? accentColor : .gray)
+                    }
 
-                    Circle()
-                        .trim(from: 0, to: ringProgress)
-                        .stroke(accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                        .frame(width: 46, height: 46)
+                    Spacer()
 
-                    Image(systemName: isUnlocked ? icon : "lock.fill")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(isUnlocked ? accentColor : .gray)
-                }
-
-                Spacer()
-
-                if isUnlocked {
-                    Text("Ready")
+                    Text(badgeLabel)
                         .font(.caption2)
                         .fontWeight(.semibold)
-                        .foregroundColor(accentColor)
+                        .foregroundColor(badgeColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(accentColor.opacity(0.15))
-                        .clipShape(Capsule())
-                } else {
-                    Text("Soon")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.1))
+                        .background(badgeColor.opacity(0.15))
                         .clipShape(Capsule())
                 }
-            }
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(isUnlocked ? .white : .white.opacity(0.6))
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(isUnlocked ? .white : .white.opacity(0.6))
+                        .lineLimit(1)
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                if !isUnlocked {
+                    Text(progressLabel)
+                        .font(.caption2)
+                        .foregroundColor(accentColor.opacity(0.8))
+                        .lineLimit(1)
+                } else if !isPurchased {
+                    Text("Tap to unlock all three pillars")
+                        .font(.caption2)
+                        .foregroundColor(badgeColor.opacity(0.8))
+                        .lineLimit(1)
+                }
             }
-
-            // Progress label
-            if !isUnlocked {
-                Text(progressLabel)
-                    .font(.caption2)
-                    .foregroundColor(accentColor.opacity(0.8))
-                    .lineLimit(1)
-            }
+            .padding(16)
+            .frame(width: 220)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color(red: 0.10, green: 0.10, blue: 0.13))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(accentColor.opacity(isUnlocked ? 0.35 : 0.12), lineWidth: 1)
+                    )
+            )
+            .shadow(color: isUnlocked ? accentColor.opacity(0.15) : .black.opacity(0.2), radius: 8, y: 3)
         }
-        .padding(16)
-        .frame(width: 220)
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color(red: 0.10, green: 0.10, blue: 0.13))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(accentColor.opacity(isUnlocked ? 0.35 : 0.12), lineWidth: 1)
-                )
-        )
-        .shadow(color: isUnlocked ? accentColor.opacity(0.15) : .black.opacity(0.2), radius: 8, y: 3)
+        .buttonStyle(.plain)
         .onAppear {
             withAnimation(.spring(response: 0.9, dampingFraction: 0.75).delay(0.2)) {
                 ringProgress = isUnlocked ? 1 : fraction

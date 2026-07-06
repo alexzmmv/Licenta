@@ -51,7 +51,14 @@ final class ServiceContainer: ObservableObject {
             embeddingService = NLEmbeddingService()
         }
 
-        let clusteringService = DBSCANClusterer()
+        let clusteringService: ClusteringServiceProtocol
+        switch clusteringStrategy {
+        case .hdbscan:
+            let minPts = HDBSCANClusterer.adaptiveMinPts(for: 50) // conservative default
+            clusteringService = HDBSCANClusterer(minPts: minPts, minClusterSize: minPts)
+        case .classic, .mrlAdapted:
+            clusteringService = DBSCANClusterer()
+        }
 
         return ServiceContainer(
             embeddingService: embeddingService,

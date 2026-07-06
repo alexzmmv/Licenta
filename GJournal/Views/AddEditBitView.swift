@@ -58,7 +58,7 @@ struct AddEditBitView: View {
     var totalSteps: Int { 5 }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             GeometryReader { geometry in
                 ZStack {
                     Color.black.ignoresSafeArea()
@@ -91,6 +91,8 @@ struct AddEditBitView: View {
 
                             Spacer()
                         }
+                        .frame(maxWidth: 700)
+                        .frame(maxWidth: .infinity)
                     }
                 }
                 .onAppear {
@@ -535,6 +537,8 @@ struct EditFormView: View {
                         .background(Color.gray.opacity(0.2)).cornerRadius(12)
                     }
                 }
+                .frame(maxWidth: 700)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20).padding(.bottom, 100)
             }
         }

@@ -6,7 +6,8 @@ open class BaseJournalRepository: ObservableObject {
     @Published var bits: [Bit] = []
     @Published var deletedBits: [Bit] = []
     @Published var errorMessage: String? = nil
-    
+
+    let hybridSearch = HybridSearchService()
     var modelContext: ModelContext?
 
     init(bool loadSampleDataInit: Bool = false) {
@@ -40,6 +41,7 @@ open class BaseJournalRepository: ObservableObject {
         do {
             bits = try modelContext.fetch(activeDescriptor)
             deletedBits = try modelContext.fetch(deletedDescriptor)
+            hybridSearch.rebuild(from: bits)
             AppLogger.log("[Repository] Loaded \(bits.count) active, \(deletedBits.count) deleted bits")
         } catch {
             AppLogger.error("[Repository] Failed to load bits: \(error)")

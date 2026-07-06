@@ -22,17 +22,20 @@ final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
             throw AIServiceError.modelNotLoaded
         }
 
-        // Prefer the Neural Engine (lowest power draw); fall back to CPU/GPU
-        // if the model can't be scheduled on the ANE.
-        let allConfig = MLModelConfiguration()
-        allConfig.computeUnits = .all
-        if let loaded = try? MLModel(contentsOf: modelURL, configuration: allConfig) {
-            model = loaded
+        // Prefer the Neural Engine (lowest power draw); fall back to CPU.
+        // Avoid GPU (Metal Performance Shaders) for quantized mlProgram as it can trigger MLIR pass manager assertions.
+        let config = MLModelConfiguration()
+        #if targetEnvironment(simulator)
+        config.computeUnits = .cpuOnly
+        #else
+        if #available(iOS 16.0, macOS 13.0, *) {
+            config.computeUnits = .cpuAndNeuralEngine
         } else {
-            let fallback = MLModelConfiguration()
-            fallback.computeUnits = .cpuAndGPU
-            model = try MLModel(contentsOf: modelURL, configuration: fallback)
+            config.computeUnits = .all
         }
+        #endif
+        
+        model = try MLModel(contentsOf: modelURL, configuration: config)
 
         if let url = Bundle.main.url(forResource: "vocab_emotion", withExtension: "txt") {
             tokenizer = try WordPieceTokenizer(vocabURL: url)
