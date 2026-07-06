@@ -73,30 +73,50 @@ class ForceDirectedLayout: ObservableObject {
         }
 
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        let radius = min(size.width, size.height) * 0.35
         let bitsByCluster = Dictionary(grouping: bits) { $0.clusterID ?? -1 }
         let bitsDict = Dictionary(uniqueKeysWithValues: bits.map { ($0.id, $0) })
-        let sortedClusters = bitsByCluster.keys.sorted()
-        let clusterCount = sortedClusters.count
+        
+        // Sort clusters by node count descending (largest clusters first)
+        let sortedClusters = bitsByCluster.keys.sorted { id1, id2 in
+            let count1 = bitsByCluster[id1]?.count ?? 0
+            let count2 = bitsByCluster[id2]?.count ?? 0
+            return count1 > count2
+        }
 
         var initialNodes: [GraphNode] = []
+        var currentSpiralRadius: CGFloat = 0
+        let goldenAngle: CGFloat = 137.5 * .pi / 180.0 // ~2.39996 radians
 
         for (clusterIndex, clusterID) in sortedClusters.enumerated() {
             let clusterBits = bitsByCluster[clusterID] ?? []
-            let clusterAngle = (CGFloat(clusterIndex) / CGFloat(max(1, clusterCount))) * 2 * .pi
+            let nodeCount = clusterBits.count
+            
+            // Calculate a radius representing the area needed by this cluster
+            let clusterRadius = 30.0 + 10.0 * sqrt(CGFloat(nodeCount))
+            
+            if clusterIndex > 0 {
+                // Grow the spiral radius based on cluster size to avoid overlaps
+                currentSpiralRadius += clusterRadius * 0.5 + 20.0
+            } else {
+                currentSpiralRadius = 0 // Largest cluster at the center
+            }
+
+            let angle = CGFloat(clusterIndex) * goldenAngle
             let clusterCenter = CGPoint(
-                x: center.x + cos(clusterAngle) * radius,
-                y: center.y + sin(clusterAngle) * radius
+                x: center.x + cos(angle) * currentSpiralRadius,
+                y: center.y + sin(angle) * currentSpiralRadius
             )
-            let localRadius: CGFloat = clusterID == -1 ? radius * 0.4 : 60.0
+
+            // Local node spread within the cluster
+            let localRadius = 15.0 + 8.0 * sqrt(CGFloat(nodeCount))
 
             for (bitIndex, bit) in clusterBits.enumerated() {
                 let position: CGPoint
                 if let gx = bit.graphX, let gy = bit.graphY, !similarityEdges {
                     position = CGPoint(x: CGFloat(gx), y: CGFloat(gy))
                 } else {
-                    let bitAngle = (CGFloat(bitIndex) / CGFloat(max(1, clusterBits.count))) * 2 * .pi
-                    let jitter = CGFloat.random(in: -15...15)
+                    let bitAngle = (CGFloat(bitIndex) / CGFloat(max(1, nodeCount))) * 2 * .pi
+                    let jitter = CGFloat.random(in: -10...10)
                     position = CGPoint(
                         x: clusterCenter.x + cos(bitAngle) * localRadius + jitter,
                         y: clusterCenter.y + sin(bitAngle) * localRadius + jitter
@@ -254,13 +274,65 @@ class ForceDirectedLayout: ObservableObject {
             forces[ti].x -= dx * attraction; forces[ti].y -= dy * attraction
         }
 
-        for indices in clusterIndices where indices.count > 1 {
-            let avgX = indices.reduce(0.0) { $0 + nodes[$1].position.x } / CGFloat(indices.count)
-            let avgY = indices.reduce(0.0) { $0 + nodes[$1].position.y } / CGFloat(indices.count)
-            let clusterCenter = CGPoint(x: avgX, y: avgY)
+        // 1. Compute cluster centroids and radii
+        var centroids = Array(repeating: CGPoint.zero, count: clusterIndices.count)
+        var clusterRadii = Array(repeating: CGFloat(0), count: clusterIndices.count)
+        
+        for (cIdx, indices) in clusterIndices.enumerated() {
+            guard !indices.isEmpty else { continue }
+            var sumX: CGFloat = 0
+            var sumY: CGFloat = 0
+            for idx in indices {
+                sumX += nodes[idx].position.x
+                sumY += nodes[idx].position.y
+            }
+            let count = CGFloat(indices.count)
+            centroids[cIdx] = CGPoint(x: sumX / count, y: sumY / count)
+            // Area-based radius: base radius + factor * sqrt(count)
+            clusterRadii[cIdx] = 30.0 + 10.0 * sqrt(count)
+        }
+        
+        // 2. Intra-cluster attraction (pull nodes to their centroid)
+        for (cIdx, indices) in clusterIndices.enumerated() {
+            let clusterCenter = centroids[cIdx]
             for idx in indices {
                 forces[idx].x += (clusterCenter.x - nodes[idx].position.x) * 0.1
                 forces[idx].y += (clusterCenter.y - nodes[idx].position.y) * 0.1
+            }
+        }
+        
+        // 3. Inter-cluster centroid repulsion (push cluster centroids away from each other)
+        var clusterForces = Array(repeating: CGPoint.zero, count: clusterIndices.count)
+        for i in 0..<clusterIndices.count {
+            for j in (i + 1)..<clusterIndices.count {
+                let dx = centroids[i].x - centroids[j].x
+                let dy = centroids[i].y - centroids[j].y
+                let dist = sqrt(dx * dx + dy * dy)
+                let actualDist = max(dist, 1.0)
+                
+                // Desired minimum distance between cluster boundaries
+                let minDistBetween = clusterRadii[i] + clusterRadii[j] + 60.0 // 60pt safety margin
+                if dist < minDistBetween {
+                    let overlap = minDistBetween - dist
+                    // Apply a push force proportional to the overlap
+                    let forceMag = overlap * 0.15
+                    let fx = (dx / actualDist) * forceMag
+                    let fy = (dy / actualDist) * forceMag
+                    
+                    clusterForces[i].x += fx
+                    clusterForces[i].y += fy
+                    clusterForces[j].x -= fx
+                    clusterForces[j].y -= fy
+                }
+            }
+        }
+        
+        // 4. Apply cluster centroid repulsion forces to all nodes in each cluster
+        for (cIdx, indices) in clusterIndices.enumerated() {
+            let cf = clusterForces[cIdx]
+            for idx in indices {
+                forces[idx].x += cf.x
+                forces[idx].y += cf.y
             }
         }
 
