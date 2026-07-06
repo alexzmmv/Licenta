@@ -74,28 +74,28 @@ struct ClusterGraphView: View {
                     Canvas { context, size in
                         let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
                         
-                        // Pass 1: Background dimmed edges
-                        var bgPath = Path()
                         for edge in layout.edges {
-                            if activeFocus && layout.focusedEdgeIDs.contains(edge.id) { continue }
                             guard let src = nodesByID[edge.sourceID],
                                   let dst = nodesByID[edge.targetID] else { continue }
-                            bgPath.move(to: src.position)
-                            bgPath.addLine(to: dst.position)
-                        }
-                        context.stroke(bgPath, with: .color(Color.gray.opacity(activeFocus ? 0.03 : 0.25)), lineWidth: 1)
-
-                        // Pass 2: Foreground highlighted edges
-                        if activeFocus {
-                            var fgPath = Path()
-                            for edge in layout.edges {
-                                if !layout.focusedEdgeIDs.contains(edge.id) { continue }
-                                guard let src = nodesByID[edge.sourceID],
-                                      let dst = nodesByID[edge.targetID] else { continue }
-                                fgPath.move(to: src.position)
-                                fgPath.addLine(to: dst.position)
+                            
+                            let isFocused = activeFocus && layout.focusedEdgeIDs.contains(edge.id)
+                            let color = colorForCluster(edge.clusterID)
+                            
+                            // Determine opacity based on focus state
+                            let opacity: Double
+                            if activeFocus {
+                                opacity = isFocused ? 0.85 : 0.04
+                            } else {
+                                opacity = Double(max(0.2, min(0.9, edge.similarity))) * 0.4
                             }
-                            context.stroke(fgPath, with: .color(Color.white.opacity(0.85)), lineWidth: 2)
+                            
+                            let lineWidth: CGFloat = isFocused ? 2.5 : 1.0
+                            
+                            var path = Path()
+                            path.move(to: src.position)
+                            path.addLine(to: dst.position)
+                            
+                            context.stroke(path, with: .color(color.opacity(opacity)), lineWidth: lineWidth)
                         }
                     }
                     .allowsHitTesting(false)
