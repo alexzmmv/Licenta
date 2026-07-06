@@ -10,9 +10,32 @@ struct GraphNode: Identifiable, Equatable {
     let clusterID: Int?
     let createdAt: Date
     let intensity: Int
+    let isHub: Bool
 
     var position: CGPoint
     var velocity: CGPoint = .zero
+
+    init(
+        id: UUID,
+        title: String,
+        emotion: Emotion,
+        clusterID: Int?,
+        createdAt: Date,
+        intensity: Int,
+        isHub: Bool = false,
+        position: CGPoint,
+        velocity: CGPoint = .zero
+    ) {
+        self.id = id
+        self.title = title
+        self.emotion = emotion
+        self.clusterID = clusterID
+        self.createdAt = createdAt
+        self.intensity = intensity
+        self.isHub = isHub
+        self.position = position
+        self.velocity = velocity
+    }
 
     static func == (lhs: GraphNode, rhs: GraphNode) -> Bool {
         lhs.id == rhs.id &&
@@ -21,6 +44,7 @@ struct GraphNode: Identifiable, Equatable {
         lhs.clusterID == rhs.clusterID &&
         lhs.createdAt == rhs.createdAt &&
         lhs.intensity == rhs.intensity &&
+        lhs.isHub == rhs.isHub &&
         lhs.position == rhs.position &&
         lhs.velocity == rhs.velocity
     }
@@ -83,20 +107,38 @@ class ForceDirectedLayout: ObservableObject {
             return count1 > count2
         }
 
+        // Pre-generate cluster names
+        var newClusterNames: [Int: String] = [:]
+        for clusterID in sortedClusters where clusterID >= 0 {
+            let clusterBits = bitsByCluster[clusterID] ?? []
+            if let persistedName = clusterBits.compactMap({ $0.cluster?.name }).first {
+                newClusterNames[clusterID] = persistedName
+            } else {
+                newClusterNames[clusterID] = ClusterNamer.generateName(for: clusterBits, fallbackID: clusterID)
+            }
+        }
+
         var initialNodes: [GraphNode] = []
         var currentSpiralRadius: CGFloat = 0
         let goldenAngle: CGFloat = 137.5 * .pi / 180.0 // ~2.39996 radians
 
+        // Helper for stable, deterministic UUIDs for hubs
+        func uuidForCluster(id: Int) -> UUID {
+            let hex = String(format: "%012lx", id)
+            return UUID(uuidString: "00000000-0000-0000-0000-\(hex)") ?? UUID()
+        }
+
+        // Initial node placement
         for (clusterIndex, clusterID) in sortedClusters.enumerated() {
             let clusterBits = bitsByCluster[clusterID] ?? []
             let nodeCount = clusterBits.count
             
             // Calculate a radius representing the area needed by this cluster
-            let clusterRadius = 30.0 + 10.0 * sqrt(CGFloat(nodeCount))
+            let clusterRadius = 40.0 + 15.0 * sqrt(CGFloat(nodeCount))
             
             if clusterIndex > 0 {
                 // Grow the spiral radius based on cluster size to avoid overlaps
-                currentSpiralRadius += clusterRadius * 0.5 + 20.0
+                currentSpiralRadius += clusterRadius * 0.7 + 35.0
             } else {
                 currentSpiralRadius = 0 // Largest cluster at the center
             }
@@ -107,8 +149,24 @@ class ForceDirectedLayout: ObservableObject {
                 y: center.y + sin(angle) * currentSpiralRadius
             )
 
+            // If it is a real cluster (not -1 unclustered), add a Hub Node!
+            if clusterID >= 0 {
+                let hubID = uuidForCluster(id: clusterID)
+                let name = newClusterNames[clusterID] ?? "Cluster \(clusterID)"
+                initialNodes.append(GraphNode(
+                    id: hubID,
+                    title: "\(name) (\(nodeCount))",
+                    emotion: .joy, // Joy is a friendly default
+                    clusterID: clusterID,
+                    createdAt: Date(),
+                    intensity: 4,
+                    isHub: true,
+                    position: clusterCenter
+                ))
+            }
+
             // Local node spread within the cluster
-            let localRadius = 15.0 + 8.0 * sqrt(CGFloat(nodeCount))
+            let localRadius = 25.0 + 12.0 * sqrt(CGFloat(nodeCount))
 
             for (bitIndex, bit) in clusterBits.enumerated() {
                 let position: CGPoint
@@ -130,27 +188,28 @@ class ForceDirectedLayout: ObservableObject {
                     clusterID: bit.clusterID,
                     createdAt: bit.createdAt,
                     intensity: bit.intensity,
+                    isHub: false,
                     position: position
                 ))
             }
         }
 
+        // Create edges (Mind Map pattern: all cluster nodes connected to their Hub Node)
         var newEdges: [GraphEdge] = []
-        var newClusterNames: [Int: String] = [:]
-        let clusterGroups = Dictionary(
-            grouping: initialNodes.filter { $0.clusterID != nil && $0.clusterID! >= 0 }
-        ) { $0.clusterID! }
-
-        for (clusterID, clusterNodes) in clusterGroups {
+        
+        for clusterID in sortedClusters where clusterID >= 0 {
             let clusterBits = bitsByCluster[clusterID] ?? []
-            if let persistedName = clusterBits.compactMap({ $0.cluster?.name }).first {
-                newClusterNames[clusterID] = persistedName
-            } else {
-                newClusterNames[clusterID] = ClusterNamer.generateName(for: clusterBits, fallbackID: clusterID)
+            let hubID = uuidForCluster(id: clusterID)
+            
+            // Connect every node in this cluster to the Hub Node
+            for bit in clusterBits {
+                newEdges.append(GraphEdge(sourceID: hubID, targetID: bit.id, clusterID: clusterID))
             }
 
+            // Similarity connections within the cluster
             if similarityEdges {
                 let threshold: Float = 0.65
+                let clusterNodes = initialNodes.filter { $0.clusterID == clusterID && !$0.isHub }
                 for i in 0..<clusterNodes.count {
                     for j in (i + 1)..<clusterNodes.count {
                         let bitA = bitsDict[clusterNodes[i].id]
@@ -167,13 +226,6 @@ class ForceDirectedLayout: ObservableObject {
                                 ))
                             }
                         }
-                    }
-                }
-            } else {
-                if clusterNodes.count > 1 {
-                    let hub = clusterNodes[0]
-                    for i in 1..<clusterNodes.count {
-                        newEdges.append(GraphEdge(sourceID: hub.id, targetID: clusterNodes[i].id, clusterID: clusterID))
                     }
                 }
             }
@@ -253,13 +305,35 @@ class ForceDirectedLayout: ObservableObject {
             for j in (i + 1)..<nodes.count {
                 var dx = nodes[i].position.x - nodes[j].position.x
                 var dy = nodes[i].position.y - nodes[j].position.y
-                guard abs(dx) < repulsionCutoff && abs(dy) < repulsionCutoff else { continue }
+                
+                let cutoff: CGFloat
+                let baseMinDist: CGFloat
+                let strength: CGFloat
+                
+                if nodes[i].isHub && nodes[j].isHub {
+                    cutoff = 500.0        // Hubs repel at long range
+                    baseMinDist = 320.0   // Ensure centroids stay at least 320pt apart
+                    strength = 12.0       // 12x stronger repulsion force
+                } else if nodes[i].isHub || nodes[j].isHub {
+                    cutoff = 350.0        // Hub-to-node repulsion range
+                    baseMinDist = 180.0   // Nodes stay at least 180pt away from hubs (creates a ring/satellite pattern)
+                    strength = 4.0
+                } else {
+                    cutoff = repulsionCutoff
+                    baseMinDist = minDist
+                    strength = (nodes[i].clusterID == nodes[j].clusterID && nodes[i].clusterID != -1) ? 0.35 : 3.0
+                }
+                
+                guard abs(dx) < cutoff && abs(dy) < cutoff else { continue }
                 if dx == 0 && dy == 0 { dx = CGFloat.random(in: -0.1...0.1); dy = CGFloat.random(in: -0.1...0.1) }
                 let distance = sqrt(dx * dx + dy * dy)
                 let actualDistance = max(distance, 1.0)
-                let repulsionFactor: CGFloat = (nodes[i].clusterID == nodes[j].clusterID && nodes[i].clusterID != -1) ? 0.3 : 3.0
-                var force = (repulsion * repulsionFactor) / (actualDistance * actualDistance)
-                if distance < minDist { force += (minDist - distance) * 5.0 }
+                
+                var force = (repulsion * strength) / (actualDistance * actualDistance)
+                if distance < baseMinDist {
+                    force += (baseMinDist - distance) * 6.0
+                }
+                
                 let fx = (dx / actualDistance) * force
                 let fy = (dy / actualDistance) * force
                 forces[i].x += fx; forces[i].y += fy

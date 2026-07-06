@@ -141,16 +141,7 @@ struct ClusterGraphView: View {
                         )
                     }
 
-                    // 3. Cluster centers / titles
-                    ForEach(clusterCenters, id: \.clusterID) { center in
-                        let name = layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)"
-                        Text(name)
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .foregroundColor(colorForCluster(center.clusterID).opacity(0.85))
-                            .position(x: center.position.x, y: center.position.y - 32)
-                            .allowsHitTesting(false)
-                    }
+                    // Hub Nodes and individual nodes show names cleanly, no need for floating text overlays
                 }
                 .offset(effectiveOffset)
                 .scaleEffect(effectiveScale)
@@ -475,39 +466,83 @@ struct NodeView: View {
     
     var body: some View {
         let isNoise = node.clusterID == nil || node.clusterID == -1
-        let scale: CGFloat = isFocused ? 1.2 : (isDimmed ? 0.9 : (isSelected || isNeighbor ? 1.1 : 1.0))
-        let opacity: Double = isDimmed ? 0.2 : 1.0
+        let scale: CGFloat = isFocused ? 1.25 : (isDimmed ? 0.95 : (isSelected || isNeighbor ? 1.15 : 1.0))
+        let opacity: Double = isDimmed ? 0.25 : 1.0
         
-        HStack(spacing: 6) {
-            Text(node.emotion.emoji)
-                .font(.caption)
-            Text(node.title)
-                .font(.caption2)
-                .fontWeight(.medium)
-                .lineLimit(1)
+        if node.isHub {
+            // Render Hub Node (Centroid)
+            HStack(spacing: 8) {
+                Image(systemName: "circle.grid.hex.fill")
+                    .font(.caption)
+                    .foregroundColor(.white)
+                Text(node.title)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+            }
+            .foregroundColor(.white.opacity(opacity))
+            .padding(.horizontal, 12)
+            .frame(width: 180, height: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(
+                        LinearGradient(
+                            colors: [clusterColor.opacity(0.95), clusterColor.opacity(0.75)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .opacity(opacity)
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(
+                        isSelected ? Color.white.opacity(opacity) : Color.white.opacity(0.25 * opacity),
+                        lineWidth: isSelected ? 2.5 : 1.5
+                    )
+            )
+            .shadow(
+                color: clusterColor.opacity(isFocused ? 0.7 : (isDimmed ? 0.0 : 0.45)),
+                radius: isFocused ? 12 : 6,
+                x: 0,
+                y: isFocused ? 6 : 3
+            )
+            .scaleEffect(scale)
+            .animation(.spring(response: 0.25, dampingFraction: 0.75), value: scale)
+            .animation(.spring(response: 0.25, dampingFraction: 0.75), value: opacity)
+        } else {
+            // Render Normal Node
+            HStack(spacing: 6) {
+                Text(node.emotion.emoji)
+                    .font(.caption)
+                Text(node.title)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+            }
+            .foregroundColor(Color.white.opacity(opacity))
+            .padding(.horizontal, 8)
+            .frame(width: 140, height: 36)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? clusterColor.opacity(0.3 * opacity) : Color(red: 0.1, green: 0.1, blue: 0.12).opacity(opacity))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        isSelected ? Color.white.opacity(opacity) : clusterColor.opacity(isNoise ? (0.4 * opacity) : (0.8 * opacity)),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .shadow(
+                color: .black.opacity(isFocused ? 0.8 : (isNeighbor ? 0.45 : 0.0)),
+                radius: isFocused ? 8 : (isNeighbor ? 4 : 0),
+                x: 0,
+                y: isFocused ? 4 : (isNeighbor ? 2 : 0)
+            )
+            .scaleEffect(scale)
+            .animation(.spring(response: 0.25, dampingFraction: 0.75), value: scale)
+            .animation(.spring(response: 0.25, dampingFraction: 0.75), value: opacity)
         }
-        .foregroundColor(Color.white.opacity(opacity))
-        .padding(.horizontal, 8)
-        .frame(width: 140, height: 36)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? clusterColor.opacity(0.3 * opacity) : Color(red: 0.1, green: 0.1, blue: 0.12).opacity(opacity))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(
-                    isSelected ? Color.white.opacity(opacity) : clusterColor.opacity(isNoise ? (0.4 * opacity) : (0.8 * opacity)),
-                    lineWidth: isSelected ? 2 : 1
-                )
-        )
-        .shadow(
-            color: .black.opacity(isFocused ? 0.8 : (isNeighbor ? 0.45 : 0.0)),
-            radius: isFocused ? 8 : (isNeighbor ? 4 : 0),
-            x: 0,
-            y: isFocused ? 4 : (isNeighbor ? 2 : 0)
-        )
-        .scaleEffect(scale)
-        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: scale)
-        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: opacity)
     }
 }

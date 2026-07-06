@@ -65,7 +65,7 @@ final class ForceDirectedLayoutTests: XCTestCase {
         
         layout.buildGraph(from: bits, in: CGSize(width: 800, height: 800))
         
-        XCTAssertEqual(layout.nodes.count, 10)
+        XCTAssertEqual(layout.nodes.count, 13) // 10 bits + 3 virtual hub nodes
         XCTAssertEqual(layout.clusterNames.count, 3)
         
         // Wait for the asynchronous simulation task to complete
