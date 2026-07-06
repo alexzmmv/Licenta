@@ -102,15 +102,18 @@ struct ClusterGraphView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            dragOffset = value.translation
-                            
-                            // Temporary focus on drag
-                            let graphPoint = adjustPoint(value.location)
-                            if let hitID = hitTest(at: graphPoint) {
-                                if draggedNodeID != hitID {
+                            // On the very first change event, determine if we started on a node
+                            if draggedNodeID == nil && dragOffset == .zero {
+                                let startGraphPoint = adjustPoint(value.startLocation)
+                                if let hitID = hitTest(at: startGraphPoint) {
                                     draggedNodeID = hitID
                                     layout.updateFocus(to: hitID)
                                 }
+                            }
+                            
+                            // Only apply pan offset if we're NOT dragging a node
+                            if draggedNodeID == nil {
+                                dragOffset = value.translation
                             }
                         }
                         .onEnded { value in
@@ -119,22 +122,27 @@ struct ClusterGraphView: View {
                             let graphPoint = adjustPoint(value.startLocation)
                             let hitID = hitTest(at: graphPoint)
                             
-                            if hypot(t.width, t.height) < 8 {
-                                withAnimation(.spring(response: 0.3)) {
+                            if draggedNodeID != nil {
+                                // We were dragging a node — clear drag focus, keep selection unchanged
+                                draggedNodeID = nil
+                                layout.updateFocus(to: selectedNodeID)
+                            } else if hypot(t.width, t.height) < 8 {
+                                // Short movement on empty space or node = tap
+                                let newSelection: UUID? = {
                                     if let id = hitID {
-                                        selectedNodeID = (selectedNodeID == id) ? nil : id
-                                    } else {
-                                        selectedNodeID = nil
+                                        return (selectedNodeID == id) ? nil : id
                                     }
+                                    return nil
+                                }()
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedNodeID = newSelection
                                 }
+                                layout.updateFocus(to: newSelection)
                             } else {
+                                // Pan gesture on empty space
                                 offset.width += t.width
                                 offset.height += t.height
                             }
-                            
-                            // Clear drag focus and update layout to current selection
-                            draggedNodeID = nil
-                            layout.updateFocus(to: selectedNodeID)
                         }
                 )
                 .simultaneousGesture(
