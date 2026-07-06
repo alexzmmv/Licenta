@@ -60,6 +60,28 @@ struct ClusterGraphView: View {
         return clusterColors[id % clusterColors.count]
     }
 
+    // MARK: - Coordinate Mapping (2D Viewport Sliding Window)
+
+    private func screenPosition(for graphPosition: CGPoint, in viewportSize: CGSize) -> CGPoint {
+        guard !viewportSize.width.isZero else { return graphPosition }
+        let cx = viewportSize.width / 2
+        let cy = viewportSize.height / 2
+        
+        // Zoom centered around the screen center, shifted by offset
+        return CGPoint(
+            x: cx + (graphPosition.x - cx) * effectiveScale + effectiveOffset.width,
+            y: cy + (graphPosition.y - cy) * effectiveScale + effectiveOffset.height
+        )
+    }
+
+    private func isNodeVisible(_ node: GraphNode, in viewportSize: CGSize) -> Bool {
+        guard !viewportSize.width.isZero else { return true }
+        let pos = screenPosition(for: node.position, in: viewportSize)
+        let margin: CGFloat = 120.0 // Account for node view width (140/180)
+        return pos.x >= -margin && pos.x <= viewportSize.width + margin &&
+               pos.y >= -margin && pos.y <= viewportSize.height + margin
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -68,28 +90,42 @@ struct ClusterGraphView: View {
 
             GeometryReader { geometry in
                 let activeFocus = !layout.focusedNeighborIDs.isEmpty
+                let viewportSize = geometry.size
                 
                 ZStack {
                     // 1. Edges Canvas (draws lines only)
                     Canvas { context, size in
+                        let cx = size.width / 2
+                        let cy = size.height / 2
+                        
+                        // Center-based scale and offset transform for drawing context
+                        let tx = cx * (1 - effectiveScale) + effectiveOffset.width
+                        let ty = cy * (1 - effectiveScale) + effectiveOffset.height
+                        
+                        context.translateBy(x: tx, y: ty)
+                        context.scaleBy(x: effectiveScale, y: effectiveScale)
+                        
                         let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
                         
                         for edge in layout.edges {
                             guard let src = nodesByID[edge.sourceID],
                                   let dst = nodesByID[edge.targetID] else { continue }
                             
+                            // 2D Sliding Window Culling: Skip edges entirely off-screen
+                            guard isNodeVisible(src, in: size) || isNodeVisible(dst, in: size) else { continue }
+                            
                             let isFocused = activeFocus && layout.focusedEdgeIDs.contains(edge.id)
                             let color = colorForCluster(edge.clusterID)
                             
-                            // Determine opacity based on focus state
                             let opacity: Double
                             if activeFocus {
                                 opacity = isFocused ? 0.85 : 0.04
                             } else {
-                                opacity = Double(max(0.2, min(0.9, edge.similarity))) * 0.4
+                                opacity = Double(max(0.2, min(0.9, edge.similarity))) * 0.45
                             }
                             
-                            let lineWidth: CGFloat = isFocused ? 2.5 : 1.0
+                            // Scale down line width relative to zoom so lines remain crisp and uniform
+                            let lineWidth: CGFloat = (isFocused ? 2.5 : 1.0) / effectiveScale
                             
                             var path = Path()
                             path.move(to: src.position)
@@ -102,49 +138,48 @@ struct ClusterGraphView: View {
 
                     // 2. Nodes Layer
                     ForEach(layout.nodes) { node in
-                        let isSelected = node.id == selectedNodeID
-                        let isDimmed = activeFocus && !layout.focusedNeighborIDs.contains(node.id)
-                        let isNeighbor = activeFocus && layout.focusedNeighborIDs.contains(node.id) && node.id != selectedNodeID
-                        let isFocused = node.id == (draggedNodeID ?? selectedNodeID)
-                        
-                        NodeView(
-                            node: node,
-                            isSelected: isSelected,
-                            isDimmed: isDimmed,
-                            isFocused: isFocused,
-                            isNeighbor: isNeighbor,
-                            clusterColor: colorForCluster(node.clusterID)
-                        )
-                        .position(node.position)
-                        .onTapGesture {
-                            let newSelection = (selectedNodeID == node.id) ? nil : node.id
-                            withAnimation(.spring(response: 0.3)) {
-                                selectedNodeID = newSelection
+                        // Only render if within the active visible viewport (culls off-screen views)
+                        if isNodeVisible(node, in: viewportSize) {
+                            let isSelected = node.id == selectedNodeID
+                            let isDimmed = activeFocus && !layout.focusedNeighborIDs.contains(node.id)
+                            let isNeighbor = activeFocus && layout.focusedNeighborIDs.contains(node.id) && node.id != selectedNodeID
+                            let isFocused = node.id == (draggedNodeID ?? selectedNodeID)
+                            
+                            NodeView(
+                                node: node,
+                                isSelected: isSelected,
+                                isDimmed: isDimmed,
+                                isFocused: isFocused,
+                                isNeighbor: isNeighbor,
+                                clusterColor: colorForCluster(node.clusterID)
+                            )
+                            .position(screenPosition(for: node.position, in: viewportSize))
+                            .onTapGesture {
+                                let newSelection = (selectedNodeID == node.id) ? nil : node.id
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedNodeID = newSelection
+                                }
+                                layout.updateFocus(to: newSelection)
                             }
-                            layout.updateFocus(to: newSelection)
+                            .gesture(
+                                DragGesture(minimumDistance: 5)
+                                    .onChanged { value in
+                                        guard !isPinching else { return }
+                                        if draggedNodeID == nil {
+                                            draggedNodeID = node.id
+                                            layout.updateFocus(to: node.id)
+                                        }
+                                    }
+                                    .onEnded { _ in
+                                        if draggedNodeID != nil {
+                                            draggedNodeID = nil
+                                            layout.updateFocus(to: selectedNodeID)
+                                        }
+                                    }
+                            )
                         }
-                        .gesture(
-                            DragGesture(minimumDistance: 5)
-                                .onChanged { value in
-                                    guard !isPinching else { return }
-                                    if draggedNodeID == nil {
-                                        draggedNodeID = node.id
-                                        layout.updateFocus(to: node.id)
-                                    }
-                                }
-                                .onEnded { _ in
-                                    if draggedNodeID != nil {
-                                        draggedNodeID = nil
-                                        layout.updateFocus(to: selectedNodeID)
-                                    }
-                                }
-                        )
                     }
-
-                    // Hub Nodes and individual nodes show names cleanly, no need for floating text overlays
                 }
-                .offset(effectiveOffset)
-                .scaleEffect(effectiveScale)
                 .onAppear {
                     graphSize = geometry.size
                     let bits = filterClusterID.map { id in repository.bits.filter { $0.clusterID == id } } ?? repository.bits
@@ -197,7 +232,7 @@ struct ClusterGraphView: View {
                     }
             )
 
-            // Overlays (Header, Cards, Zoom buttons)
+            // Overlays (Header, Cards, Legend)
             VStack {
                 headerView
                 Spacer()
