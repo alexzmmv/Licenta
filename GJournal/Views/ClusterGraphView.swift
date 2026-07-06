@@ -51,13 +51,14 @@ struct ClusterGraphView: View {
                         ty: cy * (1 - scale) + ty
                     )
 
-                    let activeFocus = layout.focusedNeighborIDs.isEmpty ? false : true
+                    let activeFocus = !layout.focusedNeighborIDs.isEmpty
+                    let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
 
                     // PASS 1: BACKGROUND (Dimmed)
                     for edge in layout.edges {
                         if activeFocus && layout.focusedEdgeIDs.contains(edge.id) { continue }
-                        guard let src = layout.nodes.first(where: { $0.id == edge.sourceID }),
-                              let dst = layout.nodes.first(where: { $0.id == edge.targetID }) else { continue }
+                        guard let src = nodesByID[edge.sourceID],
+                              let dst = nodesByID[edge.targetID] else { continue }
                         var path = Path()
                         path.move(to: src.position)
                         path.addLine(to: dst.position)
@@ -74,8 +75,8 @@ struct ClusterGraphView: View {
                     if activeFocus {
                         for edge in layout.edges {
                             if !layout.focusedEdgeIDs.contains(edge.id) { continue }
-                            guard let src = layout.nodes.first(where: { $0.id == edge.sourceID }),
-                                  let dst = layout.nodes.first(where: { $0.id == edge.targetID }) else { continue }
+                            guard let src = nodesByID[edge.sourceID],
+                                  let dst = nodesByID[edge.targetID] else { continue }
                             var path = Path()
                             path.move(to: src.position)
                             path.addLine(to: dst.position)
