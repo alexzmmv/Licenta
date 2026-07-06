@@ -22,9 +22,17 @@ final class CoreMLEmotionService: EmotionDetectionServiceProtocol {
             throw AIServiceError.modelNotLoaded
         }
 
-        let config = MLModelConfiguration()
-        config.computeUnits = .cpuAndGPU
-        model = try MLModel(contentsOf: modelURL, configuration: config)
+        // Prefer the Neural Engine (lowest power draw); fall back to CPU/GPU
+        // if the model can't be scheduled on the ANE.
+        let allConfig = MLModelConfiguration()
+        allConfig.computeUnits = .all
+        if let loaded = try? MLModel(contentsOf: modelURL, configuration: allConfig) {
+            model = loaded
+        } else {
+            let fallback = MLModelConfiguration()
+            fallback.computeUnits = .cpuAndGPU
+            model = try MLModel(contentsOf: modelURL, configuration: fallback)
+        }
 
         if let url = Bundle.main.url(forResource: "vocab_emotion", withExtension: "txt") {
             tokenizer = try WordPieceTokenizer(vocabURL: url)

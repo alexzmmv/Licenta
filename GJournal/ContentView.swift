@@ -28,6 +28,7 @@ struct ContentView: View {
     @State private var calendarAppeared = false
     @State private var recentAppeared = false
     @State private var emotionsAppeared = false
+    @State private var insightsAppeared = false
 
     init(repository: BaseJournalRepository) {
         self.repository = repository
@@ -43,6 +44,28 @@ struct ContentView: View {
 
     private var canCreateToday: Bool { repository.canCreate(for: Date()) }
     private var isFirstTimeUser: Bool { repository.bits.isEmpty }
+
+    // MARK: - Insight gating
+    private var activeBitCount: Int {
+        repository.bits.filter { !$0.isDeleted }.count
+    }
+    private var distinctDayCount: Int {
+        Set(repository.bits.filter { !$0.isDeleted }.map {
+            Calendar.current.startOfDay(for: $0.createdAt)
+        }).count
+    }
+    // Psychological Network gate: 30 entries AND 14 distinct days
+    private var networkProgress: (entries: Int, days: Int) {
+        (min(activeBitCount, 30), min(distinctDayCount, 14))
+    }
+    private var networkUnlocked: Bool { activeBitCount >= 30 && distinctDayCount >= 14 }
+    // Trajectory gate: 21 entries AND 21 distinct days
+    private var trajectoryProgress: (entries: Int, days: Int) {
+        (min(activeBitCount, 21), min(distinctDayCount, 21))
+    }
+    private var trajectoryUnlocked: Bool { activeBitCount >= 21 && distinctDayCount >= 21 }
+    // Smart Search gate: 10 entries
+    private var searchUnlocked: Bool { activeBitCount >= 10 }
 
     private var todayEmotion: Emotion? {
         let calendar = Calendar.current
@@ -122,6 +145,7 @@ struct ContentView: View {
         withAnimation(spring.delay(0.26)) { calendarAppeared = true }
         withAnimation(spring.delay(0.34)) { recentAppeared = true }
         withAnimation(spring.delay(0.42)) { emotionsAppeared = true }
+        withAnimation(spring.delay(0.50)) { insightsAppeared = true }
     }
 
     var body: some View {
@@ -192,6 +216,17 @@ struct ContentView: View {
                             }
                             .opacity(emotionsAppeared ? 1 : 0)
                             .offset(y: emotionsAppeared ? 0 : 20)
+
+                            InsightGatingSection(
+                                networkProgress: networkProgress,
+                                networkUnlocked: networkUnlocked,
+                                trajectoryProgress: trajectoryProgress,
+                                trajectoryUnlocked: trajectoryUnlocked,
+                                searchUnlocked: searchUnlocked,
+                                totalEntries: activeBitCount
+                            )
+                            .opacity(insightsAppeared ? 1 : 0)
+                            .offset(y: insightsAppeared ? 0 : 20)
                         }
 
                         Color.clear.frame(height: 100)
@@ -590,5 +625,178 @@ struct FirstTimeWelcomeView: View {
             .padding(.bottom, 80)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Insight Gating Section
+
+/// Shows locked "coming soon" cards for pillar features with progress rings.
+/// Each card unlocks (visually) once the user hits the required entry/day threshold.
+struct InsightGatingSection: View {
+    let networkProgress: (entries: Int, days: Int)
+    let networkUnlocked: Bool
+    let trajectoryProgress: (entries: Int, days: Int)
+    let trajectoryUnlocked: Bool
+    let searchUnlocked: Bool
+    let totalEntries: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Insights")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Image(systemName: "sparkles")
+                    .font(.subheadline)
+                    .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+            }
+            .padding(.horizontal, 20)
+
+            // Horizontal scroll — cards stay visible even locked to tease upcoming value
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    InsightGateCard(
+                        icon: "point.3.connected.trianglepath.dotted",
+                        title: "Psychological Network",
+                        description: "See how your emotions and behaviours connect across time.",
+                        accentColor: Color(red: 0.55, green: 0.4, blue: 0.95),
+                        isUnlocked: networkUnlocked,
+                        progressLabel: "\(networkProgress.entries)/30 entries · \(networkProgress.days)/14 days"
+                    )
+
+                    InsightGateCard(
+                        icon: "waveform.path",
+                        title: "Trajectory Analysis",
+                        description: "Track emotional loops, exploration and semantic recovery over time.",
+                        accentColor: Color(red: 0.2, green: 0.7, blue: 0.9),
+                        isUnlocked: trajectoryUnlocked,
+                        progressLabel: "\(trajectoryProgress.entries)/21 entries · \(trajectoryProgress.days)/21 days"
+                    )
+
+                    InsightGateCard(
+                        icon: "magnifyingglass.circle",
+                        title: "Smart Search",
+                        description: "Find entries by meaning, not just keywords — hybrid AI search.",
+                        accentColor: Color(red: 0.9, green: 0.55, blue: 0.25),
+                        isUnlocked: searchUnlocked,
+                        progressLabel: "\(min(totalEntries, 10))/10 entries"
+                    )
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 4)
+            }
+        }
+    }
+}
+
+struct InsightGateCard: View {
+    let icon: String
+    let title: String
+    let description: String
+    let accentColor: Color
+    let isUnlocked: Bool
+    let progressLabel: String
+
+    @State private var ringProgress: CGFloat = 0
+
+    // Parse "n/total" from progressLabel to compute fraction for the ring
+    private var fraction: CGFloat {
+        // Take the first "n/total" pair
+        let parts = progressLabel.split(separator: "·").first ?? Substring(progressLabel)
+        let nums = parts.split(separator: "/").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+        guard nums.count == 2, nums[1] > 0 else { return isUnlocked ? 1 : 0 }
+        return CGFloat(min(nums[0], nums[1])) / CGFloat(nums[1])
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                // Icon + progress ring
+                ZStack {
+                    Circle()
+                        .stroke(accentColor.opacity(0.15), lineWidth: 3)
+                        .frame(width: 46, height: 46)
+
+                    Circle()
+                        .trim(from: 0, to: ringProgress)
+                        .stroke(accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 46, height: 46)
+
+                    Image(systemName: isUnlocked ? icon : "lock.fill")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(isUnlocked ? accentColor : .gray)
+                }
+
+                Spacer()
+
+                if isUnlocked {
+                    Text("Ready")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(accentColor.opacity(0.15))
+                        .clipShape(Capsule())
+                } else {
+                    Text("Soon")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(Capsule())
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(isUnlocked ? .white : .white.opacity(0.6))
+                    .lineLimit(1)
+
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Progress label
+            if !isUnlocked {
+                Text(progressLabel)
+                    .font(.caption2)
+                    .foregroundColor(accentColor.opacity(0.8))
+                    .lineLimit(1)
+            }
+        }
+        .padding(16)
+        .frame(width: 220)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color(red: 0.10, green: 0.10, blue: 0.13))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(accentColor.opacity(isUnlocked ? 0.35 : 0.12), lineWidth: 1)
+                )
+        )
+        .shadow(color: isUnlocked ? accentColor.opacity(0.15) : .black.opacity(0.2), radius: 8, y: 3)
+        .onAppear {
+            withAnimation(.spring(response: 0.9, dampingFraction: 0.75).delay(0.2)) {
+                ringProgress = isUnlocked ? 1 : fraction
+            }
+        }
+        .onChange(of: isUnlocked) {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+                ringProgress = isUnlocked ? 1 : fraction
+            }
+        }
     }
 }

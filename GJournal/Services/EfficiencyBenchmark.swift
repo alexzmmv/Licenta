@@ -49,8 +49,6 @@ actor EfficiencyBenchmark {
 
         let configs: [(choice: EmbeddingModelChoice, label: String, dim: Int, bundleName: String?)] = [
             (.miniLM,    "MiniLM-L6-v2",            384, "GJournalEmbeddingMiniLM"),
-            (.nomicFull, "Nomic-v1.5 (768d full)",   768, "GJournalEmbeddingNomic"),
-            (.nomicMRL,  "Nomic-v1.5 (256d MRL)",    256, "GJournalEmbeddingNomic"),
             (.appleNLP,  "Apple NLEmbedding",          -1, nil),
         ]
 
@@ -146,8 +144,6 @@ actor EfficiencyBenchmark {
     private func makeEmbeddingService(for choice: EmbeddingModelChoice) -> EmbeddingServiceProtocol {
         switch choice {
         case .miniLM:    return CoreMLEmbeddingService(modelName: "GJournalEmbeddingMiniLM", poolingMode: .mean)
-        case .nomicFull: return NomicEmbeddingService(truncateDim: 768)
-        case .nomicMRL:  return NomicEmbeddingService(truncateDim: 256)
         case .appleNLP:  return NLEmbeddingService()
         }
     }

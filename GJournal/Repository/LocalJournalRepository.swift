@@ -180,6 +180,134 @@ class LocalJournalRepository: BaseJournalRepository {
         }
     }
     
+    // MARK: - Versioned JSON Export
+
+    enum ExportError: LocalizedError {
+        case contextUnavailable
+        case serializationFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .contextUnavailable:  return "Data context not available"
+            case .serializationFailed: return "Could not prepare the export file"
+            }
+        }
+    }
+
+    /// Current version of the export file format. Bump when the payload shape
+    /// changes so future import/restore code can branch on it.
+    static let exportFormatVersion = 1
+
+    /// Builds a versioned JSON backup of all entries (including soft-deleted),
+    /// clusters, and AI pipeline configuration, and writes it to a temporary
+    /// file ready for the share sheet.
+    func generateExportFile() throws -> URL {
+        guard let modelContext = modelContext else {
+            throw ExportError.contextUnavailable
+        }
+
+        let iso = ISO8601DateFormatter()
+        let model = EmbeddingModelChoice.current
+        let strategy = ClusteringStrategyChoice.current
+
+        var bitsJSON: [[String: Any]] = []
+        for bit in bits {
+            var entry: [String: Any] = [
+                "id": bit.id.uuidString,
+                "feel": bit.feel,
+                "event": bit.event,
+                "action": bit.action,
+                "intensity": bit.intensity,
+                "emotion": bit.emotion.rawValue,
+                "isHidden": bit.isHidden,
+                "isDeleted": bit.isDeleted,
+                "hasBeenProcessed": bit.hasBeenProcessed,
+                "createdAt": iso.string(from: bit.createdAt),
+                "lastModified": iso.string(from: bit.lastModified)
+            ]
+            if let title = bit.title { entry["title"] = title }
+            if let clusterIndex = bit.clusterID {
+                entry["clusterIndex"] = clusterIndex
+                entry["clusterName"] = bit.cluster?.name ?? ""
+            }
+            if let probs = bit.emotionProbabilities {
+                entry["emotionProbabilities"] = probs
+            }
+            if let emb = bit.embedding {
+                entry["embedding"] = emb
+                entry["embeddingDim"] = emb.count
+            }
+            if let t = bit.flattenedText { entry["flattenedText"] = t }
+            if let d = bit.embeddingGeneratedAt { entry["embeddingGeneratedAt"] = iso.string(from: d) }
+            bitsJSON.append(entry)
+        }
+
+        // Fetch clusters directly from context for complete picture
+        var clustersJSON: [[String: Any]] = []
+        let allClusters = (try? modelContext.fetch(FetchDescriptor<Cluster>())) ?? []
+        for c in allClusters {
+            clustersJSON.append([
+                "index": c.index,
+                "name": c.name,
+                "bitCount": c.bits.filter { !$0.isDeleted }.count,
+                "createdAt": iso.string(from: c.createdAt)
+            ])
+        }
+
+        // Build calibration diagnostics (if available)
+        var calibrationJSON: [String: Any] = [:]
+        if let cal = aiProcessingManager?.lastCalibrationResult {
+            calibrationJSON = [
+                "epsilon": cal.epsilon,
+                "minPoints": cal.minPoints,
+                "clusterCount": cal.clusterCount,
+                "noiseCount": cal.noiseCount,
+                "totalPoints": cal.totalPoints,
+                "noiseFraction": cal.noiseFraction,
+                "silhouetteScore": cal.silhouetteScore
+            ]
+        }
+
+        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+
+        let payload: [String: Any] = [
+            "formatVersion": Self.exportFormatVersion,
+            "schemaVersion": "\(SchemaV1.versionIdentifier)",
+            "appVersion": appVersion,
+            "exportedAt": iso.string(from: Date()),
+            "config": [
+                "embeddingModel": model.rawValue,
+                "embeddingModelDisplayName": model.displayName,
+                "clusteringStrategy": strategy.rawValue,
+                "clusteringStrategyDisplayName": strategy.displayName,
+                "embeddingDimension": model.embeddingDimension
+            ],
+            "calibration": calibrationJSON,
+            "summary": [
+                "totalBits": bits.count,
+                "bitsWithEmbeddings": bits.filter { $0.hasBeenProcessed }.count,
+                "clusterCount": clustersJSON.count
+            ],
+            "clusters": clustersJSON,
+            "bits": bitsJSON
+        ]
+
+        guard JSONSerialization.isValidJSONObject(payload),
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]) else {
+            AppLogger.error("[LocalRepository] Export serialization failed")
+            throw ExportError.serializationFailed
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm"
+        let filename = "gjournal_export_\(formatter.string(from: Date())).json"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+
+        try data.write(to: url)
+        AppLogger.log("[LocalRepository] Exported \(bits.count) bits to \(filename)")
+        return url
+    }
+
     override func toggleHideBit(id: UUID) {
         guard let modelContext = modelContext else {
             errorMessage = "Data context not available"

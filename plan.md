@@ -6,6 +6,14 @@ GJournal (`/Users/constantin-alexandrudumitrascu/Desktop/Licenta`) is a working 
 
 `docs/feauture.md` (typo — rename to `docs/feature.md`) is a research vision (GGM networks, TDA biomarkers, HDC, hybrid search) — **none of that code exists yet**. Exploration also found hard App Store blockers: no app icon, no privacy manifest, FaceID string = `"testing"`, ~440 MB of bundled models (incl. one dead), no SwiftData migrations (schema change silently wipes journals), unsalted SHA-256 PIN, destructive debug tools in release Settings, zero tests/accessibility, min iOS 18.6.
 
+## Status — 2026-07-06
+
+**Phase 1 is complete except HDBSCAN (§1.4) and the emotion-classifier quantization (§1.3 item 5, last bullet).** Every App Store blocker above is resolved. Verified: Debug + Release builds pass on the iPhone 17 simulator; 26/26 tests green in the new `GJournalTests` target.
+
+Done: `SchemaVersions.swift` + `GJournalMigrationPlan` + `StoreRecoveryView` (wipe fallback deleted); PBKDF2 PIN (350k iterations, salt, silent legacy upgrade, escalating lockout); Nomic + MobileBERT deleted with all references (`EmbeddingModelChoice` is now MiniLM/AppleNLP only, stale stored prefs fall back to MiniLM — regression-tested); `SettingsView` split with all pickers/destructive tools/benchmark in a `#if DEBUG`-only `DebugSettingsView`; ANE `.all` compute units on both CoreML services; versioned JSON export (`formatVersion`/`schemaVersion`/`appVersion`) in `LocalJournalRepository`; app icon (any/dark/tinted), `PrivacyInfo.xcprivacy`, real FaceID string, iOS 18.0.
+
+Remaining before Phase 1 fully closes: **HDBSCAN in Swift + oracle fixtures (§1.4)**, **Noise UX "Unsorted" (§1.4 item 10)**, **emotion quantization 94→~47 MB** (models currently total 137 MB — already under the 200 MB cellular cap, so not a blocker), and the on-device upgrade/cold-launch checks in the Phase 1 verification list. These overlap Tier 2 of `task_list.md`, which is the active work queue.
+
 ### User decisions (fixed)
 - **Quality first, no deadline.** English-only launch.
 - **Freemium**: journaling/dashboard/calendar/clusters free; all three insight pillars paid (StoreKit 2, non-consumable "GJournal Insights").
@@ -14,21 +22,21 @@ GJournal (`/Users/constantin-alexandrudumitrascu/Desktop/Licenta`) is a working 
 - **Quality-over-speed calls**: build **HDBSCAN in Swift** (evals: V 0.737 vs shipped DBSCAN 0.477) with the Python evaluation harness as correctness oracle; implement **real persistent homology (β0/β1)** in Swift for ≤60-point windows (validated against Ripser/giotto-tda fixtures), geometric proxies kept as cheap always-on signals. No sqlite-vec (brute-force SIMD is sub-ms at journal scale). No Ripser C++ bridge.
 
 ### Key existing files
-`GJournalApp.swift` (entry, container w/ wipe-on-failure bug), `AIProcessingManager.swift` (pipeline), `DBSCANClusterer.swift`, `CoreMLEmbeddingService.swift` / `NomicEmbeddingService.swift` / `CoreMLEmotionService.swift`, `WordPieceTokenizer.swift`, `ClusterNamer.swift`, `SemanticUtils`, `Models/Bit.swift` + `Cluster`, `Repository/LocalJournalRepository.swift`, `Repository/AuthManager.swift`, `Views/SettingsView.swift` (811 lines, debug tools), `Views/ClusterGraphView.swift` (force layout), `evaluation/` (Python harness + results), `docs/audit/07_FUTURE.md` (behavioral tagging + notification design to reuse).
+`GJournalApp.swift` (entry, versioned container + `StoreRecoveryView`), `Models/SchemaVersions.swift` (SchemaV1 + migration plan), `AIProcessingManager.swift` (pipeline), `DBSCANClusterer.swift`, `CoreMLEmbeddingService.swift` / `CoreMLEmotionService.swift` (both ANE `.all`), `WordPieceTokenizer.swift`, `ClusterNamer.swift`, `SemanticUtils`, `Models/Bit.swift` + `Cluster`, `Repository/LocalJournalRepository.swift` (incl. versioned export), `Repository/AuthManager.swift` (PBKDF2 + lockout), `Views/SettingsView.swift` + `Views/DebugSettingsView.swift` (`#if DEBUG`), `Views/ClusterGraphView.swift` (force layout), `GJournalTests/` (5 suites, 26 tests), `evaluation/` (Python harness + results), `docs/audit/07_FUTURE.md` (behavioral tagging + notification design to reuse). *(`NomicEmbeddingService.swift` deleted.)*
 
 ---
 
 ## Phase 1 — HARDEN (foundation)
 
-### 1.1 Data safety (blocks everything else)
+> ✅ **Done 2026-07-06** except §1.4 (HDBSCAN + Noise UX) and the emotion-quantization bullet in §1.3 — see Status above.
+
+### 1.1 Data safety (blocks everything else) ✅
 1. New `GJournal/Models/SchemaVersions.swift`: `SchemaV1` (`VersionedSchema` wrapping current `Bit`, `Cluster`) + `GJournalMigrationPlan` (`SchemaMigrationPlan`). Future models arrive as `SchemaV2+` lightweight stages.
 2. `GJournalApp.makeModelContainer`: **delete the wipe-store-and-recreate fallback**; on container failure show a recovery UI (retry / export raw store), never silent data loss. (`Cluster.self` is already registered in the existing `makeModelContainer` — no action needed; verify new SchemaV2 models are registered when added.)
 3. Versioned JSON backup/export (schema tag + entries; embeddings optional) in `LocalJournalRepository` + `SettingsView`.
 
-### 1.2 Security
-4. ~~`AuthManager.swift`: PIN unsalted SHA-256 → **PBKDF2** (CommonCrypto `CCKeyDerivationPBKDF` with `kCCPRFHmacAlgSHA256`, ~210k iterations, 16-byte cryptographically random salt, salt + derived key stored in Keychain); silent re-hash on next successful unlock. Escalating lockout (30 s after 5 fails → 1 min → 5 min → 15 min; counter + timestamp persisted in Keychain). Keep `completeUnlessOpen` file protection. *(Note: CryptoKit lacks native PBKDF2 — CommonCrypto is required.)*~~ **DONE**
 
-### 1.3 Bundle & config
+### 1.3 Bundle & config ✅ (except quantization)
 5. **Dead model cleanup** (full checklist):
    - Delete `MLModels/GJournalEmbeddingNomic.mlpackage` (261 MB)
    - Delete `MLModels/GJournalEmbeddingMobileBERT.mlpackage` (dead)
@@ -41,18 +49,18 @@ GJournal (`/Users/constantin-alexandrudumitrascu/Desktop/Licenta`) is a working 
 6. Single source of truth `EmbeddingModelChoice.current = .miniLM`; **delete** the `@AppStorage("embeddingModelChoice")` binding pattern in `SettingsView` entirely — the `@AppStorage` default is `nomicMRL` while `EmbeddingModelChoice.current` defaults to `miniLM`; after removing the Nomic enum cases the old `@AppStorage` value would fail to deserialize, causing a crash. Replace with a direct read of `EmbeddingModelChoice.current`. Split `SettingsView` → `SettingsView` + `DebugSettingsView`; model picker and ALL destructive tools (re-embed, clear embeddings/clusters, recluster) behind `#if DEBUG`. Also gate behind `#if DEBUG`: `Services/EfficiencyBenchmark.swift` (thesis-specific benchmarking), `Services/MockAIService.swift` (test-only service).
 7. `CoreMLEmotionService` + `CoreMLEmbeddingService`: request `.all` compute units (ANE) with CPU/GPU fallback.
 
-### 1.4 HDBSCAN in Swift (quality-first decision)
+### 1.4 HDBSCAN in Swift (quality-first decision) ⏳ REMAINING
 8. New `Services/HDBSCANClusterer.swift`: mutual reachability distances → MST (Prim, vDSP-accelerated cosine) → cluster hierarchy → condensed tree (min_cluster_size) → EOM cluster extraction. Conforms to the same clusterer protocol as `DBSCANClusterer` (keep DBSCAN as debug-selectable fallback).
 9. **Correctness oracle**: extend `evaluation/` Python harness to dump reference HDBSCAN inputs/outputs (fixtures: synthetic blobs + real 20NG/journal-domain subsets) → Swift unit tests assert matching labels/ARI within tolerance. Acceptance: Swift HDBSCAN reproduces reference ARI/V-measure on fixtures; on-device reclustering of 500 seeded entries < 2 s.
 10. Noise UX: unclustered entries appear as "Unsorted" in `ClusterCardsView`, never hidden.
 
-### 1.5 Tests
-11. New `GJournalTests` target: WordPiece tokenizer golden fixtures; HDBSCAN vs oracle fixtures; cosine/`SemanticUtils`; migration V1→V2 smoke; PBKDF2 re-hash. Fixture JSONs in `GJournalTests/Fixtures/`.
+### 1.5 Tests ✅ (HDBSCAN oracle fixtures pending with §1.4)
+11. New `GJournalTests` target: WordPiece tokenizer golden fixtures; HDBSCAN vs oracle fixtures *(pending)*; cosine/`SemanticUtils`; migration smoke; PBKDF2 re-hash + legacy-upgrade; export/model-choice regressions. 26 tests passing.
 
-### 1.6 App Store mechanics
+### 1.6 App Store mechanics ✅
 12. App icon PNG into `AppIcon.appiconset`; `PrivacyInfo.xcprivacy` (UserDefaults CA92.1, file-timestamp C617.1, no tracking — App Privacy label becomes "Data Not Collected", a genuine marketing asset); real `NSFaceIDUsageDescription`; min iOS 18.6 → **18.0** (free win, no API audit needed; 17.0 would require auditing every iOS-18 API for near-zero market gain by launch time); fix deprecated `UIScreen.main` uses.
 
-**Phase 1 verification**: old build → new build upgrade on device with zero data loss; all tests green; IPA < 100 MB; Core ML performance report shows ANE for both models; cold launch < 1.5 s.
+**Phase 1 verification**: ✅ all tests green (26/26); ✅ Debug + Release simulator builds. Still open: old→new upgrade on a physical device with zero data loss; IPA < 100 MB (blocked on emotion quantization — models are 137 MB); Core ML performance report confirming ANE for both models on-device; cold launch < 1.5 s.
 
 ---
 

@@ -3,8 +3,6 @@ import Foundation
 enum EmbeddingModelChoice: String, CaseIterable, Identifiable {
     case appleNLP  = "appleNLP"
     case miniLM    = "miniLM"
-    case nomicFull = "nomicFull"
-    case nomicMRL  = "nomicMRL"
 
     var id: String { rawValue }
 
@@ -12,8 +10,6 @@ enum EmbeddingModelChoice: String, CaseIterable, Identifiable {
         switch self {
         case .appleNLP:  return "Apple NLP"
         case .miniLM:    return "MiniLM-L6-v2"
-        case .nomicFull: return "Nomic Full (768d)"
-        case .nomicMRL:  return "Nomic MRL (256d)"
         }
     }
 
@@ -21,13 +17,21 @@ enum EmbeddingModelChoice: String, CaseIterable, Identifiable {
         switch self {
         case .appleNLP:  return "Built-in iOS embedding — fast, zero bundle size"
         case .miniLM:    return "all-MiniLM-L6-v2 — 384-dim, mean pooling, ~45 MB"
-        case .nomicFull: return "nomic-embed-text-v1.5 — 768-dim full vector, ~261 MB"
-        case .nomicMRL:  return "nomic-embed-text-v1.5 — 256-dim MRL, ~261 MB"
+        }
+    }
+
+    var embeddingDimension: Int {
+        switch self {
+        case .appleNLP:  return 512
+        case .miniLM:    return 384
         }
     }
 
     private static let defaultsKey = "embeddingModelChoice"
 
+    /// Single source of truth for the active embedding model. Defaults to
+    /// MiniLM (best evaluation scores). Stored raw values from removed models
+    /// (e.g. the retired Nomic variants) fall back to MiniLM automatically.
     static var current: EmbeddingModelChoice {
         get {
             guard let raw = UserDefaults.standard.string(forKey: defaultsKey),

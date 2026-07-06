@@ -22,9 +22,14 @@ struct ClusterCardsView: View {
         repository.bits.compactMap { $0.createdAt }.max() ?? Date()
     }
 
+    // MARK: - Noise entries (DBSCAN assigned index = -1)
+    private var unsortedBits: [Bit] {
+        repository.bits.filter { !$0.isDeleted && $0.clusterID == -1 }
+    }
+
     var body: some View {
         ScrollView {
-            if clusters.isEmpty {
+            if clusters.isEmpty && unsortedBits.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "circle.hexagongrid")
                         .font(.system(size: 48))
@@ -50,6 +55,11 @@ struct ClusterCardsView: View {
                             selectedCluster = cluster
                         }
                     }
+
+                    // Unsorted / noise card — always last in the grid
+                    if !unsortedBits.isEmpty {
+                        UnsortedCard(count: unsortedBits.count)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
@@ -61,6 +71,59 @@ struct ClusterCardsView: View {
                 ClusterGraphView(repository: repository, filterClusterID: cluster.index)
             }
         }
+    }
+}
+
+// MARK: - Unsorted Card
+
+private struct UnsortedCard: View {
+    let count: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 4) {
+                Text("🌫️").font(.title3)
+                Spacer()
+                Text("\(count)")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.gray)
+            }
+
+            Text("Unsorted")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .lineLimit(2)
+
+            Text("Entries that don't yet belong to a theme")
+                .font(.caption2)
+                .foregroundColor(.gray.opacity(0.7))
+                .lineLimit(2)
+
+            // Dashed progress bar placeholder
+            GeometryReader { _ in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.white.opacity(0.06))
+                        .frame(height: 3)
+                    RoundedRectangle(cornerRadius: 2)
+                        .stroke(Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                        .frame(height: 3)
+                }
+            }
+            .frame(height: 3)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(red: 0.12, green: 0.12, blue: 0.14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.gray.opacity(0.18), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
     }
 }
 
