@@ -3,7 +3,7 @@ import Combine
 
 // MARK: - Graph Data Models
 
-struct GraphNode: Identifiable {
+struct GraphNode: Identifiable, Equatable {
     let id: UUID
     let title: String
     let emotion: Emotion
@@ -13,6 +13,17 @@ struct GraphNode: Identifiable {
 
     var position: CGPoint
     var velocity: CGPoint = .zero
+
+    static func == (lhs: GraphNode, rhs: GraphNode) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.title == rhs.title &&
+        lhs.emotion == rhs.emotion &&
+        lhs.clusterID == rhs.clusterID &&
+        lhs.createdAt == rhs.createdAt &&
+        lhs.intensity == rhs.intensity &&
+        lhs.position == rhs.position &&
+        lhs.velocity == rhs.velocity
+    }
 }
 
 struct GraphEdge: Identifiable {

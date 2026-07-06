@@ -20,9 +20,9 @@ struct ClusterGraphView: View {
     @State private var scale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
 
-    // In-progress gesture deltas (not yet committed)
-    @State private var gestureScale: CGFloat = 1.0      // Magnification delta
-    @State private var gesturePanOffset: CGSize = .zero  // Pan delta
+    // In-progress gesture deltas
+    @State private var gestureScale: CGFloat = 1.0
+    @State private var gesturePanOffset: CGSize = .zero
 
     // Multi-touch detection
     @State private var isPinching = false
@@ -35,12 +35,10 @@ struct ClusterGraphView: View {
 
     // MARK: - Computed Camera
 
-    /// The effective scale combining committed + in-progress gesture
     private var effectiveScale: CGFloat {
         max(0.3, min(3.0, scale * gestureScale))
     }
 
-    /// The effective offset combining committed + in-progress pan
     private var effectiveOffset: CGSize {
         CGSize(
             width: offset.width + gesturePanOffset.width,
@@ -62,77 +60,126 @@ struct ClusterGraphView: View {
         return clusterColors[id % clusterColors.count]
     }
 
+    // MARK: - Body
+
     var body: some View {
         ZStack {
             Color(red: 0.06, green: 0.06, blue: 0.08).ignoresSafeArea()
 
             GeometryReader { geometry in
-                Canvas { context, size in
-                    let cx = size.width / 2
-                    let cy = size.height / 2
-                    let s = effectiveScale
-                    let o = effectiveOffset
-                    context.transform = CGAffineTransform(
-                        a: s, b: 0, c: 0, d: s,
-                        tx: cx * (1 - s) + o.width,
-                        ty: cy * (1 - s) + o.height
-                    )
+                let activeFocus = !layout.focusedNeighborIDs.isEmpty
+                
+                ZStack {
+                    // Panning background area
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    guard !isPinching else { return }
+                                    gesturePanOffset = value.translation
+                                }
+                                .onEnded { value in
+                                    guard !isPinching else {
+                                        gesturePanOffset = .zero
+                                        return
+                                    }
+                                    offset.width += value.translation.width
+                                    offset.height += value.translation.height
+                                    gesturePanOffset = .zero
+                                }
+                        )
 
-                    let activeFocus = !layout.focusedNeighborIDs.isEmpty
-                    let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
-
-                    // PASS 1: BACKGROUND (Dimmed when focus is active)
-                    for edge in layout.edges {
-                        if activeFocus && layout.focusedEdgeIDs.contains(edge.id) { continue }
-                        guard let src = nodesByID[edge.sourceID],
-                              let dst = nodesByID[edge.targetID] else { continue }
-                        var path = Path()
-                        path.move(to: src.position)
-                        path.addLine(to: dst.position)
-                        let opacity = activeFocus ? 0.05 : Double(max(0.2, min(0.9, edge.similarity))) * 0.6
-                        context.stroke(path, with: .color(colorForCluster(edge.clusterID).opacity(opacity)), lineWidth: 1)
-                    }
-
-                    for node in layout.nodes {
-                        if activeFocus && layout.focusedNeighborIDs.contains(node.id) { continue }
-                        drawNode(node, context: &context, isSelected: false, isDimmed: activeFocus, isFocused: false)
-                    }
-
-                    // PASS 2: FOREGROUND (Focused nodes + edges drawn on top)
-                    if activeFocus {
+                    // 1. Edges Canvas (draws lines only)
+                    Canvas { context, size in
+                        let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
+                        
+                        // Pass 1: Background dimmed edges
+                        var bgPath = Path()
                         for edge in layout.edges {
-                            if !layout.focusedEdgeIDs.contains(edge.id) { continue }
+                            if activeFocus && layout.focusedEdgeIDs.contains(edge.id) { continue }
                             guard let src = nodesByID[edge.sourceID],
                                   let dst = nodesByID[edge.targetID] else { continue }
-                            var path = Path()
-                            path.move(to: src.position)
-                            path.addLine(to: dst.position)
-                            context.stroke(path, with: .color(colorForCluster(edge.clusterID).opacity(1.0)), lineWidth: 2)
+                            bgPath.move(to: src.position)
+                            bgPath.addLine(to: dst.position)
                         }
+                        context.stroke(bgPath, with: .color(Color.gray.opacity(activeFocus ? 0.03 : 0.25)), lineWidth: 1)
 
-                        for node in layout.nodes {
-                            if !layout.focusedNeighborIDs.contains(node.id) { continue }
-                            let isTarget = node.id == (draggedNodeID ?? selectedNodeID)
-                            drawNode(node, context: &context, isSelected: node.id == selectedNodeID, isDimmed: false, isFocused: isTarget)
+                        // Pass 2: Foreground highlighted edges
+                        if activeFocus {
+                            var fgPath = Path()
+                            for edge in layout.edges {
+                                if !layout.focusedEdgeIDs.contains(edge.id) { continue }
+                                guard let src = nodesByID[edge.sourceID],
+                                      let dst = nodesByID[edge.targetID] else { continue }
+                                fgPath.move(to: src.position)
+                                fgPath.addLine(to: dst.position)
+                            }
+                            context.stroke(fgPath, with: .color(Color.white.opacity(0.85)), lineWidth: 2)
                         }
                     }
 
-                    // Cluster labels
-                    for center in clusterCenters {
-                        let name = layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)"
-                        context.draw(
-                            Text(name).font(.caption2).fontWeight(.medium)
-                                .foregroundColor(colorForCluster(center.clusterID).opacity(0.9)),
-                            at: CGPoint(x: center.position.x, y: center.position.y - 32)
+                    // 2. Nodes Layer
+                    ForEach(layout.nodes) { node in
+                        let isSelected = node.id == selectedNodeID
+                        let isDimmed = activeFocus && !layout.focusedNeighborIDs.contains(node.id)
+                        let isNeighbor = activeFocus && layout.focusedNeighborIDs.contains(node.id) && node.id != selectedNodeID
+                        let isFocused = node.id == (draggedNodeID ?? selectedNodeID)
+                        
+                        NodeView(
+                            node: node,
+                            isSelected: isSelected,
+                            isDimmed: isDimmed,
+                            isFocused: isFocused,
+                            isNeighbor: isNeighbor,
+                            clusterColor: colorForCluster(node.clusterID)
+                        ) {
+                            // Tap handler handled inside the node view gesture to ensure no overlap
+                        }
+                        .position(node.position)
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    guard !isPinching else { return }
+                                    if draggedNodeID == nil {
+                                        draggedNodeID = node.id
+                                        layout.updateFocus(to: node.id)
+                                    }
+                                }
+                                .onEnded { value in
+                                    if draggedNodeID != nil {
+                                        draggedNodeID = nil
+                                        layout.updateFocus(to: selectedNodeID)
+                                    }
+                                    
+                                    // Check for tap gesture
+                                    if hypot(value.translation.width, value.translation.height) < 8 {
+                                        let newSelection = (selectedNodeID == node.id) ? nil : node.id
+                                        withAnimation(.spring(response: 0.3)) {
+                                            selectedNodeID = newSelection
+                                        }
+                                        layout.updateFocus(to: newSelection)
+                                    }
+                                }
                         )
                     }
+
+                    // 3. Cluster centers / titles
+                    ForEach(clusterCenters, id: \.clusterID) { center in
+                        let name = layout.clusterNames[center.clusterID] ?? "Cluster \(center.clusterID)"
+                        Text(name)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(colorForCluster(center.clusterID).opacity(0.85))
+                            .position(x: center.position.x, y: center.position.y - 32)
+                    }
                 }
-                // MARK: - Gestures
+                .offset(effectiveOffset)
+                .scaleEffect(effectiveScale)
                 .simultaneousGesture(
                     MagnificationGesture()
                         .onChanged { value in
                             isPinching = true
-                            // If a drag-focus was active, cancel it immediately
                             if draggedNodeID != nil {
                                 draggedNodeID = nil
                                 layout.updateFocus(to: selectedNodeID)
@@ -143,65 +190,6 @@ struct ClusterGraphView: View {
                             scale = max(0.3, min(3.0, scale * value))
                             gestureScale = 1.0
                             isPinching = false
-                        }
-                )
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            // Skip all drag logic while pinching
-                            guard !isPinching else { return }
-
-                            let t = value.translation
-
-                            // First event: determine if we started on a node
-                            if draggedNodeID == nil && gesturePanOffset == .zero && hypot(t.width, t.height) < 2 {
-                                let startGraphPoint = screenToGraph(value.startLocation)
-                                if let hitID = hitTest(at: startGraphPoint) {
-                                    draggedNodeID = hitID
-                                    layout.updateFocus(to: hitID)
-                                }
-                            }
-
-                            // Pan only when NOT interacting with a node
-                            if draggedNodeID == nil {
-                                gesturePanOffset = t
-                            }
-                        }
-                        .onEnded { value in
-                            // If we were pinching, just clean up
-                            guard !isPinching else {
-                                gesturePanOffset = .zero
-                                draggedNodeID = nil
-                                return
-                            }
-
-                            let t = value.translation
-                            let startGraphPoint = screenToGraph(value.startLocation)
-                            let hitID = hitTest(at: startGraphPoint)
-
-                            if draggedNodeID != nil {
-                                // Was holding/dragging a node — clear temporary focus
-                                draggedNodeID = nil
-                                layout.updateFocus(to: selectedNodeID)
-                            } else if hypot(t.width, t.height) < 8 {
-                                // Tap — select/deselect
-                                let newSelection: UUID? = {
-                                    if let id = hitID {
-                                        return (selectedNodeID == id) ? nil : id
-                                    }
-                                    return nil
-                                }()
-                                withAnimation(.spring(response: 0.3)) {
-                                    selectedNodeID = newSelection
-                                }
-                                layout.updateFocus(to: newSelection)
-                            } else {
-                                // Pan — commit the offset
-                                offset.width += t.width
-                                offset.height += t.height
-                            }
-
-                            gesturePanOffset = .zero
                         }
                 )
                 .onAppear {
@@ -275,55 +263,6 @@ struct ClusterGraphView: View {
         }
     }
 
-    // MARK: - Node Rendering
-
-    private func drawNode(_ node: GraphNode, context: inout GraphicsContext, isSelected: Bool, isDimmed: Bool, isFocused: Bool) {
-        let isNoise = node.clusterID == nil || node.clusterID == -1
-        let clusterColor = colorForCluster(node.clusterID)
-
-        let nodeScale: CGFloat
-        if isFocused {
-            nodeScale = 1.2
-        } else if isDimmed {
-            nodeScale = 0.9
-        } else if layout.focusedNeighborIDs.contains(node.id) {
-            nodeScale = 1.1
-        } else {
-            nodeScale = 1.0
-        }
-        let opacity: Double = isDimmed ? 0.2 : 1.0
-
-        let rect = CGRect(
-            x: node.position.x - (70 * nodeScale),
-            y: node.position.y - (18 * nodeScale),
-            width: 140 * nodeScale,
-            height: 36 * nodeScale
-        )
-        let nodePath = Path(roundedRect: rect, cornerRadius: 12 * nodeScale)
-
-        var drawCtx = context
-        if !isDimmed && layout.focusedNeighborIDs.contains(node.id) {
-            drawCtx.addFilter(.shadow(
-                color: .black.opacity(isFocused ? 0.8 : 0.4),
-                radius: isFocused ? 8 : 4,
-                x: 0,
-                y: isFocused ? 4 : 2
-            ))
-        }
-
-        drawCtx.fill(nodePath, with: .color(
-            isSelected ? clusterColor.opacity(0.3 * opacity) : Color(red: 0.1, green: 0.1, blue: 0.12).opacity(opacity)
-        ))
-        drawCtx.stroke(nodePath, with: .color(
-            isSelected ? Color.white.opacity(opacity) : clusterColor.opacity(isNoise ? (0.4 * opacity) : (0.8 * opacity))
-        ), lineWidth: isSelected ? 2 : 1)
-
-        drawCtx.draw(
-            Text("\(node.emotion.emoji) \(node.title)").font(.caption2).foregroundColor(Color.white.opacity(opacity)),
-            in: CGRect(x: rect.minX + 6, y: rect.minY, width: rect.width - 12, height: rect.height)
-        )
-    }
-
     // MARK: - Camera
 
     private func centerOnNodes() {
@@ -335,30 +274,6 @@ struct ClusterGraphView: View {
         withAnimation(.easeOut(duration: 0.45)) {
             offset = CGSize(width: effectiveScale * (cx - avgX), height: effectiveScale * (cy - avgY))
         }
-    }
-
-    // MARK: - Coordinate Transform
-
-    /// Converts a screen-space point to graph-space, accounting for all active transforms
-    private func screenToGraph(_ point: CGPoint) -> CGPoint {
-        let cx = graphSize.width / 2
-        let cy = graphSize.height / 2
-        let s = effectiveScale
-        let o = effectiveOffset
-        return CGPoint(
-            x: (point.x - cx * (1 - s) - o.width) / s,
-            y: (point.y - cy * (1 - s) - o.height) / s
-        )
-    }
-
-    // MARK: - Hit Testing
-
-    private func hitTest(at graphPoint: CGPoint) -> UUID? {
-        for node in layout.nodes.reversed() {
-            let rect = CGRect(x: node.position.x - 70, y: node.position.y - 18, width: 140, height: 36)
-            if rect.contains(graphPoint) { return node.id }
-        }
-        return nil
     }
 
     // MARK: - Header
@@ -503,5 +418,55 @@ struct ClusterGraphView: View {
             let avgY = nodes.reduce(0) { $0 + $1.position.y } / CGFloat(nodes.count)
             return (clusterID: clusterID, position: CGPoint(x: avgX, y: avgY))
         }
+    }
+}
+
+// MARK: - Node View
+
+struct NodeView: View {
+    let node: GraphNode
+    let isSelected: Bool
+    let isDimmed: Bool
+    let isFocused: Bool
+    let isNeighbor: Bool
+    let clusterColor: Color
+    let onTap: () -> Void
+    
+    var body: some View {
+        let isNoise = node.clusterID == nil || node.clusterID == -1
+        let scale: CGFloat = isFocused ? 1.2 : (isDimmed ? 0.9 : (isSelected || isNeighbor ? 1.1 : 1.0))
+        let opacity: Double = isDimmed ? 0.2 : 1.0
+        
+        HStack(spacing: 6) {
+            Text(node.emotion.emoji)
+                .font(.caption)
+            Text(node.title)
+                .font(.caption2)
+                .fontWeight(.medium)
+                .lineLimit(1)
+        }
+        .foregroundColor(Color.white.opacity(opacity))
+        .padding(.horizontal, 8)
+        .frame(width: 140, height: 36)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isSelected ? clusterColor.opacity(0.3 * opacity) : Color(red: 0.1, green: 0.1, blue: 0.12).opacity(opacity))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(
+                    isSelected ? Color.white.opacity(opacity) : clusterColor.opacity(isNoise ? (0.4 * opacity) : (0.8 * opacity)),
+                    lineWidth: isSelected ? 2 : 1
+                )
+        )
+        .shadow(
+            color: .black.opacity(isFocused ? 0.8 : (isNeighbor ? 0.45 : 0.0)),
+            radius: isFocused ? 8 : (isNeighbor ? 4 : 0),
+            x: 0,
+            y: isFocused ? 4 : (isNeighbor ? 2 : 0)
+        )
+        .scaleEffect(scale)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: scale)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: opacity)
     }
 }
