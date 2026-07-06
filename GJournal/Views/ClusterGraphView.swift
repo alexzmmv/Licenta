@@ -69,27 +69,35 @@ struct ClusterGraphView: View {
             GeometryReader { geometry in
                 let activeFocus = !layout.focusedNeighborIDs.isEmpty
                 
-                ZStack {
-                    // Panning background area
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    guard !isPinching else { return }
-                                    gesturePanOffset = value.translation
-                                }
-                                .onEnded { value in
-                                    guard !isPinching else {
-                                        gesturePanOffset = .zero
-                                        return
-                                    }
-                                    offset.width += value.translation.width
-                                    offset.height += value.translation.height
+                // Full-screen background area for panning and selection clearing
+                // This sits outside the transformed ZStack so it covers the 100% full screen area at all times,
+                // allowing panning indefinitely even when the graph is zoomed out or panned away.
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3)) {
+                            selectedNodeID = nil
+                        }
+                        layout.updateFocus(to: nil)
+                    }
+                    .gesture(
+                        DragGesture(minimumDistance: 5)
+                            .onChanged { value in
+                                guard !isPinching else { return }
+                                gesturePanOffset = value.translation
+                            }
+                            .onEnded { value in
+                                guard !isPinching else {
                                     gesturePanOffset = .zero
+                                    return
                                 }
-                        )
+                                offset.width += value.translation.width
+                                offset.height += value.translation.height
+                                gesturePanOffset = .zero
+                            }
+                    )
 
+                ZStack {
                     // 1. Edges Canvas (draws lines only)
                     Canvas { context, size in
                         let nodesByID = Dictionary(uniqueKeysWithValues: layout.nodes.map { ($0.id, $0) })
@@ -134,12 +142,17 @@ struct ClusterGraphView: View {
                             isFocused: isFocused,
                             isNeighbor: isNeighbor,
                             clusterColor: colorForCluster(node.clusterID)
-                        ) {
-                            // Tap handler handled inside the node view gesture to ensure no overlap
-                        }
+                        )
                         .position(node.position)
+                        .onTapGesture {
+                            let newSelection = (selectedNodeID == node.id) ? nil : node.id
+                            withAnimation(.spring(response: 0.3)) {
+                                selectedNodeID = newSelection
+                            }
+                            layout.updateFocus(to: newSelection)
+                        }
                         .gesture(
-                            DragGesture(minimumDistance: 0)
+                            DragGesture(minimumDistance: 5)
                                 .onChanged { value in
                                     guard !isPinching else { return }
                                     if draggedNodeID == nil {
@@ -147,19 +160,10 @@ struct ClusterGraphView: View {
                                         layout.updateFocus(to: node.id)
                                     }
                                 }
-                                .onEnded { value in
+                                .onEnded { _ in
                                     if draggedNodeID != nil {
                                         draggedNodeID = nil
                                         layout.updateFocus(to: selectedNodeID)
-                                    }
-                                    
-                                    // Check for tap gesture
-                                    if hypot(value.translation.width, value.translation.height) < 8 {
-                                        let newSelection = (selectedNodeID == node.id) ? nil : node.id
-                                        withAnimation(.spring(response: 0.3)) {
-                                            selectedNodeID = newSelection
-                                        }
-                                        layout.updateFocus(to: newSelection)
                                     }
                                 }
                         )
@@ -270,12 +274,16 @@ struct ClusterGraphView: View {
     private func centerOnNodes() {
         guard !layout.nodes.isEmpty, !graphSize.width.isZero else { return }
         let cx = graphSize.width / 2
-        let cy = graphSize.height / 2
+        let cy = geometryReaderWorkaroundCenter().y // fallback helper
         let avgX = layout.nodes.reduce(0.0) { $0 + $1.position.x } / CGFloat(layout.nodes.count)
         let avgY = layout.nodes.reduce(0.0) { $0 + $1.position.y } / CGFloat(layout.nodes.count)
         withAnimation(.easeOut(duration: 0.45)) {
-            offset = CGSize(width: effectiveScale * (cx - avgX), height: effectiveScale * (cy - avgY))
+            offset = CGSize(width: effectiveScale * (cx - avgX), height: effectiveScale * (graphSize.height / 2 - avgY))
         }
+    }
+    
+    private func geometryReaderWorkaroundCenter() -> CGPoint {
+        CGPoint(x: graphSize.width / 2, y: graphSize.height / 2)
     }
 
     // MARK: - Header
@@ -432,7 +440,6 @@ struct NodeView: View {
     let isFocused: Bool
     let isNeighbor: Bool
     let clusterColor: Color
-    let onTap: () -> Void
     
     var body: some View {
         let isNoise = node.clusterID == nil || node.clusterID == -1
