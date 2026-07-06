@@ -118,6 +118,7 @@ struct ClusterGraphView: View {
                             context.stroke(fgPath, with: .color(Color.white.opacity(0.85)), lineWidth: 2)
                         }
                     }
+                    .allowsHitTesting(false)
 
                     // 2. Nodes Layer
                     ForEach(layout.nodes) { node in
@@ -172,6 +173,7 @@ struct ClusterGraphView: View {
                             .fontWeight(.medium)
                             .foregroundColor(colorForCluster(center.clusterID).opacity(0.85))
                             .position(x: center.position.x, y: center.position.y - 32)
+                            .allowsHitTesting(false)
                     }
                 }
                 .offset(effectiveOffset)
