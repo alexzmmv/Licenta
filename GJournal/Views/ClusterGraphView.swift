@@ -153,6 +153,7 @@ struct ClusterGraphView: View {
                                 isNeighbor: isNeighbor,
                                 clusterColor: colorForCluster(node.clusterID)
                             )
+                            .scaleEffect(effectiveScale)
                             .position(screenPosition(for: node.position, in: viewportSize))
                             .onTapGesture {
                                 let newSelection = (selectedNodeID == node.id) ? nil : node.id
