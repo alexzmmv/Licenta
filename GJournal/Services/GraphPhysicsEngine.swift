@@ -64,6 +64,7 @@ class ForceDirectedLayout: ObservableObject {
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
         let radius = min(size.width, size.height) * 0.35
         let bitsByCluster = Dictionary(grouping: bits) { $0.clusterID ?? -1 }
+        let bitsDict = Dictionary(uniqueKeysWithValues: bits.map { ($0.id, $0) })
         let sortedClusters = bitsByCluster.keys.sorted()
         let clusterCount = sortedClusters.count
 
@@ -110,7 +111,7 @@ class ForceDirectedLayout: ObservableObject {
         ) { $0.clusterID! }
 
         for (clusterID, clusterNodes) in clusterGroups {
-            let clusterBits = bits.filter { $0.clusterID == clusterID }
+            let clusterBits = bitsByCluster[clusterID] ?? []
             if let persistedName = clusterBits.compactMap({ $0.cluster?.name }).first {
                 newClusterNames[clusterID] = persistedName
             } else {
@@ -121,8 +122,8 @@ class ForceDirectedLayout: ObservableObject {
                 let threshold: Float = 0.65
                 for i in 0..<clusterNodes.count {
                     for j in (i + 1)..<clusterNodes.count {
-                        let bitA = bits.first { $0.id == clusterNodes[i].id }
-                        let bitB = bits.first { $0.id == clusterNodes[j].id }
+                        let bitA = bitsDict[clusterNodes[i].id]
+                        let bitB = bitsDict[clusterNodes[j].id]
                         if let nA = SemanticUtils.normalised(bitA?.embedding),
                            let nB = SemanticUtils.normalised(bitB?.embedding) {
                             let sim = SemanticUtils.cosineSimilarity(nA, nB)
@@ -157,12 +158,26 @@ class ForceDirectedLayout: ObservableObject {
 
             var simulationNodes = initialNodes
             let maxIters = 250
+            
+            let nodeIndexDict = Dictionary(uniqueKeysWithValues: initialNodes.enumerated().map { ($0.element.id, $0.offset) })
+            let edgeIndices: [(Int, Int)] = newEdges.compactMap { edge in
+                guard let si = nodeIndexDict[edge.sourceID], let ti = nodeIndexDict[edge.targetID] else { return nil }
+                return (si, ti)
+            }
+            
+            let clusterGroupsIndices: [[Int]] = {
+                let grouped = Dictionary(
+                    grouping: initialNodes.enumerated().filter { $0.element.clusterID != nil && $0.element.clusterID! >= 0 }
+                ) { $0.element.clusterID! }
+                return Array(grouped.values.map { $0.map { $0.offset } })
+            }()
 
             for _ in 0..<maxIters {
                 let prevPositions = simulationNodes.map { $0.position }
                 simulationNodes = self.computeStep(
                     nodes: simulationNodes,
-                    edges: newEdges,
+                    edgeIndices: edgeIndices,
+                    clusterIndices: clusterGroupsIndices,
                     center: center,
                     repulsion: 12000,
                     attraction: 0.12,
@@ -189,7 +204,8 @@ class ForceDirectedLayout: ObservableObject {
 
     nonisolated private func computeStep(
         nodes: [GraphNode],
-        edges: [GraphEdge],
+        edgeIndices: [(Int, Int)],
+        clusterIndices: [[Int]],
         center: CGPoint,
         repulsion: CGFloat,
         attraction: CGFloat,
@@ -220,23 +236,18 @@ class ForceDirectedLayout: ObservableObject {
             }
         }
 
-        for edge in edges {
-            guard let si = nodes.firstIndex(where: { $0.id == edge.sourceID }),
-                  let ti = nodes.firstIndex(where: { $0.id == edge.targetID }) else { continue }
+        for (si, ti) in edgeIndices {
             let dx = nodes[ti].position.x - nodes[si].position.x
             let dy = nodes[ti].position.y - nodes[si].position.y
             forces[si].x += dx * attraction; forces[si].y += dy * attraction
             forces[ti].x -= dx * attraction; forces[ti].y -= dy * attraction
         }
 
-        let clusterGroups = Dictionary(
-            grouping: nodes.enumerated().filter { $0.element.clusterID != nil && $0.element.clusterID! >= 0 }
-        ) { $0.element.clusterID! }
-        for (_, clusterNodes) in clusterGroups where clusterNodes.count > 1 {
-            let avgX = clusterNodes.reduce(0.0) { $0 + $1.element.position.x } / CGFloat(clusterNodes.count)
-            let avgY = clusterNodes.reduce(0.0) { $0 + $1.element.position.y } / CGFloat(clusterNodes.count)
+        for indices in clusterIndices where indices.count > 1 {
+            let avgX = indices.reduce(0.0) { $0 + nodes[$1].position.x } / CGFloat(indices.count)
+            let avgY = indices.reduce(0.0) { $0 + nodes[$1].position.y } / CGFloat(indices.count)
             let clusterCenter = CGPoint(x: avgX, y: avgY)
-            for (idx, _) in clusterNodes {
+            for idx in indices {
                 forces[idx].x += (clusterCenter.x - nodes[idx].position.x) * 0.1
                 forces[idx].y += (clusterCenter.y - nodes[idx].position.y) * 0.1
             }
