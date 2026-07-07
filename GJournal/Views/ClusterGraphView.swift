@@ -33,7 +33,14 @@ struct ClusterGraphView: View {
     @State private var bitToEdit: Bit?
     @State private var graphSize: CGSize = .zero
 
+    // Blur and transition state
+    @State private var isAnimatingScale = false
+
     // MARK: - Computed Camera
+
+    private var shouldApplyBlur: Bool {
+        isPinching || gesturePanOffset != .zero || draggedNodeID != nil || isAnimatingScale
+    }
 
     private var effectiveScale: CGFloat {
         max(0.3, min(3.0, scale * gestureScale))
@@ -135,6 +142,9 @@ struct ClusterGraphView: View {
                         }
                     }
                     .allowsHitTesting(false)
+                    .blur(radius: shouldApplyBlur ? 2.0 : 0)
+                    .opacity(shouldApplyBlur ? 0.55 : 1.0)
+                    .animation(.easeInOut(duration: 0.15), value: shouldApplyBlur)
 
                     // 2. Nodes Layer
                     ForEach(layout.nodes) { node in
@@ -155,6 +165,8 @@ struct ClusterGraphView: View {
                             )
                             .scaleEffect(effectiveScale)
                             .position(screenPosition(for: node.position, in: viewportSize))
+                            .blur(radius: shouldApplyBlur ? 0.7 : 0)
+                            .animation(.easeInOut(duration: 0.15), value: shouldApplyBlur)
                             .onTapGesture {
                                 let newSelection = (selectedNodeID == node.id) ? nil : node.id
                                 withAnimation(.spring(response: 0.3)) {
@@ -209,9 +221,15 @@ struct ClusterGraphView: View {
                             }
                             layout.updateFocus(to: nil)
                         } else {
-                            // Panning gesture — commit translate
-                            offset.width += t.width
-                            offset.height += t.height
+                            // Panning gesture — commit translate with a smooth spring release animation
+                            isAnimatingScale = true
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                offset.width += t.width
+                                offset.height += t.height
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                isAnimatingScale = false
+                            }
                         }
                         gesturePanOffset = .zero
                     }
@@ -227,9 +245,16 @@ struct ClusterGraphView: View {
                         gestureScale = value
                     }
                     .onEnded { value in
-                        scale = max(0.3, min(3.0, scale * value))
+                        isAnimatingScale = true
+                        // Smoothly animate the zoom release
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            scale = max(0.3, min(3.0, scale * value))
+                        }
                         gestureScale = 1.0
                         isPinching = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            isAnimatingScale = false
+                        }
                     }
             )
 
@@ -250,8 +275,12 @@ struct ClusterGraphView: View {
             if !isLoading {
                 VStack(spacing: 12) {
                     Button {
-                        withAnimation(.spring(response: 0.3)) {
+                        isAnimatingScale = true
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             scale = min(3.0, scale + 0.25)
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            isAnimatingScale = false
                         }
                     } label: {
                         Image(systemName: "plus")
@@ -264,8 +293,12 @@ struct ClusterGraphView: View {
                     }
                     
                     Button {
-                        withAnimation(.spring(response: 0.3)) {
+                        isAnimatingScale = true
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             scale = max(0.3, scale - 0.25)
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            isAnimatingScale = false
                         }
                     } label: {
                         Image(systemName: "minus")
@@ -466,11 +499,15 @@ struct ClusterGraphView: View {
                     .background(Color.gray.opacity(0.1)).cornerRadius(8)
                     .onTapGesture {
                         if let center = clusterCenters.first(where: { $0.clusterID == clusterID }) {
+                            isAnimatingScale = true
                             withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                                 offset = CGSize(
                                     width: effectiveScale * (graphSize.width / 2 - center.position.x),
                                     height: effectiveScale * (graphSize.height / 2 - center.position.y)
                                 )
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                isAnimatingScale = false
                             }
                             if clusterID >= 0 {
                                 let hubID = uuidForCluster(id: clusterID)
