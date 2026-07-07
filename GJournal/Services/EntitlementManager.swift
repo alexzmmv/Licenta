@@ -30,6 +30,13 @@ final class EntitlementManager {
     }
 
     func refreshEntitlements() async {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "bypassPaywall") {
+            hasInsights = true
+            return
+        }
+        #endif
+
         var found = false
         for await result in Transaction.currentEntitlements {
             if case .verified(let tx) = result, tx.productID == Self.insightsProductID {

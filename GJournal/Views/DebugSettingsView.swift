@@ -22,6 +22,9 @@ struct DebugSettingsView: View {
     @AppStorage("clusteringStrategyChoice") private var clusteringStrategyRaw: String = ClusteringStrategyChoice.classic.rawValue
     @AppStorage("debugLoggingEnabled") private var debugLoggingEnabled = false
 
+    @Environment(EntitlementManager.self) private var entitlementManager
+    @AppStorage("bypassPaywall") private var bypassPaywall = false
+
     private var selectedModel: Binding<EmbeddingModelChoice> {
         Binding(
             get: { EmbeddingModelChoice(rawValue: embeddingModelRaw) ?? .miniLM },
@@ -91,6 +94,25 @@ struct DebugSettingsView: View {
                 Text("AI Model")
             } footer: {
                 Text("\(selectedModel.wrappedValue.subtitle)\n\(selectedStrategy.wrappedValue.subtitle)")
+            }
+
+            Section {
+                Toggle(isOn: $bypassPaywall) {
+                    HStack {
+                        Image(systemName: "creditcard.fill")
+                            .foregroundColor(.green)
+                        Text("Bypass Paywall (Force Paid)")
+                    }
+                }
+                .onChange(of: bypassPaywall) { _, newValue in
+                    Task {
+                        await entitlementManager.refreshEntitlements()
+                    }
+                }
+            } header: {
+                Text("Licensing & Paywall Override")
+            } footer: {
+                Text("When enabled, all premium features (Network Graphs, Trajectories, and Advanced Insights) will be immediately unlocked and treated as purchased.")
             }
 
             Section {
