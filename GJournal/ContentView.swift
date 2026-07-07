@@ -312,7 +312,8 @@ struct ContentView: View {
             }
             .onChange(of: showingNetworkGraph) { _, isShowing in
                 guard isShowing else { return }
-                Task { await insightEngine.compute(bits: repository.bits) }
+                let tags = (try? modelContext.fetch(FetchDescriptor<BehavioralTag>())) ?? []
+                Task { await insightEngine.compute(bits: repository.bits, allTags: tags) }
             }
             .sheet(isPresented: $showingTrajectory) {
                 TrajectoryView(metrics: trajectoryEngine.metrics)

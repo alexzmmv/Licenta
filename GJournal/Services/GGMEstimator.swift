@@ -2,10 +2,26 @@ import Foundation
 
 // MARK: - Output Models
 
+/// A node in the psychological network: an emotion or a behavioral tag (event/action).
+enum NetworkVariable: Hashable, Sendable {
+    case emotion(Emotion)
+    case tag(lemma: String, category: TagCategory)
+
+    var label: String {
+        switch self {
+        case .emotion(let e): return e.rawValue
+        case .tag(let lemma, _): return lemma.capitalized
+        }
+    }
+
+    var emotion: Emotion? { if case .emotion(let e) = self { return e }; return nil }
+    var isEmotion: Bool { emotion != nil }
+}
+
 struct PsychNetworkEdge: Identifiable, Sendable {
     let id = UUID()
-    let first: Emotion
-    let second: Emotion
+    let first: NetworkVariable
+    let second: NetworkVariable
     let weight: Float     // partial correlation (Tier 2) or Spearman r (Tier 1)
 
     var isPositive: Bool { weight > 0 }
@@ -16,7 +32,7 @@ struct PsychologicalNetwork: Sendable {
     enum Tier: Sendable { case spearman, ledoitWolf }
 
     let edges: [PsychNetworkEdge]
-    let centrality: [Emotion: Float]   // node strength = Σ|weight|
+    let centrality: [NetworkVariable: Float]   // node strength = Σ|weight|
     let tier: Tier
     let n: Int
     let shrinkageCoefficient: Double?  // Tier 2 only
@@ -37,11 +53,14 @@ enum GGMEstimator {
     nonisolated static let bootstrapMin = 8
     nonisolated static let fdrQ         = 0.10
 
+    /// Default variable set when none is supplied: the 12 emotions (backward-compatible).
+    nonisolated static var defaultLabels: [NetworkVariable] { Emotion.allCases.map { .emotion($0) } }
+
     // MARK: - Tier 1: Spearman + BH FDR + Bootstrap
 
-    static func tier1Network(from matrix: [[Float]], n: Int) -> PsychologicalNetwork {
-        let emotions = Emotion.allCases
-        let p = emotions.count  // 12
+    static func tier1Network(from matrix: [[Float]], n: Int,
+                             labels: [NetworkVariable] = defaultLabels) -> PsychologicalNetwork {
+        let p = labels.count
 
         let cols: [[Double]] = (0..<p).map { j in matrix.map { Double($0[j]) } }
         let ranked = cols.map { rankVector($0) }
@@ -57,11 +76,11 @@ enum GGMEstimator {
         }
 
         let kept = benjaminiHochberg(pairs: pairs, q: fdrQ)
-        let candidates: [(Emotion, Emotion, Float)] = kept
+        let candidates: [(NetworkVariable, NetworkVariable, Float)] = kept
             .filter { abs($0.r) >= Double(edgeThreshold) }
-            .map { (emotions[$0.i], emotions[$0.j], Float($0.r)) }
+            .map { (labels[$0.i], labels[$0.j], Float($0.r)) }
 
-        let stable = bootstrapSpearman(matrix: matrix, candidates: candidates)
+        let stable = bootstrapSpearman(matrix: matrix, labels: labels, candidates: candidates)
 
         let final = stable
             .sorted { abs($0.2) > abs($1.2) }
@@ -80,27 +99,27 @@ enum GGMEstimator {
 
     // MARK: - Tier 2: Ledoit-Wolf GGM + Bootstrap
 
-    static func tier2Network(from matrix: [[Float]], n: Int) -> PsychologicalNetwork {
-        let emotions = Emotion.allCases
-        let p = emotions.count  // 12
+    static func tier2Network(from matrix: [[Float]], n: Int,
+                             labels: [NetworkVariable] = defaultLabels) -> PsychologicalNetwork {
+        let p = labels.count
 
         guard let (omega, lambda) = ledoitWolfPrecision(from: matrix, p: p, n: n) else {
-            return tier1Network(from: matrix, n: n)
+            return tier1Network(from: matrix, n: n, labels: labels)
         }
 
         let partialR = partialCorrelations(precision: omega, p: p)
 
-        var candidates: [(Emotion, Emotion, Float)] = []
+        var candidates: [(NetworkVariable, NetworkVariable, Float)] = []
         for i in 0..<p {
             for j in (i+1)..<p {
                 let r = Float(partialR[i * p + j])
                 if abs(r) >= edgeThreshold {
-                    candidates.append((emotions[i], emotions[j], r))
+                    candidates.append((labels[i], labels[j], r))
                 }
             }
         }
 
-        let stable = bootstrapLW(matrix: matrix, candidates: candidates, p: p)
+        let stable = bootstrapLW(matrix: matrix, labels: labels, candidates: candidates, p: p)
 
         let final = stable
             .sorted { abs($0.2) > abs($1.2) }
@@ -316,21 +335,22 @@ enum GGMEstimator {
     // Tier 1: check Spearman |r| ≥ threshold in each resample.
     private static func bootstrapSpearman(
         matrix: [[Float]],
-        candidates: [(Emotion, Emotion, Float)]
-    ) -> [(Emotion, Emotion, Float)] {
+        labels: [NetworkVariable],
+        candidates: [(NetworkVariable, NetworkVariable, Float)]
+    ) -> [(NetworkVariable, NetworkVariable, Float)] {
         guard !candidates.isEmpty else { return [] }
-        let emotions = Emotion.allCases
-        let emoIdx = Dictionary(uniqueKeysWithValues: emotions.enumerated().map { ($1, $0) })
+        let idx = Dictionary(uniqueKeysWithValues: labels.enumerated().map { ($1, $0) })
+        let p = labels.count
         let n = matrix.count
         var passes = [Int](repeating: 0, count: candidates.count)
         var rng = SystemRandomNumberGenerator()
 
         for _ in 0..<bootstrapN {
             let sample = (0..<n).map { _ in matrix[Int.random(in: 0..<n, using: &rng)] }
-            let sampledCols: [[Double]] = (0..<emotions.count).map { j in sample.map { Double($0[j]) } }
+            let sampledCols: [[Double]] = (0..<p).map { j in sample.map { Double($0[j]) } }
             let ranked = sampledCols.map { rankVector($0) }
-            for (k, (em1, em2, _)) in candidates.enumerated() {
-                guard let i = emoIdx[em1], let j = emoIdx[em2] else { continue }
+            for (k, (v1, v2, _)) in candidates.enumerated() {
+                guard let i = idx[v1], let j = idx[v2] else { continue }
                 let r = Float(pearsonCorrelation(ranked[i], ranked[j]))
                 if abs(r) >= edgeThreshold { passes[k] += 1 }
             }
@@ -342,12 +362,12 @@ enum GGMEstimator {
     // Tier 2: recompute full LW + partial correlations for each resample.
     private static func bootstrapLW(
         matrix: [[Float]],
-        candidates: [(Emotion, Emotion, Float)],
+        labels: [NetworkVariable],
+        candidates: [(NetworkVariable, NetworkVariable, Float)],
         p: Int
-    ) -> [(Emotion, Emotion, Float)] {
+    ) -> [(NetworkVariable, NetworkVariable, Float)] {
         guard !candidates.isEmpty else { return [] }
-        let emotions = Emotion.allCases
-        let emoIdx = Dictionary(uniqueKeysWithValues: emotions.enumerated().map { ($1, $0) })
+        let idx = Dictionary(uniqueKeysWithValues: labels.enumerated().map { ($1, $0) })
         let n = matrix.count
         var passes = [Int](repeating: 0, count: candidates.count)
         var rng = SystemRandomNumberGenerator()
@@ -356,8 +376,8 @@ enum GGMEstimator {
             let sample = (0..<n).map { _ in matrix[Int.random(in: 0..<n, using: &rng)] }
             guard let (omega, _) = ledoitWolfPrecision(from: sample, p: p, n: sample.count) else { continue }
             let partialR = partialCorrelations(precision: omega, p: p)
-            for (k, (em1, em2, _)) in candidates.enumerated() {
-                guard let i = emoIdx[em1], let j = emoIdx[em2] else { continue }
+            for (k, (v1, v2, _)) in candidates.enumerated() {
+                guard let i = idx[v1], let j = idx[v2] else { continue }
                 if abs(Float(partialR[i * p + j])) >= edgeThreshold { passes[k] += 1 }
             }
         }
@@ -367,8 +387,8 @@ enum GGMEstimator {
 
     // MARK: - Centrality
 
-    static func computeCentrality(edges: [PsychNetworkEdge]) -> [Emotion: Float] {
-        var strength = [Emotion: Float]()
+    static func computeCentrality(edges: [PsychNetworkEdge]) -> [NetworkVariable: Float] {
+        var strength = [NetworkVariable: Float]()
         for e in edges {
             strength[e.first,  default: 0] += e.absWeight
             strength[e.second, default: 0] += e.absWeight
