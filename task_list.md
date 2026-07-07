@@ -2,7 +2,7 @@
 
 This list categorizes the remaining tasks from `plan.md` across 4 Tiers of Necessity (from Critical Foundation down to Optional Fallbacks) and 3 Tiers of Difficulty (Easy, Medium, Hard).
 
-> **Status (2026-07-06): Tier 1 complete. Tier 2 Easy complete. Tier 2 Medium complete. Tier 2 Hard (HDBSCAN) complete.** Verified: 26/26 unit tests green. HybridSearchService (BM25 + pseudo-relevance cosine + RRF k=60) wired into BitsListView and DayDetailView. GraphPhysicsEngine extracted from ClusterGraphView into shared Services/. EntitlementManager (@Observable, StoreKit 2), PaywallView, and GJournal.storekit config added; InsightGatingSection updated with Unlock/Open badge logic. Next: Tier 2 Hard or Tier 3.
+> **Status (2026-07-07): Tier 1 + Tier 2 (Easy/Medium/Hard) all complete.** All four Tier 2 Hard innovation pillars shipped and tested — Swift HDBSCAN, GGM Estimator (Pillar A, exact sklearn Ledoit-Wolf parity + behavioral-tag variables), Persistent Homology (Pillar B, ripser-validated β0/β1 + trajectory biomarkers), and the Behavioral Tags Engine (SchemaV2, field-scoped extraction, embedding canonicalization). **88 unit tests green.** Python oracles: `training/{hdbscan_oracle,ggm_oracle,ph_oracle}.py`. Next: Tier 3 (Crisis Safety, Onboarding, TestFlight, Accessibility).
 
 ## 🟥 Tier 1: Essential – The Non-Negotiable Foundation ✅
 *These are critical tasks that block the app from being safe, stable, or accepted into the App Store.*
