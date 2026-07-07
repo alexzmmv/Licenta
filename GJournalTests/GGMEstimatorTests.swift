@@ -315,6 +315,24 @@ final class GGMEstimatorTests: XCTestCase {
         [-0.2408, 0.1570, -0.7628, 0.2874, 0.8161, 0.0544],
         [-1.1796, -0.2462, 0.4301, 1.3345, 1.0811, 1.8876]
     ]
+
+    func testNetworkGraphViewCompilesAndInitializes() {
+        let node1 = NetworkVariable.emotion(.joy)
+        let node2 = NetworkVariable.emotion(.anxiety)
+        let edge = PsychNetworkEdge(first: node1, second: node2, weight: 0.45)
+        
+        let network = PsychologicalNetwork(
+            edges: [edge],
+            centrality: [node1: 0.45, node2: 0.45],
+            tier: .spearman,
+            n: 40,
+            shrinkageCoefficient: nil,
+            computedAt: Date()
+        )
+        
+        let view = NetworkGraphView(network: network)
+        XCTAssertNotNil(view)
+    }
 }
 
 // MARK: - Minimal seeded RNG for reproducible tests
