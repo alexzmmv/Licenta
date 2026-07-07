@@ -3,6 +3,9 @@ import SwiftUI
 struct BitsListView: View {
     @ObservedObject var repository: BaseJournalRepository
     @Environment(\.dismiss) var dismiss
+    
+    var focusSearchOnAppear: Bool = false
+    @FocusState private var isSearchFieldFocused: Bool
 
     @State private var searchText = ""
     @State private var selectedEmotions: Set<Emotion> = []
@@ -19,6 +22,7 @@ struct BitsListView: View {
     @State private var viewMode: ViewMode = .list
 
     enum SortOrder: String, CaseIterable {
+        case relevance = "Relevance"
         case newestFirst = "Newest First"
         case oldestFirst = "Oldest First"
         case highIntensity = "Highest Intensity"
@@ -38,6 +42,9 @@ struct BitsListView: View {
         )
 
         switch sortOrder {
+        case .relevance:
+            // Relevance ranking is pre-sorted by the hybridSearch engine
+            break
         case .newestFirst:
             results.sort { $0.createdAt > $1.createdAt }
         case .oldestFirst:
@@ -103,9 +110,28 @@ struct BitsListView: View {
             .frame(maxWidth: .infinity)
         }
         .navigationBarHidden(true)
-        .onAppear { updateFilteredData() }
+        .onAppear {
+            updateFilteredData()
+            if focusSearchOnAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                    isSearchFieldFocused = true
+                }
+            }
+        }
         .onChange(of: repository.bits) { updateFilteredData() }
-        .onChange(of: searchText) { updateFilteredData() }
+        .onChange(of: searchText) {
+            let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                if sortOrder == .newestFirst {
+                    sortOrder = .relevance
+                }
+            } else {
+                if sortOrder == .relevance {
+                    sortOrder = .newestFirst
+                }
+            }
+            updateFilteredData()
+        }
         .onChange(of: selectedEmotions) { updateFilteredData() }
         .onChange(of: sortOrder) { updateFilteredData() }
         .onChange(of: selectedIntensityRange) { updateFilteredData() }
@@ -116,7 +142,8 @@ struct BitsListView: View {
                 selectedEmotions: $selectedEmotions,
                 selectedClusters: $selectedClusters,
                 sortOrder: $sortOrder,
-                selectedIntensityRange: $selectedIntensityRange
+                selectedIntensityRange: $selectedIntensityRange,
+                searchText: searchText
             )
         }
         .sheet(item: $bitToEdit) { bit in
@@ -202,6 +229,7 @@ struct BitsListView: View {
             TextField("Search entries...", text: $searchText)
                 .foregroundColor(.white)
                 .autocorrectionDisabled()
+                .focused($isSearchFieldFocused)
 
             if !searchText.isEmpty {
                 Button {
@@ -395,6 +423,7 @@ struct FilterSheetView: View {
     @Binding var selectedClusters: Set<Int>
     @Binding var sortOrder: BitsListView.SortOrder
     @Binding var selectedIntensityRange: ClosedRange<Int>
+    var searchText: String
     
     private var availableClusters: [Int] {
         let ids = Set(repository.bits.compactMap { $0.clusterID }).filter { $0 != -1 }
@@ -417,28 +446,30 @@ struct FilterSheetView: View {
 
                             VStack(spacing: 8) {
                                 ForEach(BitsListView.SortOrder.allCases, id: \.self) { order in
-                                    Button {
-                                        sortOrder = order
-                                    } label: {
-                                        HStack {
-                                            Text(order.rawValue)
-                                                .font(.body)
-                                                .foregroundColor(.white)
+                                    if order != .relevance || !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        Button {
+                                            sortOrder = order
+                                        } label: {
+                                            HStack {
+                                                Text(order.rawValue)
+                                                    .font(.body)
+                                                    .foregroundColor(.white)
 
-                                            Spacer()
+                                                Spacer()
 
-                                            if sortOrder == order {
-                                                Image(systemName: "checkmark")
-                                                    .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
-                                                    .fontWeight(.semibold)
+                                                if sortOrder == order {
+                                                    Image(systemName: "checkmark")
+                                                        .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                                                        .fontWeight(.semibold)
+                                                }
                                             }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(sortOrder == order ? Color(red: 0.55, green: 0.4, blue: 0.95).opacity(0.15) : Color.gray.opacity(0.1))
+                                            )
                                         }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .fill(sortOrder == order ? Color(red: 0.55, green: 0.4, blue: 0.95).opacity(0.15) : Color.gray.opacity(0.1))
-                                        )
                                     }
                                 }
                             }

@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var bitToEdit: Bit?
     @State private var selectedEmotion: Emotion?
     @State private var showingEmotionSheet = false
+    @State private var focusSearchOnAppear = false
 
     @State private var headerAppeared = false
     @State private var moodCardAppeared = false
@@ -190,6 +191,14 @@ struct ContentView: View {
                             .opacity(weekStripAppeared ? 1 : 0)
                             .offset(y: weekStripAppeared ? 0 : 20)
 
+                            dashboardSearchBar
+                                .opacity(weekStripAppeared ? 1 : 0)
+                                .offset(y: weekStripAppeared ? 0 : 20)
+
+                            recentEntriesSection
+                                .opacity(recentAppeared ? 1 : 0)
+                                .offset(y: recentAppeared ? 0 : 20)
+
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Your Journey")
                                     .font(.title3)
@@ -211,10 +220,6 @@ struct ContentView: View {
                             }
                             .opacity(calendarAppeared ? 1 : 0)
                             .offset(y: calendarAppeared ? 0 : 20)
-
-                            recentEntriesSection
-                                .opacity(recentAppeared ? 1 : 0)
-                                .offset(y: recentAppeared ? 0 : 20)
 
                             TopEmotionsView(topEmotions: topEmotions) { emotion in
                                 selectedEmotion = emotion
@@ -288,8 +293,8 @@ struct ContentView: View {
             .sheet(item: $bitToEdit) { bit in
                 AddEditBitView(repository: repository, bitToEdit: bit, date: bit.createdAt)
             }
-            .fullScreenCover(isPresented: $showingBitsList) {
-                NavigationStack { BitsListView(repository: repository) }
+            .fullScreenCover(isPresented: $showingBitsList, onDismiss: { focusSearchOnAppear = false }) {
+                NavigationStack { BitsListView(repository: repository, focusSearchOnAppear: focusSearchOnAppear) }
             }
             .fullScreenCover(isPresented: $showingGraph) {
                 NavigationStack { ClusterGraphView(repository: repository) }
@@ -379,6 +384,31 @@ struct ContentView: View {
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Color.white.opacity(0.1), lineWidth: 1))
         }
+    }
+
+    private var dashboardSearchBar: some View {
+        Button {
+            focusSearchOnAppear = true
+            showingBitsList = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                Text("Search memories, emotions, or days...")
+                    .foregroundColor(.gray)
+                    .font(.subheadline)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.white.opacity(0.08))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            )
+        }
+        .padding(.horizontal, 20)
     }
 }
 
@@ -589,7 +619,6 @@ struct RecentEntryRow: View {
         }
         .buttonStyle(.plain)
     }
-
 }
 
 // MARK: - First-Time Welcome
@@ -732,7 +761,7 @@ struct InsightGatingSection: View {
                         description: "Find entries by meaning, not just keywords — hybrid AI search.",
                         accentColor: Color(red: 0.9, green: 0.55, blue: 0.25),
                         isUnlocked: searchUnlocked,
-                        isPurchased: isPurchased,
+                        isPurchased: true,
                         progressLabel: "\(min(totalEntries, 10))/10 entries",
                         onUnlock: onUnlock,
                         onOpen: onOpenSearch

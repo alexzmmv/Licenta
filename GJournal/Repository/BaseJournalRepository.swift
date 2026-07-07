@@ -96,7 +96,7 @@ open class BaseJournalRepository: ObservableObject {
     func canEdit(bit: Bit) -> Bool {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? Date.distantPast
         let bitDay = calendar.startOfDay(for: bit.createdAt)
 
         return bitDay == today || bitDay == yesterday
@@ -110,7 +110,7 @@ open class BaseJournalRepository: ObservableObject {
     func getTopEmotionsLast30Days() -> [(emotion: Emotion, count: Int, dates: [Date])] {
         let calendar = Calendar.current
         let now = Date()
-        let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now)!
+        let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now) ?? Date.distantPast
 
         let recentBits = bits.filter { $0.createdAt >= thirtyDaysAgo && $0.createdAt <= now && !$0.isHidden }
 
@@ -149,7 +149,15 @@ open class BaseJournalRepository: ObservableObject {
         intensityRange: ClosedRange<Int>? = nil,
         clusterIDs: [Int]? = nil
     ) -> [Bit] {
-        var results = bits
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        var results: [Bit]
+        if !trimmedQuery.isEmpty {
+            // Retrieve results pre-ranked by hybrid BM25 + vector semantic relevance
+            results = hybridSearch.search(query: trimmedQuery)
+        } else {
+            results = bits
+        }
 
         // Filter by cluster
         if let clusterIDs = clusterIDs, !clusterIDs.isEmpty {
@@ -158,17 +166,6 @@ open class BaseJournalRepository: ObservableObject {
                     return clusterIDs.contains(id)
                 }
                 return false
-            }
-        }
-
-        // Text search across title, feel, event, action
-        if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let lowered = query.lowercased()
-            results = results.filter { bit in
-                (bit.title?.lowercased().contains(lowered) ?? false) ||
-                bit.feel.lowercased().contains(lowered) ||
-                bit.event.lowercased().contains(lowered) ||
-                bit.action.lowercased().contains(lowered)
             }
         }
 
@@ -186,6 +183,12 @@ open class BaseJournalRepository: ObservableObject {
             results = results.filter { intensityRange.contains($0.intensity) }
         }
 
-        return results.sorted { $0.createdAt > $1.createdAt }
+        // Return results. If query is active, the caller preserves relevance order,
+        // otherwise they are sorted chronologically.
+        if !trimmedQuery.isEmpty {
+            return results
+        } else {
+            return results.sorted { $0.createdAt > $1.createdAt }
+        }
     }
 }
