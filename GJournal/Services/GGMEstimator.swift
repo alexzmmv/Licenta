@@ -137,7 +137,7 @@ enum GGMEstimator {
             }
         }
 
-        let (lambda, mu) = ledoitWolfShrinkage(S: S, p: p, n: n)
+        let (lambda, mu) = ledoitWolfShrinkage(matrix: matrix, p: p, n: n)
 
         // Σ_hat = (1-λ)S + λμI
         var Shat = S
@@ -148,20 +148,43 @@ enum GGMEstimator {
         return (omega, lambda)
     }
 
-    // Ledoit-Wolf shrinkage coefficient (sklearn formula).
-    // Returns (lambda, mu) where mu = trace(S)/p.
-    static func ledoitWolfShrinkage(S: [Double], p: Int, n: Int) -> (lambda: Double, mu: Double) {
+    // Exact port of sklearn.covariance.ledoit_wolf_shrinkage (non-blocked path, valid for
+    // p ≤ 1000). Uses the biased covariance S = XᵀX/n on centered data X.
+    //   μ = trace(S)/p
+    //   δ = ‖S − μI‖²_F / p
+    //   β = (1/(p·n))·( (Σₜ‖xₜ‖⁴)/n − ‖S‖²_F ),  capped at δ
+    //   λ = β/δ
+    // Validated to <1e-6 against sklearn on a fixed fixture (training/ggm_oracle.py).
+    static func ledoitWolfShrinkage(matrix: [[Float]], p: Int, n: Int) -> (lambda: Double, mu: Double) {
+        var means = [Double](repeating: 0, count: p)
+        for t in 0..<n { for j in 0..<p { means[j] += Double(matrix[t][j]) } }
+        for j in 0..<p { means[j] /= Double(n) }
+
+        var S = [Double](repeating: 0, count: p * p)
+        var rowNorm4Sum = 0.0
+        var xc = [Double](repeating: 0, count: p)
+        for t in 0..<n {
+            var rowSq = 0.0
+            for j in 0..<p { let v = Double(matrix[t][j]) - means[j]; xc[j] = v; rowSq += v * v }
+            rowNorm4Sum += rowSq * rowSq
+            for i in 0..<p {
+                let xi = xc[i]
+                for j in i..<p { S[i * p + j] += xi * xc[j] }
+            }
+        }
+        for i in 0..<p {
+            for j in i..<p { let v = S[i * p + j] / Double(n); S[i * p + j] = v; S[j * p + i] = v }
+        }
+
         let traceS = (0..<p).reduce(0.0) { $0 + S[$1 * p + $1] }
-        let traceS2 = S.reduce(0.0) { $0 + $1 * $1 }  // Frobenius² = trace(S²) for symmetric S
         let mu = traceS / Double(p)
+        let normS2 = S.reduce(0.0) { $0 + $1 * $1 }               // ‖S‖²_F
+        let delta = (normS2 - 2 * mu * traceS + Double(p) * mu * mu) / Double(p)
+        var beta = (1.0 / (Double(p) * Double(n))) * (rowNorm4Sum / Double(n) - normS2)
+        beta = Swift.min(beta, delta)
 
-        // α = ((n-2)/n)*trace(S²) + trace(S)²
-        // β = (n+2)*(trace(S²) - trace(S)²/p)
-        let alpha = Double(n - 2) / Double(n) * traceS2 + traceS * traceS
-        let beta  = Double(n + 2) * (traceS2 - traceS * traceS / Double(p))
-
-        let lambda = beta > 1e-15 ? min(1.0, alpha / beta) : 1.0
-        return (lambda, mu)
+        let lambda = (beta == 0 || delta <= 0) ? 0.0 : beta / delta
+        return (Swift.max(0, Swift.min(1, lambda)), mu)
     }
 
     // MARK: - Matrix Inversion (pure-Swift Cholesky, no deprecated LAPACK)
