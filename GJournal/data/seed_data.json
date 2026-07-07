@@ -2,17 +2,17 @@
   "entries": [
     {
       "title": "Midnight Deploy",
-      "feel": "I felt completely hollowed out, like the job had reached inside and turned off a switch.",
-      "event": "Pushed an emergency hotfix at 1am after a production incident that was partly my fault.",
-      "action": "Wrote an honest post-mortem and sent it before anyone asked. Then closed the laptop and refused to reopen it.",
+      "feel": "I felt completely hollowed out, feeling the weight of the upcoming project deadline.",
+      "event": "Pushed an emergency hotfix at 1am after a sprint deploy incident that was partly my fault.",
+      "action": "Wrote an honest post-mortem, sent it on Slack, and closed the laptop.",
       "intensity": 4,
       "daysAgo": 2
     },
     {
       "title": "Invisible in the Standup",
-      "feel": "That specific tiredness of being talked over — not once, twice, three times.",
-      "event": "Raised the same architectural concern I raised two weeks ago. Same senior engineer interrupted me again before I could finish the sentence.",
-      "action": "Wrote it up in a Notion doc with evidence and sent it to my manager. Not sure she read it.",
+      "feel": "That specific tiredness of being talked over — and Slack alerts ringing in my ears.",
+      "event": "Raised an architectural concern in the sprint standup before the deadline. Same senior engineer interrupted me.",
+      "action": "Sent a Slack message to my manager with a Notion link. Not sure she read it.",
       "intensity": 3,
       "daysAgo": 6
     },
@@ -27,15 +27,15 @@
     {
       "title": "Eight Hours of Flow",
       "feel": "Rare and almost euphoric — the kind of focus you can't manufacture.",
-      "event": "Solved the concurrency bug that had been blocking the team for a week. Just me, a whiteboard, and enough coffee.",
-      "action": "Documented the root cause thoroughly. Felt good enough to leave at 5pm without guilt.",
+      "event": "Solved the concurrency bug blocking the team for the sprint.",
+      "action": "Muted Slack notifications to focus, documented the fix, and left at 5pm.",
       "intensity": 4,
       "daysAgo": 21
     },
     {
       "title": "Deadline Again",
       "feel": "Numb. I've stopped feeling the urgency and that worries me more than the urgency itself.",
-      "event": "Third sprint in a row where scope expanded on the last day. No one acknowledged it.",
+      "event": "Third sprint in a row where scope expanded on the last day before the deadline.",
       "action": "Blocked two hours tomorrow morning — no Slack, no meetings — just to think about whether this is sustainable.",
       "intensity": 4,
       "daysAgo": 29
@@ -68,7 +68,7 @@
       "title": "The Wall",
       "feel": "My legs felt like wet concrete and I genuinely hated every person I saw enjoying themselves.",
       "event": "Attempted a 10k. Hit the wall at 7km. Walked the rest.",
-      "action": "Ate a banana, looked up what hitting the wall actually means physiologically. Felt better once I understood it.",
+      "action": "Ate a banana, realized I should have done yoga instead of over-running.",
       "intensity": 2,
       "daysAgo": 10
     },
@@ -84,7 +84,7 @@
       "title": "Knee Scare",
       "feel": "That specific fear of the body betraying you before you've finished with it.",
       "event": "Sharp pain in my left knee mid-run. Stopped immediately.",
-      "action": "Iced it, booked a physio appointment. Resisted the urge to self-diagnose on Reddit.",
+      "action": "Iced it, booked a physio appointment, and decided to stick to gentle yoga.",
       "intensity": 3,
       "daysAgo": 31
     },
@@ -98,16 +98,16 @@
     },
     {
       "title": "Rest Day Guilt",
-      "feel": "The irrationality of feeling bad for doing something my body needed.",
+      "feel": "Missed my morning yoga session and felt irrational guilt for resting.",
       "event": "Took a full rest day. Didn't run, didn't stretch, didn't do anything athletic.",
-      "action": "Wrote out what recovery actually does physiologically. Read it twice. Started to believe it.",
+      "action": "Wrote out what recovery actually does physiologically. Read it twice.",
       "intensity": 2,
       "daysAgo": 63
     },
     {
       "title": "The Conversation About Distance",
       "feel": "Braced the whole time, like waiting for something to break.",
-      "event": "We talked about the fact that we've been less present with each other lately. Neither of us blamed the other.",
+      "event": "Talked with my partner about being less present lately. Neither of us blamed the other.",
       "action": "Suggested we have dinner without phones on Thursday. She said yes.",
       "intensity": 4,
       "daysAgo": 1
@@ -115,7 +115,7 @@
     {
       "title": "Thursday Dinner",
       "feel": "Reminded me why I chose this person. It was that simple.",
-      "event": "We cooked together and talked for three hours. No phones. No agenda.",
+      "event": "Cooked dinner and talked for three hours with my partner. No phones. No agenda.",
       "action": "Told her I'd been scared she was pulling away. She said she'd felt the same about me.",
       "intensity": 4,
       "daysAgo": 4
@@ -123,7 +123,7 @@
     {
       "title": "She Cried and I Froze",
       "feel": "A cold wave of helplessness. I wanted to fix it and knew I couldn't.",
-      "event": "She got difficult news about her mother. I sat next to her and didn't know what to say.",
+      "event": "My partner got difficult news about her mother. We talked but I froze.",
       "action": "I said 'I don't know what to say but I'm here.' She leaned into me. That was enough.",
       "intensity": 3,
       "daysAgo": 12
@@ -131,7 +131,7 @@
     {
       "title": "Laughing Until We Couldn't",
       "feel": "Weightless. Like nothing difficult had happened or would happen.",
-      "event": "We watched old home videos from her childhood and she kept explaining why each outfit was actually fine.",
+      "event": "My partner and I watched old home videos and laughed until we cried.",
       "action": "Saved the best one to rewatch when things feel heavy.",
       "intensity": 4,
       "daysAgo": 22
@@ -139,8 +139,8 @@
     {
       "title": "Different Futures",
       "feel": "A kind of quiet dread I've been pretending isn't there.",
-      "event": "She mentioned wanting to move cities in two years. Casually, like it wasn't a grenade.",
-      "action": "Didn't react in the moment. Wrote this instead. Need to actually talk about it.",
+      "event": "My partner mentioned moving cities in two years. Need to actually talk about it.",
+      "action": "Didn't react in the moment. Wrote this instead.",
       "intensity": 4,
       "daysAgo": 36
     },
@@ -219,7 +219,7 @@
     {
       "title": "The Old Argument",
       "feel": "The exhaustion of a pattern you can see coming and still can't stop.",
-      "event": "Family dinner. Same dynamic as always — my older brother talks, I retreat, Mum mediates.",
+      "event": "Family dinner with my older brother. Same dynamic as always — my brother talks, I retreat, Mum mediates.",
       "action": "Left early. Texted my sister about it. She said she'd noticed it for years.",
       "intensity": 3,
       "daysAgo": 33
@@ -227,7 +227,7 @@
     {
       "title": "Hometown for the Weekend",
       "feel": "Nostalgia as a physical sensation — warm and slightly suffocating.",
-      "event": "Visited my parents for the first time in four months. Walked the same streets I walked at fifteen.",
+      "event": "Visited my parents and my older brother in my hometown for the first time in four months.",
       "action": "Told my mum she looked well. She lit up. I should say things like that more often.",
       "intensity": 3,
       "daysAgo": 55
@@ -236,7 +236,7 @@
       "title": "My Brother's News",
       "feel": "Genuine joy followed by an honest flicker of envy I'm not proud of.",
       "event": "My brother announced his engagement. Everyone cried. It was a good moment.",
-      "action": "Called him separately to congratulate him properly, without an audience.",
+      "action": "Called my brother separately to congratulate him properly, without an audience.",
       "intensity": 4,
       "daysAgo": 79
     },
@@ -283,7 +283,7 @@
     {
       "title": "Deadlines Feel Different Now",
       "feel": "The same pressure as before, but now it feels like it's happening to someone else.",
-      "event": "Three deadlines this week. I handled them all. I'm not sure that's a good sign.",
+      "event": "Three sprint deadlines this week. I handled them all. I'm not sure that's a good sign.",
       "action": "Booked a day off next week. Something I've never done mid-sprint before.",
       "intensity": 3,
       "daysAgo": 75
@@ -291,7 +291,7 @@
     {
       "title": "Running in the Dark",
       "feel": "Slightly afraid, mostly alive. The city is a different place at 5am.",
-      "event": "Alarm failed, went out at 5am instead of 6. The streets were empty.",
+      "event": "Alarm failed, went out at 5am instead of 6 for a run. The streets were empty.",
       "action": "Decided 5am is better. Set the alarm for 5 tomorrow.",
       "intensity": 3,
       "daysAgo": 82
@@ -315,7 +315,7 @@
     {
       "title": "Sibling Silence Broken",
       "feel": "Tentative hope, like testing ice you're not sure will hold.",
-      "event": "My sister texted out of nowhere after three months of no contact. Just 'how are you?'",
+      "event": "My sister and brother texted out of nowhere after three months of no contact. Just 'how are you?'",
       "action": "Replied honestly. Said it had been hard. She said 'me too.' We talked for an hour.",
       "intensity": 4,
       "daysAgo": 103
