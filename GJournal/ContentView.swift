@@ -21,7 +21,9 @@ struct ContentView: View {
     @State private var showingGraph = false
     @State private var showingPaywall = false
     @State private var showingNetworkGraph = false
+    @State private var showingTrajectory = false
     @State private var insightEngine = InsightEngine()
+    @State private var trajectoryEngine = TrajectoryEngine()
     @State private var bitToEdit: Bit?
     @State private var selectedEmotion: Emotion?
     @State private var showingEmotionSheet = false
@@ -231,7 +233,8 @@ struct ContentView: View {
                                 isPurchased: entitlementManager.hasInsights,
                                 onUnlock: { showingPaywall = true },
                                 onOpenSearch: { showingBitsList = true },
-                                onOpenNetwork: { showingNetworkGraph = true }
+                                onOpenNetwork: { showingNetworkGraph = true },
+                                onOpenTrajectory: { showingTrajectory = true }
                             )
                             .opacity(insightsAppeared ? 1 : 0)
                             .offset(y: insightsAppeared ? 0 : 20)
@@ -310,6 +313,14 @@ struct ContentView: View {
             .onChange(of: showingNetworkGraph) { _, isShowing in
                 guard isShowing else { return }
                 Task { await insightEngine.compute(bits: repository.bits) }
+            }
+            .sheet(isPresented: $showingTrajectory) {
+                TrajectoryView(metrics: trajectoryEngine.metrics)
+            }
+            .onChange(of: showingTrajectory) { _, isShowing in
+                guard isShowing else { return }
+                trajectoryEngine.metrics = nil
+                Task { await trajectoryEngine.compute(bits: repository.bits) }
             }
             .onReceive(repository.$errorMessage) { new in
                 showingRepoError = new != nil
@@ -670,6 +681,7 @@ struct InsightGatingSection: View {
     let onUnlock: () -> Void
     let onOpenSearch: () -> Void
     let onOpenNetwork: (() -> Void)?
+    let onOpenTrajectory: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -710,7 +722,7 @@ struct InsightGatingSection: View {
                         isPurchased: isPurchased,
                         progressLabel: "\(trajectoryProgress.entries)/21 entries \u{00B7} \(trajectoryProgress.days)/21 days",
                         onUnlock: onUnlock,
-                        onOpen: nil
+                        onOpen: onOpenTrajectory
                     )
 
                     InsightGateCard(

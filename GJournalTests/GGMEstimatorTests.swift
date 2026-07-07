@@ -163,11 +163,13 @@ final class GGMEstimatorTests: XCTestCase {
     }
 
     func testLedoitWolfShrinkageIsZeroForLargeN() {
-        // With very large n relative to p, shrinkage should be small (S is a good estimate)
+        // With very large n relative to p, shrinkage should be small (S is a good estimate).
+        // Use a NON-degenerate diagonal covariance: a perfect identity equals the shrinkage
+        // target μI, making the misfit β exactly 0 and forcing λ→1 regardless of n (a
+        // mathematically correct edge case that never arises from real sampled data).
         let p = 3
-        // S = identity (already "shrinkage target"), large n
         var S = [Double](repeating: 0, count: p * p)
-        S[0] = 1; S[4] = 1; S[8] = 1
+        S[0] = 1; S[4] = 2; S[8] = 4   // distinct variances -> β > 0
         let (lambda, _) = GGMEstimator.ledoitWolfShrinkage(S: S, p: p, n: 10_000)
         XCTAssertLessThan(lambda, 0.01)
     }

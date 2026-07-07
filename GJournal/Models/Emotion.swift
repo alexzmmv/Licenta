@@ -48,4 +48,23 @@ enum Emotion: String, CaseIterable, Codable {
         case .guilt: return Color(red: 0.7, green: 0.5, blue: 0.35) // Light brown
         }
     }
+
+    /// Emotional valence in [-1, +1] (negative = distressing, positive = pleasant).
+    /// Used by the trajectory Semantic Recovery Velocity to locate the "distress anchor".
+    var valence: Double {
+        switch self {
+        case .joy:        return 0.9
+        case .love:       return 0.9
+        case .gratitude:  return 0.8
+        case .excitement: return 0.8
+        case .hope:       return 0.7
+        case .surprise:   return 0.1
+        case .disgust:    return -0.6
+        case .guilt:      return -0.6
+        case .anger:      return -0.7
+        case .anxiety:    return -0.7
+        case .sadness:    return -0.8
+        case .fear:       return -0.8
+        }
+    }
 }
