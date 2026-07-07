@@ -90,9 +90,14 @@ final class AIProcessingManager: ObservableObject {
                 bit.embedding = embedding
                 bit.emotionProbabilities = emotions.reduce(into: [:]) { $0[$1.emotion] = $1.probability }
                 bit.embeddingGeneratedAt = Date()
+
+                // Behavioral tags (Pillar A substrate): extract → canonicalize → persist.
+                let tagProcessor = TagProcessor(embeddingService: capturedServices.embeddingService)
+                bit.tagLemmas = await tagProcessor.process(event: bit.event, action: bit.action, into: backgroundContext)
+
                 try backgroundContext.save()
             }
-            
+
             return (embedding, emotions)
         }.value
 
@@ -110,6 +115,37 @@ final class AIProcessingManager: ObservableObject {
             guard let container = modelContext?.container else { return }
             try? await self.runClustering(forceRecalibrate: false)
         }
+    }
+
+    // MARK: - Behavioral Tag Backfill
+
+    /// One-shot backfill of behavioral tags for existing entries that have an embedding but no
+    /// tags yet. Reports (processed, total) progress on the main actor. Idempotent.
+    func backfillTags(progress: @escaping @MainActor (Int, Int) -> Void) async {
+        guard let container = modelContext?.container else { return }
+        let capturedServices = services
+
+        await Task.detached(priority: .utility) {
+            let context = ModelContext(container)
+            let predicate = #Predicate<Bit> { $0.deletedAt == nil && $0.embeddingGeneratedAt != nil }
+            guard let bits = try? context.fetch(FetchDescriptor<Bit>(predicate: predicate)) else { return }
+            let pending = bits.filter { $0.tagLemmas.isEmpty }
+            let total = pending.count
+            guard total > 0 else { await progress(0, 0); return }
+
+            let processor = TagProcessor(embeddingService: capturedServices.embeddingService)
+            var done = 0
+            for bit in pending {
+                bit.tagLemmas = await processor.process(event: bit.event, action: bit.action, into: context)
+                done += 1
+                if done % 5 == 0 || done == total {
+                    try? context.save()
+                    await progress(done, total)
+                }
+            }
+            try? context.save()
+            await progress(total, total)
+        }.value
     }
 
     // MARK: - Batch Clustering

@@ -137,6 +137,13 @@ struct SettingsView: View {
                             }
                         }
                     }
+                    NavigationLink(destination: TagManagementView(repository: repository)) {
+                        HStack {
+                            Image(systemName: "tag")
+                                .foregroundColor(.purple)
+                            Text("Behavioral Tags")
+                        }
+                    }
                 } header: {
                     Text("Data Management")
                 }

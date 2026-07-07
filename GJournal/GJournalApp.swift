@@ -20,10 +20,10 @@ struct GJournalApp: App {
     private static func makeModelContainer() throws -> ModelContainer {
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
 
-        // Use the versioned schema + migration plan so that future schema
-        // changes (SchemaV2+) are handled via lightweight/custom migration
-        // stages instead of crashing or wiping.
-        let schema = Schema(versionedSchema: SchemaV1.self)
+        // Use the versioned schema + migration plan so that schema changes are
+        // handled via lightweight/custom migration stages instead of crashing or
+        // wiping. Current head is SchemaV2 (adds BehavioralTag + Bit.tagLemmas).
+        let schema = Schema(versionedSchema: SchemaV2.self)
         let container = try ModelContainer(
             for: schema,
             migrationPlan: GJournalMigrationPlan.self,

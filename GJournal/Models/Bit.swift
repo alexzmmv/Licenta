@@ -57,6 +57,10 @@ final class Bit {
 
     var clusterAssignedAt: Date?
 
+    /// Canonical behavioral-tag lemmas assigned to this entry (denormalized; the canonical
+    /// registry lives in `BehavioralTag`). JSON-encoded for a purely additive migration.
+    var tagLemmasData: Data?
+
     // MARK: - Graph Layout Cache
 
     var graphX: Double?
@@ -83,6 +87,16 @@ final class Bit {
         }
         set {
             emotionProbabilitiesData = newValue.flatMap { try? JSONEncoder().encode($0) }
+        }
+    }
+
+    var tagLemmas: [String] {
+        get {
+            guard let data = tagLemmasData else { return [] }
+            return (try? JSONDecoder().decode([String].self, from: data)) ?? []
+        }
+        set {
+            tagLemmasData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue)
         }
     }
 
