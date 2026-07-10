@@ -28,6 +28,16 @@ class SafetyFilter: SafetyFilterServiceProtocol {
         ]
     ]
 
+    // MARK: - Static self-harm signal (used by AddEditBitView before the AI pipeline runs)
+
+    static func isSelfHarmSignal(_ text: String) -> Bool {
+        let lowered = text.lowercased()
+        let keywords = ["kill myself", "end my life", "suicide plan", "want to die",
+                        "self harm", "self-harm", "cut myself", "hurt myself",
+                        "suicidal", "take my life"]
+        return keywords.contains(where: lowered.contains)
+    }
+
     // MARK: - SafetyFilterServiceProtocol
 
     func checkSafety(_ text: String) -> SafetyResult {

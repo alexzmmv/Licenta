@@ -5,7 +5,7 @@ struct ClusterNamer {
 
     // MARK: - Public API
 
-    static func generateName(for bits: [Bit], allBits: [Bit]? = nil, fallbackID: Int) -> String {
+    nonisolated static func generateName(for bits: [Bit], allBits: [Bit]? = nil, fallbackID: Int) -> String {
         guard !bits.isEmpty else { return "Cluster \(fallbackID)" }
 
         let clusterWords = extractScoredWords(from: bits)
@@ -37,7 +37,7 @@ struct ClusterNamer {
 
     // MARK: - Word Extraction
 
-    private static func extractScoredWords(from bits: [Bit]) -> [String: Int] {
+    private nonisolated static func extractScoredWords(from bits: [Bit]) -> [String: Int] {
         var combinedText = ""
         for bit in bits {
             if let title = bit.title, !title.isEmpty {
@@ -51,7 +51,7 @@ struct ClusterNamer {
         return extractWords(from: combinedText)
     }
 
-    private static func extractWords(from text: String) -> [String: Int] {
+    private nonisolated static func extractWords(from text: String) -> [String: Int] {
         let tagger = NLTagger(tagSchemes: [.lexicalClass])
         tagger.string = text
 
@@ -81,7 +81,7 @@ struct ClusterNamer {
 
     // MARK: - TF-IDF Scoring
 
-    private static func tfidfTopWords(
+    private nonisolated static func tfidfTopWords(
         clusterWords: [String: Int],
         allBits: [Bit],
         limit: Int
@@ -118,7 +118,7 @@ struct ClusterNamer {
 
     // MARK: - Fallback
 
-    private static func emotionFallbackName(for bits: [Bit], fallbackID: Int) -> String {
+    private nonisolated static func emotionFallbackName(for bits: [Bit], fallbackID: Int) -> String {
         let emotionCounts = Dictionary(grouping: bits, by: { $0.emotion }).mapValues { $0.count }
         if let topEmotion = emotionCounts.max(by: { $0.value < $1.value })?.key {
             return "\(topEmotion.emoji) \(topEmotion.rawValue)"
@@ -128,7 +128,7 @@ struct ClusterNamer {
 
     // MARK: - Stop Words
 
-    private static let stopWords: Set<String> = [
+    private nonisolated static let stopWords: Set<String> = [
         // Pronouns and basic verbs
         "i", "we", "he", "she", "they", "me", "my", "you", "your", "our",
         "was", "is", "are", "am", "were", "be", "been", "being",

@@ -80,23 +80,26 @@ final class Bit {
         }
     }
 
+    private static let jsonDecoder = JSONDecoder()
+    private static let jsonEncoder = JSONEncoder()
+
     var emotionProbabilities: [String: Float]? {
         get {
             guard let data = emotionProbabilitiesData else { return nil }
-            return try? JSONDecoder().decode([String: Float].self, from: data)
+            return try? Self.jsonDecoder.decode([String: Float].self, from: data)
         }
         set {
-            emotionProbabilitiesData = newValue.flatMap { try? JSONEncoder().encode($0) }
+            emotionProbabilitiesData = newValue.flatMap { try? Self.jsonEncoder.encode($0) }
         }
     }
 
     var tagLemmas: [String] {
         get {
             guard let data = tagLemmasData else { return [] }
-            return (try? JSONDecoder().decode([String].self, from: data)) ?? []
+            return (try? Self.jsonDecoder.decode([String].self, from: data)) ?? []
         }
         set {
-            tagLemmasData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue)
+            tagLemmasData = newValue.isEmpty ? nil : try? Self.jsonEncoder.encode(newValue)
         }
     }
 

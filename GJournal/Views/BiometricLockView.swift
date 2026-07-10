@@ -32,7 +32,7 @@ struct BiometricLockView: View {
 
     private var lockScreenView: some View {
         ZStack {
-            Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
             if showPINEntry {
                 pinUnlockView

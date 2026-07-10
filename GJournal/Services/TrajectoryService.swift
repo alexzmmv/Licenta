@@ -37,7 +37,7 @@ enum TrajectoryService {
 
     /// Computes trajectory metrics for one window. Returns nil below `minPoints`.
     /// `permutations > 0` runs the spatial permutation-null test for the loop metric.
-    static func metrics(for window: [TrajectoryPoint], permutations: Int = 0) -> TrajectoryMetrics? {
+    nonisolated static func metrics(for window: [TrajectoryPoint], permutations: Int = 0) -> TrajectoryMetrics? {
         let pts = window.sorted { $0.date < $1.date }
         guard pts.count >= minPoints else { return nil }
         let embeddings = pts.map(\.embedding)
@@ -70,7 +70,7 @@ enum TrajectoryService {
     /// aspect-invariant: a near-1D "recovery line" fills almost none of its square (→0),
     /// while a genuinely 2D disk/ring spreads to fill it (→~0.78). This is the intended
     /// "flaring outward" signal — a degenerate bbox would otherwise score a line spuriously high.
-    static func flareIndex(_ embeddings: [[Double]]) -> Double {
+    nonisolated static func flareIndex(_ embeddings: [[Double]]) -> Double {
         let coords = pca2D(embeddings)
         guard coords.count >= 3 else { return 0 }
         let hullArea = polygonArea(convexHull(coords))
@@ -84,7 +84,7 @@ enum TrajectoryService {
 
     /// Anchor = centroid of the lowest-valence entries; SRV = slope of distance-from-anchor
     /// over time (days). Positive = drifting away from difficult moments.
-    static func recoveryVelocity(_ pts: [TrajectoryPoint]) -> Double {
+    nonisolated static func recoveryVelocity(_ pts: [TrajectoryPoint]) -> Double {
         let n = pts.count
         guard n >= 2, let dim = pts.first?.embedding.count, dim > 0 else { return 0 }
 
@@ -110,7 +110,7 @@ enum TrajectoryService {
     /// The point cloud — and thus LP — is invariant to time order, so the loop's null must be
     /// spatial: draw `trials` random clouds matching the window's per-dimension mean/std and
     /// measure how often their LP reaches the observed value. p = (1 + #{null ≥ obs}) / (trials + 1).
-    static func loopPValue(observedLP: Double, embeddings: [[Double]], trials: Int) -> Double {
+    nonisolated static func loopPValue(observedLP: Double, embeddings: [[Double]], trials: Int) -> Double {
         let n = embeddings.count, dim = embeddings.first?.count ?? 0
         guard n >= minPoints, dim > 0, observedLP > 0 else { return 1.0 }
 
@@ -140,7 +140,7 @@ enum TrajectoryService {
     // MARK: - Geometry helpers
 
     /// PCA to 2D via the n×n Gram matrix (n is small): scores_k = sqrt(λ_k)·u_k.
-    static func pca2D(_ points: [[Double]]) -> [(Double, Double)] {
+    nonisolated static func pca2D(_ points: [[Double]]) -> [(Double, Double)] {
         let n = points.count
         guard n > 0, let dim = points.first?.count, dim > 0 else { return [] }
 
@@ -169,7 +169,7 @@ enum TrajectoryService {
     }
 
     /// Dominant eigenpair of a symmetric matrix by power iteration (deterministic start).
-    private static func topEigen(_ m: [[Double]], iterations: Int = 300) -> (Double, [Double]) {
+    private nonisolated static func topEigen(_ m: [[Double]], iterations: Int = 300) -> (Double, [Double]) {
         let n = m.count
         guard n > 0 else { return (0, []) }
         var v = (0..<n).map { Double(($0 % 7) + 1) }  // deterministic, non-degenerate
@@ -188,19 +188,19 @@ enum TrajectoryService {
         return (lambda, v)
     }
 
-    private static func deflate(_ m: inout [[Double]], value: Double, vector v: [Double]) {
+    private nonisolated static func deflate(_ m: inout [[Double]], value: Double, vector v: [Double]) {
         let n = m.count
         for i in 0..<n { for j in 0..<n { m[i][j] -= value * v[i] * v[j] } }
     }
 
-    private static func normalize(_ v: inout [Double]) {
+    private nonisolated static func normalize(_ v: inout [Double]) {
         let norm = v.reduce(0) { $0 + $1 * $1 }.squareRoot()
         guard norm > 1e-15 else { return }
         for i in v.indices { v[i] /= norm }
     }
 
     /// Andrew's monotone-chain convex hull.
-    static func convexHull(_ pts: [(Double, Double)]) -> [(Double, Double)] {
+    nonisolated static func convexHull(_ pts: [(Double, Double)]) -> [(Double, Double)] {
         let p = Array(Set(pts.map { Point2($0.0, $0.1) })).sorted()
         guard p.count >= 3 else { return p.map { ($0.x, $0.y) } }
         func cross(_ o: Point2, _ a: Point2, _ b: Point2) -> Double {
@@ -220,7 +220,7 @@ enum TrajectoryService {
         return (lower + upper).map { ($0.x, $0.y) }
     }
 
-    static func polygonArea(_ poly: [(Double, Double)]) -> Double {
+    nonisolated static func polygonArea(_ poly: [(Double, Double)]) -> Double {
         let n = poly.count
         guard n >= 3 else { return 0 }
         var area = 0.0
@@ -231,7 +231,7 @@ enum TrajectoryService {
         return abs(area) / 2.0
     }
 
-    static func leastSquaresSlope(x: [Double], y: [Double]) -> Double {
+    nonisolated static func leastSquaresSlope(x: [Double], y: [Double]) -> Double {
         let n = Double(x.count)
         guard n >= 2 else { return 0 }
         let mx = x.reduce(0, +) / n, my = y.reduce(0, +) / n
@@ -243,19 +243,21 @@ enum TrajectoryService {
 
 // MARK: - Support types
 
-private struct Point2: Hashable, Comparable {
+private struct Point2: Hashable, Comparable, Sendable {
     let x: Double, y: Double
-    init(_ x: Double, _ y: Double) { self.x = x; self.y = y }
-    static func < (a: Point2, b: Point2) -> Bool { a.x != b.x ? a.x < b.x : a.y < b.y }
+    nonisolated init(_ x: Double, _ y: Double) { self.x = x; self.y = y }
+    nonisolated static func == (lhs: Point2, rhs: Point2) -> Bool { lhs.x == rhs.x && lhs.y == rhs.y }
+    nonisolated func hash(into hasher: inout Hasher) { hasher.combine(x); hasher.combine(y) }
+    nonisolated static func < (a: Point2, b: Point2) -> Bool { a.x != b.x ? a.x < b.x : a.y < b.y }
 }
 
 /// Deterministic PRNG with a Gaussian sampler (Box–Muller), for reproducible null tests.
-struct SplitMix64: RandomNumberGenerator {
+struct SplitMix64: RandomNumberGenerator, Sendable {
     private var state: UInt64
     private var spare: Double?
-    init(seed: UInt64) { state = seed }
+    nonisolated init(seed: UInt64) { state = seed }
 
-    mutating func next() -> UInt64 {
+    nonisolated mutating func next() -> UInt64 {
         state &+= 0x9E37_79B9_7F4A_7C15
         var z = state
         z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
@@ -263,9 +265,9 @@ struct SplitMix64: RandomNumberGenerator {
         return z ^ (z >> 31)
     }
 
-    mutating func nextUnit() -> Double { Double(next() >> 11) * (1.0 / 9_007_199_254_740_992.0) }
+    nonisolated mutating func nextUnit() -> Double { Double(next() >> 11) * (1.0 / 9_007_199_254_740_992.0) }
 
-    mutating func nextGaussian() -> Double {
+    nonisolated mutating func nextGaussian() -> Double {
         if let s = spare { spare = nil; return s }
         let u1 = max(nextUnit(), 1e-12), u2 = nextUnit()
         let r = (-2.0 * Foundation.log(u1)).squareRoot()

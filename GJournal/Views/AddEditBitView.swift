@@ -20,6 +20,7 @@ struct AddEditBitView: View {
     @State private var slideWidth: CGFloat = 400
     @State private var slideOffset: CGFloat = 400
     @State private var currentStepOpacity: Double = 0
+    @State private var showingCrisisResources = false
 
     enum TherapyStep: CaseIterable {
         case welcome
@@ -103,6 +104,9 @@ struct AddEditBitView: View {
                 }
             }
             .navigationBarHidden(true)
+        }
+        .sheet(isPresented: $showingCrisisResources, onDismiss: { dismiss() }) {
+            CrisisResourcesView()
         }
         .preferredColorScheme(.dark)
     }
@@ -193,7 +197,12 @@ struct AddEditBitView: View {
                 intensity: Int(intensity)
             )
         }
-        dismiss()
+        let combinedText = [feel, event, action].joined(separator: " ")
+        if SafetyFilter.isSelfHarmSignal(combinedText) {
+            showingCrisisResources = true
+        } else {
+            dismiss()
+        }
     }
 }
 
@@ -248,6 +257,9 @@ struct WelcomeStepView: View {
     }
 }
 
+private let maxTitleLength = 100
+private let maxBodyLength = 2000
+
 struct TitleStepView: View {
     @Binding var title: String
     let onNext: () -> Void
@@ -269,6 +281,7 @@ struct TitleStepView: View {
                     .font(.title3).foregroundColor(.white).padding()
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .focused($focused).padding(.horizontal, 30)
+                    .onChange(of: title) { _, v in if v.count > maxTitleLength { title = String(v.prefix(maxTitleLength)) } }
                 HStack(spacing: 20) {
                     Button(action: onSkip) {
                         Text("Skip").font(.body).foregroundColor(.gray)
@@ -308,6 +321,7 @@ struct FeelStepView: View {
                     .scrollContentBackground(.hidden)
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .frame(minHeight: 120).focused($focused).padding(.horizontal, 30)
+                    .onChange(of: feel) { _, v in if v.count > maxBodyLength { feel = String(v.prefix(maxBodyLength)) } }
                 Button(action: onNext) {
                     Text("Next").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -344,6 +358,7 @@ struct EventStepView: View {
                     .scrollContentBackground(.hidden)
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .frame(minHeight: 120).focused($focused).padding(.horizontal, 30)
+                    .onChange(of: event) { _, v in if v.count > maxBodyLength { event = String(v.prefix(maxBodyLength)) } }
                 Button(action: onNext) {
                     Text("Next").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -380,6 +395,7 @@ struct ActionStepView: View {
                     .scrollContentBackground(.hidden)
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .frame(minHeight: 120).focused($focused).padding(.horizontal, 30)
+                    .onChange(of: action) { _, v in if v.count > maxBodyLength { action = String(v.prefix(maxBodyLength)) } }
                 Button(action: onNext) {
                     Text("Next").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -518,7 +534,7 @@ struct EditFormView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
-                    EditSection(label: "Title (Optional)", text: $title, placeholder: "Add a title…")
+                    EditSection(label: "Title (Optional)", text: $title, placeholder: "Add a title…", limit: maxTitleLength)
                     EditSection(label: "Feel", text: $feel, placeholder: "How are you feeling?")
                     EditSection(label: "Event", text: $event, placeholder: "What happened?")
                     EditSection(label: "Action", text: $action, placeholder: "What will you do?")
@@ -549,6 +565,7 @@ struct EditSection: View {
     let label: String
     @Binding var text: String
     let placeholder: String
+    var limit: Int = maxBodyLength
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -563,6 +580,7 @@ struct EditSection: View {
                     text.isEmpty ? Text(placeholder).foregroundColor(.gray.opacity(0.5)).padding(20) : nil,
                     alignment: .topLeading
                 )
+                .onChange(of: text) { _, v in if v.count > limit { text = String(v.prefix(limit)) } }
         }
     }
 }

@@ -6,11 +6,7 @@ import CommonCrypto
 
 class AuthManager: ObservableObject {
     @Published var isAuthenticated = false
-    @Published var isSessionAuthenticated = false {
-        didSet {
-            UserDefaults.standard.set(isSessionAuthenticated, forKey: sessionAuthenticatedKey)
-        }
-    }
+    @Published var isSessionAuthenticated = false
     @Published var currentUser: String?
 
     /// Published lockout state so views can react
@@ -20,7 +16,6 @@ class AuthManager: ObservableObject {
     private let biometricEnabledKey    = "biometric_enabled"
     private let userRegisteredKey      = "user_registered"
     private let userLoggedInKey        = "user_logged_in"
-    private let sessionAuthenticatedKey = "session_authenticated"
 
     // MARK: - Keychain keys
     private let pinHashKey             = "user_pin_hash"       // legacy SHA-256 or PBKDF2-derived key
@@ -47,7 +42,7 @@ class AuthManager: ObservableObject {
            let name = UserDefaults.standard.string(forKey: nameKey), !name.isEmpty {
             currentUser = name
             isAuthenticated = true
-            isSessionAuthenticated = UserDefaults.standard.bool(forKey: sessionAuthenticatedKey)
+            // isSessionAuthenticated intentionally not restored — always require biometric/PIN after any launch/crash
         }
         refreshLockoutState()
     }
@@ -85,7 +80,6 @@ class AuthManager: ObservableObject {
 
     func logout() {
         UserDefaults.standard.set(false, forKey: userLoggedInKey)
-        UserDefaults.standard.set(false, forKey: sessionAuthenticatedKey)
         currentUser = nil
         isAuthenticated = false
         isSessionAuthenticated = false

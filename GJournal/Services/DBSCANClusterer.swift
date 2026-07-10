@@ -103,7 +103,7 @@ final class DBSCANClusterer: ClusteringServiceProtocol, Sendable {
 
     // MARK: - Parameter Calibration (Grid-Search with Silhouette Validation)
 
-    static func adaptiveMinPoints(for n: Int) -> Int {
+    nonisolated static func adaptiveMinPoints(for n: Int) -> Int {
         let raw = Int(ceil(1.5 * log(Double(max(3, n)))))
         return max(3, min(raw, max(3, n / 5)))
     }

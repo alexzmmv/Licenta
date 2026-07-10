@@ -22,6 +22,7 @@ struct MainAppView: View {
     }
 
     private func rebuildServices() {
+        repository.aiProcessingManager?.resetState()  // cancel any pending background tasks before swap
         let services = ServiceContainer.makeProduction()
         let manager = AIProcessingManager(services: services)
         if let ctx = repository.modelContext {

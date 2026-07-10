@@ -52,7 +52,7 @@ class LocalJournalRepository: BaseJournalRepository {
             // Trigger background AI processing
             aiProcessingManager?.processBit(newBit)
         } catch {
-            errorMessage = "Failed to save micro-journal bit: \(error.localizedDescription)"
+            errorMessage = "Couldn't save your entry. Please try again."
             AppLogger.log("[LocalRepository] Failed to create micro-journal bit: \(error)")
         }
     }
@@ -80,7 +80,7 @@ class LocalJournalRepository: BaseJournalRepository {
                 // Re-trigger AI processing for updated content (capture before reload)
                 aiProcessingManager?.processBit(updatedBit)
             } catch {
-                errorMessage = "Failed to update micro-journal bit: \(error.localizedDescription)"
+                errorMessage = "Couldn't update your entry. Please try again."
                 AppLogger.log("[LocalRepository] Failed to update micro-journal bit: \(error)")
             }
         } else {
@@ -105,7 +105,7 @@ class LocalJournalRepository: BaseJournalRepository {
                 loadBitsFromContext()
                 AppLogger.log("[LocalRepository] Soft-deleted bit: \(id)")
             } catch {
-                errorMessage = "Failed to delete bit: \(error.localizedDescription)"
+                errorMessage = "Couldn't delete your entry. Please try again."
                 AppLogger.log("[LocalRepository] Failed to soft-delete bit: \(error)")
             }
         } else {
@@ -134,7 +134,7 @@ class LocalJournalRepository: BaseJournalRepository {
                 errorMessage = "Bit not found"
             }
         } catch {
-            errorMessage = "Failed to restore bit: \(error.localizedDescription)"
+            errorMessage = "Couldn't restore your entry. Please try again."
             AppLogger.log("[LocalRepository] Failed to restore bit: \(error)")
         }
     }
@@ -156,7 +156,7 @@ class LocalJournalRepository: BaseJournalRepository {
                 errorMessage = "Bit not found"
             }
         } catch {
-            errorMessage = "Failed to permanently delete bit: \(error.localizedDescription)"
+            errorMessage = "Couldn't permanently delete this entry. Please try again."
             AppLogger.log("[LocalRepository] Failed to permanently delete bit: \(error)")
         }
     }
@@ -303,7 +303,12 @@ class LocalJournalRepository: BaseJournalRepository {
         let filename = "gjournal_export_\(formatter.string(from: Date())).json"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
 
-        try data.write(to: url)
+        try data.write(to: url, options: .atomic)
+        // Protect the export file so it is inaccessible while the device is locked
+        try FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.completeUnlessOpen],
+            ofItemAtPath: url.path
+        )
         AppLogger.log("[LocalRepository] Exported \(bits.count) bits to \(filename)")
         return url
     }
@@ -323,7 +328,7 @@ class LocalJournalRepository: BaseJournalRepository {
                 loadBitsFromContext()
                 AppLogger.log("[LocalRepository] Toggled hide for bit: \(id)")
             } catch {
-                errorMessage = "Failed to toggle bit: \(error.localizedDescription)"
+                errorMessage = "Couldn't update visibility. Please try again."
                 AppLogger.log("[LocalRepository] Failed to toggle bit: \(error)")
             }
         } else {

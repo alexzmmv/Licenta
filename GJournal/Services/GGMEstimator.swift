@@ -16,6 +16,22 @@ enum NetworkVariable: Hashable, Sendable {
 
     var emotion: Emotion? { if case .emotion(let e) = self { return e }; return nil }
     var isEmotion: Bool { emotion != nil }
+
+    // Explicit nonisolated conformance so math can run in Task.detached
+    nonisolated static func == (lhs: NetworkVariable, rhs: NetworkVariable) -> Bool {
+        switch (lhs, rhs) {
+        case (.emotion(let a), .emotion(let b)): return a == b
+        case (.tag(let a, let c), .tag(let b, let d)): return a == b && c == d
+        default: return false
+        }
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        switch self {
+        case .emotion(let e): hasher.combine(0); hasher.combine(e.rawValue)
+        case .tag(let lemma, let cat): hasher.combine(1); hasher.combine(lemma); hasher.combine(cat)
+        }
+    }
 }
 
 struct PsychNetworkEdge: Identifiable, Sendable {
@@ -24,8 +40,8 @@ struct PsychNetworkEdge: Identifiable, Sendable {
     let second: NetworkVariable
     let weight: Float     // partial correlation (Tier 2) or Spearman r (Tier 1)
 
-    var isPositive: Bool { weight > 0 }
-    var absWeight: Float { abs(weight) }
+    nonisolated var isPositive: Bool { weight > 0 }
+    nonisolated var absWeight: Float { abs(weight) }
 }
 
 struct PsychologicalNetwork: Sendable {
@@ -58,7 +74,7 @@ enum GGMEstimator {
 
     // MARK: - Tier 1: Spearman + BH FDR + Bootstrap
 
-    static func tier1Network(from matrix: [[Float]], n: Int,
+    nonisolated static func tier1Network(from matrix: [[Float]], n: Int,
                              labels: [NetworkVariable] = defaultLabels) -> PsychologicalNetwork {
         let p = labels.count
 
@@ -99,7 +115,7 @@ enum GGMEstimator {
 
     // MARK: - Tier 2: Ledoit-Wolf GGM + Bootstrap
 
-    static func tier2Network(from matrix: [[Float]], n: Int,
+    nonisolated static func tier2Network(from matrix: [[Float]], n: Int,
                              labels: [NetworkVariable] = defaultLabels) -> PsychologicalNetwork {
         let p = labels.count
 
@@ -140,7 +156,7 @@ enum GGMEstimator {
 
     // Returns (precision_flat, shrinkage_lambda) or nil if inversion fails.
     // Uses biased covariance (1/n) to match sklearn.covariance.LedoitWolf.
-    static func ledoitWolfPrecision(from matrix: [[Float]], p: Int, n: Int) -> ([Double], Double)? {
+    nonisolated static func ledoitWolfPrecision(from matrix: [[Float]], p: Int, n: Int) -> ([Double], Double)? {
         // Biased sample covariance S = (1/n) Σ (x_t - μ)(x_t - μ)^T
         let means = (0..<p).map { j in matrix.map { Double($0[j]) }.reduce(0, +) / Double(n) }
         var S = [Double](repeating: 0, count: p * p)
@@ -174,7 +190,7 @@ enum GGMEstimator {
     //   β = (1/(p·n))·( (Σₜ‖xₜ‖⁴)/n − ‖S‖²_F ),  capped at δ
     //   λ = β/δ
     // Validated to <1e-6 against sklearn on a fixed fixture (training/ggm_oracle.py).
-    static func ledoitWolfShrinkage(matrix: [[Float]], p: Int, n: Int) -> (lambda: Double, mu: Double) {
+    nonisolated static func ledoitWolfShrinkage(matrix: [[Float]], p: Int, n: Int) -> (lambda: Double, mu: Double) {
         var means = [Double](repeating: 0, count: p)
         for t in 0..<n { for j in 0..<p { means[j] += Double(matrix[t][j]) } }
         for j in 0..<p { means[j] /= Double(n) }
@@ -211,7 +227,7 @@ enum GGMEstimator {
     // Inverts a symmetric positive-definite p×p matrix stored row-major.
     // Uses Cholesky A = L L^T then A^{-1} = L^{-T} L^{-1}.
     // Returns nil if A is not positive definite (pivot ≤ ε).
-    static func invertSymmetricPD(flat A: [Double], p: Int) -> [Double]? {
+    nonisolated static func invertSymmetricPD(flat A: [Double], p: Int) -> [Double]? {
         // Step 1 — Cholesky decomposition: L[i,j] stored at L[i*p+j]
         var L = [Double](repeating: 0, count: p * p)
         for j in 0..<p {
@@ -258,7 +274,7 @@ enum GGMEstimator {
     // MARK: - Partial Correlations
 
     // P_ij = -Ω_ij / sqrt(Ω_ii * Ω_jj)
-    static func partialCorrelations(precision: [Double], p: Int) -> [Double] {
+    nonisolated static func partialCorrelations(precision: [Double], p: Int) -> [Double] {
         var result = [Double](repeating: 0, count: p * p)
         for i in 0..<p {
             for j in 0..<p where i != j {
@@ -272,7 +288,7 @@ enum GGMEstimator {
     // MARK: - Spearman
 
     // Replaces each value with its rank (1-based, average ties).
-    static func rankVector(_ v: [Double]) -> [Double] {
+    nonisolated static func rankVector(_ v: [Double]) -> [Double] {
         let n = v.count
         guard n > 0 else { return [] }
         let indexed = v.enumerated().sorted { $0.element < $1.element }
@@ -288,7 +304,7 @@ enum GGMEstimator {
         return ranks
     }
 
-    static func pearsonCorrelation(_ x: [Double], _ y: [Double]) -> Double {
+    nonisolated static func pearsonCorrelation(_ x: [Double], _ y: [Double]) -> Double {
         let n = x.count
         guard n > 1 else { return 0 }
         let mx = x.reduce(0, +) / Double(n)
@@ -303,19 +319,19 @@ enum GGMEstimator {
     }
 
     // Two-tailed p-value via normal approximation (adequate for n ≥ 30, df ≥ 28).
-    static func tPValue(r: Double, n: Int) -> Double {
+    nonisolated static func tPValue(r: Double, n: Int) -> Double {
         guard abs(r) < 1.0 - 1e-9, n > 2 else { return abs(r) >= 1.0 - 1e-9 ? 0.0 : 1.0 }
         let t = r * ((Double(n - 2) / (1.0 - r * r)).squareRoot())
         return 2.0 * (1.0 - normalCDF(abs(t)))
     }
 
-    static func normalCDF(_ x: Double) -> Double {
+    nonisolated static func normalCDF(_ x: Double) -> Double {
         0.5 * (1.0 + erf(x / 2.0.squareRoot()))
     }
 
     // MARK: - Benjamini-Hochberg FDR
 
-    static func benjaminiHochberg(
+    nonisolated static func benjaminiHochberg(
         pairs: [(i: Int, j: Int, r: Double, p: Double)],
         q: Double
     ) -> [(i: Int, j: Int, r: Double)] {
@@ -333,7 +349,7 @@ enum GGMEstimator {
     // MARK: - Bootstrap Stability
 
     // Tier 1: check Spearman |r| ≥ threshold in each resample.
-    private static func bootstrapSpearman(
+    private nonisolated static func bootstrapSpearman(
         matrix: [[Float]],
         labels: [NetworkVariable],
         candidates: [(NetworkVariable, NetworkVariable, Float)]
@@ -360,7 +376,7 @@ enum GGMEstimator {
     }
 
     // Tier 2: recompute full LW + partial correlations for each resample.
-    private static func bootstrapLW(
+    private nonisolated static func bootstrapLW(
         matrix: [[Float]],
         labels: [NetworkVariable],
         candidates: [(NetworkVariable, NetworkVariable, Float)],
@@ -387,7 +403,7 @@ enum GGMEstimator {
 
     // MARK: - Centrality
 
-    static func computeCentrality(edges: [PsychNetworkEdge]) -> [NetworkVariable: Float] {
+    nonisolated static func computeCentrality(edges: [PsychNetworkEdge]) -> [NetworkVariable: Float] {
         var strength = [NetworkVariable: Float]()
         for e in edges {
             strength[e.first,  default: 0] += e.absWeight

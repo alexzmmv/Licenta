@@ -18,9 +18,6 @@ struct BitsListView: View {
     @State private var showingDeleteAlert = false
     @State private var bitToDelete: Bit?
 
-    enum ViewMode { case list, clusters }
-    @State private var viewMode: ViewMode = .list
-
     enum SortOrder: String, CaseIterable {
         case relevance = "Relevance"
         case newestFirst = "Newest First"
@@ -82,28 +79,16 @@ struct BitsListView: View {
             VStack(spacing: 0) {
                 headerView
 
-                Picker("", selection: $viewMode) {
-                    Label("List", systemImage: "list.bullet").tag(ViewMode.list)
-                    Label("Clusters", systemImage: "circle.hexagongrid.fill").tag(ViewMode.clusters)
+                searchBarView
+
+                if !selectedEmotions.isEmpty || !selectedClusters.isEmpty {
+                    activeFiltersView
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
 
-                if viewMode == .list {
-                    searchBarView
-
-                    if !selectedEmotions.isEmpty || !selectedClusters.isEmpty {
-                        activeFiltersView
-                    }
-
-                    if filteredBits.isEmpty {
-                        emptyStateView
-                    } else {
-                        bitListView
-                    }
+                if filteredBits.isEmpty {
+                    emptyStateView
                 } else {
-                    ClusterCardsView(repository: repository)
+                    bitListView
                 }
             }
             .frame(maxWidth: 700)

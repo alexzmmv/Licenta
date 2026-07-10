@@ -15,7 +15,7 @@ enum Emotion: String, CaseIterable, Codable {
     case hope = "Hope"
     case guilt = "Guilt"
     
-    var emoji: String {
+    nonisolated var emoji: String {
         switch self {
         case .joy: return "😊"
         case .sadness: return "😢"

@@ -13,36 +13,7 @@ struct SettingsView: View {
     @State private var isExporting = false
     @State private var exportErrorMessage: String?
     @State private var showingChangePIN = false
-
-    // MARK: - AI Stats (computed from repository)
-
-    private var totalBits: Int {
-        repository.bits.filter { !$0.isDeleted }.count
-    }
-
-    private var bitsWithEmbeddings: Int {
-        repository.bits.filter { !$0.isDeleted && $0.embedding != nil && !($0.embedding?.isEmpty ?? true) }.count
-    }
-
-    private var bitsWithoutEmbeddings: Int {
-        totalBits - bitsWithEmbeddings
-    }
-
-    private var clusteredBits: Int {
-        repository.bits.filter { !$0.isDeleted && $0.clusterID != nil }.count
-    }
-
-    private var uniqueClusterCount: Int {
-        Set(repository.bits.compactMap { $0.clusterID }).count
-    }
-
-    private var noiseBits: Int {
-        repository.bits.filter { !$0.isDeleted && $0.embedding != nil && !($0.embedding?.isEmpty ?? true) && $0.clusterID == nil }.count
-    }
-
-    private var embeddingDimension: Int? {
-        repository.bits.first(where: { $0.embedding != nil })?.embedding?.count
-    }
+    @State private var reminderEnabled = ReminderScheduler.shared.isEnabled
 
     var body: some View {
         NavigationStack {
@@ -101,21 +72,37 @@ struct SettingsView: View {
                         .environmentObject(authManager)
                 }
 
-                // MARK: - AI Pipeline Stats
                 Section {
-                    statsRow(icon: "doc.text", color: .blue, label: "Total Entries", value: "\(totalBits)")
-                    statsRow(icon: "cpu", color: .green, label: "With Embeddings", value: "\(bitsWithEmbeddings)")
-                    statsRow(icon: "exclamationmark.triangle", color: .orange, label: "Unprocessed", value: "\(bitsWithoutEmbeddings)")
-                    statsRow(icon: "circle.hexagongrid", color: .purple, label: "Clusters", value: "\(uniqueClusterCount)")
-                    statsRow(icon: "link", color: .cyan, label: "Clustered Entries", value: "\(clusteredBits)")
-                    statsRow(icon: "waveform.path", color: .gray, label: "Noise (unclustered)", value: "\(noiseBits)")
-                    if let dim = embeddingDimension {
-                        statsRow(icon: "arrow.left.and.right", color: .indigo, label: "Embedding Dimensions", value: "\(dim)")
+                    Toggle(isOn: $reminderEnabled) {
+                        HStack {
+                            Image(systemName: "bell.fill")
+                                .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                            Text("Daily Reminder")
+                        }
                     }
-                    statsRow(icon: "gearshape.2", color: .pink, label: "Active Model", value: EmbeddingModelChoice.current.displayName)
-                    statsRow(icon: "circle.hexagongrid.fill", color: .purple, label: "Clustering", value: ClusteringStrategyChoice.current.displayName)
+                    .onChange(of: reminderEnabled) { _, enabled in
+                        Task {
+                            if enabled {
+                                let granted = await ReminderScheduler.shared.requestPermissionAndEnable()
+                                if !granted { reminderEnabled = false }
+                            } else {
+                                ReminderScheduler.shared.isEnabled = false
+                            }
+                        }
+                    }
+
+                    NavigationLink(destination: CrisisResourcesView()) {
+                        HStack {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(Color(red: 1.0, green: 0.35, blue: 0.55))
+                            Text("Support Resources")
+                                .foregroundColor(.primary)
+                        }
+                    }
                 } header: {
-                    Text("AI Pipeline Stats")
+                    Text("Wellbeing")
+                } footer: {
+                    Text("A gentle daily nudge to check in with yourself. Support resources offer free, confidential crisis help 24/7.")
                 }
 
                 Section {
@@ -246,22 +233,6 @@ struct SettingsView: View {
                     ActivityView(items: [url])
                 }
             }
-        }
-    }
-
-    // MARK: - Stats Row Helper
-
-    private func statsRow(icon: String, color: Color, label: String, value: String) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .frame(width: 24)
-            Text(label)
-            Spacer()
-            Text(value)
-                .foregroundColor(.secondary)
-                .fontWeight(.medium)
-                .monospacedDigit()
         }
     }
 

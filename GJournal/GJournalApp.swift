@@ -6,6 +6,7 @@ struct GJournalApp: App {
     @StateObject private var authManager = AuthManager()
     @State private var entitlementManager = EntitlementManager()
     @Environment(\.scenePhase) var scenePhase
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     /// Holds either a successfully created ModelContainer or the error that
     /// prevented creation. The wipe-and-retry fallback has been intentionally
@@ -46,7 +47,11 @@ struct GJournalApp: App {
             switch containerResult {
             case .success(let container):
                 Group {
-                    if authManager.isAuthenticated {
+                    if !hasCompletedOnboarding {
+                        OnboardingView { hasCompletedOnboarding = true }
+                            .environmentObject(authManager)
+                            .environment(entitlementManager)
+                    } else if authManager.isAuthenticated {
                         BiometricLockView()
                             .environmentObject(authManager)
                             .environment(entitlementManager)

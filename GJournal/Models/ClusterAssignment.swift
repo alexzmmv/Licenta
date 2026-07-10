@@ -1,11 +1,11 @@
 import Foundation
 
-struct ClusterAssignment {
+struct ClusterAssignment: Sendable {
     let bitID: UUID
 
     let clusterID: Int
 
-    var isNoise: Bool {
+    nonisolated var isNoise: Bool {
         clusterID == -1
     }
 }

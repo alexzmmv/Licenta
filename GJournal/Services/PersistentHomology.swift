@@ -27,11 +27,11 @@ struct PersistenceBar: Equatable, Sendable {
 enum PersistentHomology {
 
     // Zero-persistence pairs (birth == death) are omitted, matching Ripser.
-    private static let zeroBarEpsilon = 1e-12
+    private nonisolated static let zeroBarEpsilon = 1e-12
 
     // MARK: Distance matrix
 
-    static func euclideanDistanceMatrix(_ points: [[Double]]) -> [[Double]] {
+    nonisolated static func euclideanDistanceMatrix(_ points: [[Double]]) -> [[Double]] {
         let n = points.count
         var dm = [[Double]](repeating: [Double](repeating: 0, count: n), count: n)
         for i in 0..<n {
@@ -55,9 +55,17 @@ enum PersistentHomology {
     /// Computes the VR persistence diagram (dimensions 0 and 1). Edges/triangles whose
     /// filtration value exceeds `maxEpsilon` are excluded; unfilled classes then surface as
     /// essential bars with `death == .infinity`.
-    static func vietorisRips(distanceMatrix dm: [[Double]], maxEpsilon: Double = .infinity) -> [PersistenceBar] {
+    /// Hard cap: at n = 80 the complex has ~82k triangles; beyond that the O(n³) reduction
+    /// becomes too slow for on-device real-time use.
+    nonisolated static let maxPoints = 80
+
+    nonisolated static func vietorisRips(distanceMatrix dm: [[Double]], maxEpsilon: Double = .infinity) -> [PersistenceBar] {
         let n = dm.count
         guard n > 0 else { return [] }
+        guard n <= Self.maxPoints else {
+            AppLogger.error("[PH] vietorisRips called with \(n) points (max \(Self.maxPoints)); returning empty diagram")
+            return []
+        }
 
         // ── Build simplices: vertices (dim 0), edges (dim 1), triangles (dim 2) ──────────
         struct Simplex { let dim: Int; let filt: Double; let verts: [Int] }
@@ -153,7 +161,7 @@ enum PersistentHomology {
     }
 
     /// Loop Persistence: Σ(death − birth) over finite H1 bars. Rumination proxy.
-    static func loopPersistence(_ bars: [PersistenceBar]) -> Double {
+    nonisolated static func loopPersistence(_ bars: [PersistenceBar]) -> Double {
         bars.filter { $0.dimension == 1 && $0.death.isFinite }
             .reduce(0) { $0 + ($1.death - $1.birth) }
     }
@@ -161,7 +169,7 @@ enum PersistentHomology {
     // MARK: - Z/2 helpers
 
     /// Symmetric difference of two ascending, duplicate-free index lists (Z/2 column add).
-    private static func symmetricDifference(_ a: [Int], _ b: [Int]) -> [Int] {
+    private nonisolated static func symmetricDifference(_ a: [Int], _ b: [Int]) -> [Int] {
         var result = [Int]()
         result.reserveCapacity(a.count + b.count)
         var i = 0, j = 0
@@ -175,7 +183,7 @@ enum PersistentHomology {
         return result
     }
 
-    private static func lexLess(_ a: [Int], _ b: [Int]) -> Bool {
+    private nonisolated static func lexLess(_ a: [Int], _ b: [Int]) -> Bool {
         for i in 0..<Swift.min(a.count, b.count) {
             if a[i] != b[i] { return a[i] < b[i] }
         }

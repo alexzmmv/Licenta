@@ -74,13 +74,14 @@ final class AIProcessingManager: ObservableObject {
         let safetyResult = services.safetyFilter.checkSafety(flattenedText)
         AppLogger.log("[AI] Step 2 — \(safetyResult.isSafe ? "safe" : "flagged")")
 
-        // Steps 3-4: ML inference
-        let capturedServices = services
-        
+        // Steps 3-4: ML inference — capture protocol values on MainActor before going detached
+        let embeddingService = services.embeddingService
+        let emotionService = services.emotionService
+
         let (emb, emo) = try await Task.detached(priority: .utility) {
-            let embedding = try await capturedServices.embeddingService.generateEmbedding(for: flattenedText)
-            let emotions = try await capturedServices.emotionService.detectEmotions(for: flattenedText)
-            
+            let embedding = try await embeddingService.generateEmbedding(for: flattenedText)
+            let emotions = try await emotionService.detectEmotions(for: flattenedText)
+
             // Persist on background context
             let backgroundContext = ModelContext(container)
             let predicate = #Predicate<Bit> { $0.id == bitID }
@@ -92,7 +93,7 @@ final class AIProcessingManager: ObservableObject {
                 bit.embeddingGeneratedAt = Date()
 
                 // Behavioral tags (Pillar A substrate): extract → canonicalize → persist.
-                let tagProcessor = TagProcessor(embeddingService: capturedServices.embeddingService)
+                let tagProcessor = TagProcessor(embeddingService: embeddingService)
                 bit.tagLemmas = await tagProcessor.process(event: bit.event, action: bit.action, into: backgroundContext)
 
                 try backgroundContext.save()
@@ -112,8 +113,12 @@ final class AIProcessingManager: ObservableObject {
         pendingClusterTask?.cancel()
         pendingClusterTask = Task {
             do { try await Task.sleep(for: .seconds(3)) } catch { return }
-            guard let container = modelContext?.container else { return }
-            try? await self.runClustering(forceRecalibrate: false)
+            guard modelContext?.container != nil else { return }
+            do {
+                try await self.runClustering(forceRecalibrate: false)
+            } catch {
+                AppLogger.error("[AI] Scheduled reclustering failed: \(error)")
+            }
         }
     }
 
@@ -123,7 +128,7 @@ final class AIProcessingManager: ObservableObject {
     /// tags yet. Reports (processed, total) progress on the main actor. Idempotent.
     func backfillTags(progress: @escaping @MainActor (Int, Int) -> Void) async {
         guard let container = modelContext?.container else { return }
-        let capturedServices = services
+        let embeddingService = services.embeddingService  // capture on MainActor before detach
 
         await Task.detached(priority: .utility) {
             let context = ModelContext(container)
@@ -133,7 +138,7 @@ final class AIProcessingManager: ObservableObject {
             let total = pending.count
             guard total > 0 else { await progress(0, 0); return }
 
-            let processor = TagProcessor(embeddingService: capturedServices.embeddingService)
+            let processor = TagProcessor(embeddingService: embeddingService)
             var done = 0
             for bit in pending {
                 bit.tagLemmas = await processor.process(event: bit.event, action: bit.action, into: context)
@@ -158,10 +163,11 @@ final class AIProcessingManager: ObservableObject {
             needsCalibration = true
         }
 
+        // Capture MainActor-isolated values before going detached
         let capturedStrategy = services.clusteringStrategy
-        let capturedServices = services
+        let capturedClusteringService = services.clusteringService
         let currentCalib = lastCalibrationResult
-        
+
         struct ClusterResult {
             let clusterCount: Int
             let noiseCount: Int
@@ -185,7 +191,7 @@ final class AIProcessingManager: ObservableObject {
             var newCalib: CalibrationResult? = nil
             var clearedCalib = false
 
-            if needsCalibration, capturedServices.clusteringService is DBSCANClusterer {
+            if needsCalibration, capturedClusteringService is DBSCANClusterer {
                 let embeddings = clusterableEntries.map { $0.embedding }
                 let n = embeddings.count
                 let baseMinPts = DBSCANClusterer.adaptiveMinPoints(for: n)
@@ -199,17 +205,17 @@ final class AIProcessingManager: ObservableObject {
                 let clusterer = DBSCANClusterer(epsilon: cal.epsilon, minPoints: cal.minPoints)
                 assignments = try await clusterer.clusterEntries(clusterableEntries)
                 newCalib = cal
-            } else if let calibResult = currentCalib, capturedServices.clusteringService is DBSCANClusterer {
+            } else if let calibResult = currentCalib, capturedClusteringService is DBSCANClusterer {
                 let clusterer = DBSCANClusterer(epsilon: calibResult.epsilon, minPoints: calibResult.minPoints)
                 assignments = try await clusterer.clusterEntries(clusterableEntries)
-            } else if capturedServices.clusteringService is HDBSCANClusterer {
+            } else if capturedClusteringService is HDBSCANClusterer {
                 let n = clusterableEntries.count
                 let minPts = HDBSCANClusterer.adaptiveMinPts(for: n)
                 let clusterer = HDBSCANClusterer(minPts: minPts, minClusterSize: minPts)
                 assignments = try await clusterer.clusterEntries(clusterableEntries)
                 clearedCalib = true
             } else {
-                assignments = try await capturedServices.clusteringService.clusterEntries(clusterableEntries)
+                assignments = try await capturedClusteringService.clusterEntries(clusterableEntries)
             }
 
             // Persist cluster assignments on BackgroundContext
