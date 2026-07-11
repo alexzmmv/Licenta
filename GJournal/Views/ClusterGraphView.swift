@@ -346,7 +346,10 @@ struct ClusterGraphView: View {
             BitDetailView(
                 bit: bit,
                 clusterName: bit.clusterID.flatMap { layout.clusterNames[$0] },
-                allBits: repository.bits
+                allBits: repository.bits,
+                onClusterTap: { _ in
+                    bitToEdit = nil
+                }
             )
         }
         .onChange(of: repository.bits) {

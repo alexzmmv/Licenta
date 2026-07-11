@@ -17,6 +17,7 @@ struct BitsListView: View {
     @State private var bitToEdit: Bit?
     @State private var showingDeleteAlert = false
     @State private var bitToDelete: Bit?
+    @State private var selectedClusterForGraphID: Int? = nil
 
     enum SortOrder: String, CaseIterable {
         case relevance = "Relevance"
@@ -146,6 +147,14 @@ struct BitsListView: View {
             }
         } message: {
             Text("Are you sure you want to delete this bit? This action cannot be undone.")
+        }
+        .fullScreenCover(item: Binding(
+            get: { selectedClusterForGraphID.map { IdentifiableInt(id: $0) } },
+            set: { selectedClusterForGraphID = $0?.id }
+        )) { ident in
+            NavigationView {
+                ClusterGraphView(repository: repository, filterClusterID: ident.id)
+            }
         }
         .preferredColorScheme(.dark)
     }
@@ -283,6 +292,26 @@ struct BitsListView: View {
                     .cornerRadius(16)
                 }
 
+                if selectedClusters.count == 1, let clusterID = selectedClusters.first {
+                    Button {
+                        selectedClusterForGraphID = clusterID
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "circle.hexagongrid.fill")
+                                .font(.caption2)
+                            Text("See Theme Graph")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color(red: 0.55, green: 0.4, blue: 0.95))
+                        .cornerRadius(16)
+                        .foregroundColor(.white)
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 if !selectedEmotions.isEmpty || !selectedClusters.isEmpty {
                     Button {
                         selectedEmotions.removeAll()
@@ -385,6 +414,9 @@ struct BitsListView: View {
                             },
                             onToggleHide: {
                                 repository.toggleHideBit(id: bit.id)
+                            },
+                            onClusterTap: { clusterID in
+                                selectedClusterForGraphID = clusterID
                             }
                         )
                         .padding(.horizontal, 20)
@@ -618,4 +650,8 @@ struct FilterSheetView: View {
         default: return ""
         }
     }
+}
+
+struct IdentifiableInt: Identifiable {
+    let id: Int
 }

@@ -6,6 +6,7 @@ struct BitCard: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onToggleHide: () -> Void
+    var onClusterTap: ((Int) -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -73,6 +74,25 @@ struct BitCard: View {
                 Text(bit.lastModified.timeOfDay)
                     .font(.caption)
                     .foregroundColor(.secondary)
+                
+                if let clusterID = bit.clusterID, clusterID >= 0 {
+                    Button {
+                        onClusterTap?(clusterID)
+                    } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: "circle.grid.hex.fill")
+                                .font(.system(size: 8))
+                            Text(bit.cluster?.displayName ?? "Cluster \(clusterID)")
+                                .font(.system(size: 10))
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color(red: 0.55, green: 0.4, blue: 0.95).opacity(0.12))
+                        .cornerRadius(8)
+                        .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                    }
+                    .buttonStyle(.plain)
+                }
                 
                 Spacer()
                 
@@ -178,11 +198,13 @@ struct BitDetailView: View {
     var clusterName: String?
     var allBits: [Bit] = []
     @Environment(\.dismiss) var dismiss
+    var onClusterTap: ((Int) -> Void)? = nil
 
-    init(bit: Bit, clusterName: String? = nil, allBits: [Bit] = []) {
+    init(bit: Bit, clusterName: String? = nil, allBits: [Bit] = [], onClusterTap: ((Int) -> Void)? = nil) {
         _currentBit = State(initialValue: bit)
         self.clusterName = clusterName
         self.allBits = allBits
+        self.onClusterTap = onClusterTap
     }
 
     private var clusterSpanLabel: String? {
@@ -250,11 +272,24 @@ struct BitDetailView: View {
                         metadataRow(title: "Intensity", value: String(repeating: "🔥", count: currentBit.intensity))
 
                         if let clusterID = currentBit.clusterID, clusterID >= 0 {
-                            if let name = clusterName {
-                                metadataRow(title: "Cluster", value: name)
-                            } else {
-                                metadataRow(title: "Cluster", value: "Cluster \(clusterID)")
+                            Button {
+                                onClusterTap?(clusterID)
+                            } label: {
+                                HStack {
+                                    Text("Cluster")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                    Spacer()
+                                    Text(clusterName ?? "Cluster \(clusterID)")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption2)
+                                        .foregroundColor(.gray)
+                                }
                             }
+                            .buttonStyle(.plain)
                         }
 
                         if let spanLabel = clusterSpanLabel {
