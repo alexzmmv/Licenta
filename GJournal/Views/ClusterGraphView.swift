@@ -477,9 +477,11 @@ struct ClusterGraphView: View {
                 Spacer()
 
                 if node.isHub {
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(colorForCluster(node.clusterID))
+                    if filterClusterID == nil {
+                        Image(systemName: "chevron.right.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(colorForCluster(node.clusterID))
+                    }
                 } else {
                     HStack(spacing: 2) {
                         ForEach(1...4, id: \.self) { level in
@@ -507,7 +509,7 @@ struct ClusterGraphView: View {
                 .shadow(color: .black.opacity(0.3), radius: 10, y: -5)
         )
         .onTapGesture {
-            if node.isHub, let clusterID = node.clusterID {
+            if filterClusterID == nil, node.isHub, let clusterID = node.clusterID {
                 selectedClusterForGraphID = clusterID
             }
         }
