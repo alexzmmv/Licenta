@@ -1,0 +1,572 @@
+{
+  "GJournal/Assets.xcassets/AccentColor.colorset/Contents.json": {
+    "mtime": 1780250456.6146333,
+    "ast_hash": "55019f7265dde0a78318b0807f98e847",
+    "semantic_hash": "55019f7265dde0a78318b0807f98e847"
+  },
+  "GJournal/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1783331406.3004746,
+    "ast_hash": "29a9ad092c4aa4b22e3ee8ee232f2812",
+    "semantic_hash": "29a9ad092c4aa4b22e3ee8ee232f2812"
+  },
+  "GJournal/Assets.xcassets/Contents.json": {
+    "mtime": 1780250456.6734111,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
+  },
+  "GJournal/ContentView.swift": {
+    "mtime": 1783434810.802365,
+    "ast_hash": "0d64de224e6875295cb7e6f8d5dd36f9",
+    "semantic_hash": "0d64de224e6875295cb7e6f8d5dd36f9"
+  },
+  "GJournal/Extensions/Collection+Bits.swift": {
+    "mtime": 1781372454.4427478,
+    "ast_hash": "76ea6378e99a7bee6743c796a85e4116",
+    "semantic_hash": "76ea6378e99a7bee6743c796a85e4116"
+  },
+  "GJournal/Extensions/Date+Formatting.swift": {
+    "mtime": 1781372454.4236214,
+    "ast_hash": "dc763a8e8291d70c1a49b4cae39dad4c",
+    "semantic_hash": "dc763a8e8291d70c1a49b4cae39dad4c"
+  },
+  "GJournal/GJournalApp.swift": {
+    "mtime": 1783776160.3439488,
+    "ast_hash": "99e7556dd2fb4c34d07f923c1bd49cf1",
+    "semantic_hash": ""
+  },
+  "GJournal/MLModels/emotion_labels.json": {
+    "mtime": 1780325231.2054093,
+    "ast_hash": "1975b94857ac32989d55f9687965fc93",
+    "semantic_hash": "1975b94857ac32989d55f9687965fc93"
+  },
+  "GJournal/Models/BehavioralTag.swift": {
+    "mtime": 1783425956.6083753,
+    "ast_hash": "b11df2a2c7f76ccc62a72a7d2700b832",
+    "semantic_hash": "b11df2a2c7f76ccc62a72a7d2700b832"
+  },
+  "GJournal/Models/Bit.swift": {
+    "mtime": 1783428692.9941797,
+    "ast_hash": "0cd4139a14a7ba36f107614d41ff6c16",
+    "semantic_hash": "0cd4139a14a7ba36f107614d41ff6c16"
+  },
+  "GJournal/Models/Cluster.swift": {
+    "mtime": 1781373493.359633,
+    "ast_hash": "0b4d774e3f096857484ffee53c644e5d",
+    "semantic_hash": "0b4d774e3f096857484ffee53c644e5d"
+  },
+  "GJournal/Models/ClusterAssignment.swift": {
+    "mtime": 1783428952.572608,
+    "ast_hash": "ee001cc1d991d22cce6395c34b7d1fb4",
+    "semantic_hash": "ee001cc1d991d22cce6395c34b7d1fb4"
+  },
+  "GJournal/Models/ClusteringStrategyChoice.swift": {
+    "mtime": 1783346199.2410982,
+    "ast_hash": "2cb4c9c0c1cd5c14b65a448f6e818eff",
+    "semantic_hash": "2cb4c9c0c1cd5c14b65a448f6e818eff"
+  },
+  "GJournal/Models/EmbeddingModelChoice.swift": {
+    "mtime": 1783331175.9741313,
+    "ast_hash": "a9ebf1adb4190d09dbc1f17fc2d6f948",
+    "semantic_hash": "a9ebf1adb4190d09dbc1f17fc2d6f948"
+  },
+  "GJournal/Models/Emotion.swift": {
+    "mtime": 1783429243.8214734,
+    "ast_hash": "5f5c44fb40420459d0f8ba438305b584",
+    "semantic_hash": "5f5c44fb40420459d0f8ba438305b584"
+  },
+  "GJournal/Models/EmotionProbability.swift": {
+    "mtime": 1781372592.241209,
+    "ast_hash": "dc25764376c654a81154790307ef4222",
+    "semantic_hash": "dc25764376c654a81154790307ef4222"
+  },
+  "GJournal/Models/SchemaVersions.swift": {
+    "mtime": 1783426135.5643728,
+    "ast_hash": "24968ffe194bd2328980e50caf5e2934",
+    "semantic_hash": "24968ffe194bd2328980e50caf5e2934"
+  },
+  "GJournal/Repository/AuthManager.swift": {
+    "mtime": 1783776163.2251565,
+    "ast_hash": "c4780d5257309b8019cfd2c4ccdcebd0",
+    "semantic_hash": ""
+  },
+  "GJournal/Repository/BaseJournalRepository.swift": {
+    "mtime": 1783434657.8554466,
+    "ast_hash": "f6aecbe7757d7782a3502ac9ec30f406",
+    "semantic_hash": "f6aecbe7757d7782a3502ac9ec30f406"
+  },
+  "GJournal/Repository/JournalRepositoryProtocol.swift": {
+    "mtime": 1781372743.7515829,
+    "ast_hash": "6e9b94796b39a9c71eb46f72fe974654",
+    "semantic_hash": "6e9b94796b39a9c71eb46f72fe974654"
+  },
+  "GJournal/Repository/LocalJournalRepository.swift": {
+    "mtime": 1783703971.279239,
+    "ast_hash": "ea6c629fc35144d76d0efaa78e227ba3",
+    "semantic_hash": "ea6c629fc35144d76d0efaa78e227ba3"
+  },
+  "GJournal/Services/AIProcessingManager.swift": {
+    "mtime": 1783429104.9493139,
+    "ast_hash": "376f2d086d67ef6b20b70b04f8357b20",
+    "semantic_hash": "376f2d086d67ef6b20b70b04f8357b20"
+  },
+  "GJournal/Services/AIServiceProtocol.swift": {
+    "mtime": 1781372886.072282,
+    "ast_hash": "45982d4534a813ae1617ff614484ddc1",
+    "semantic_hash": "45982d4534a813ae1617ff614484ddc1"
+  },
+  "GJournal/Services/ClusterNamer.swift": {
+    "mtime": 1783429251.6796093,
+    "ast_hash": "318098253fe21260ce002cce3a5b661b",
+    "semantic_hash": "318098253fe21260ce002cce3a5b661b"
+  },
+  "GJournal/Services/CoreMLEmbeddingService.swift": {
+    "mtime": 1781373026.7097402,
+    "ast_hash": "781c1396e68df4bf91278f754bd31ffd",
+    "semantic_hash": "781c1396e68df4bf91278f754bd31ffd"
+  },
+  "GJournal/Services/CoreMLEmotionService.swift": {
+    "mtime": 1783349011.9305866,
+    "ast_hash": "cb60732d1ea1be93908516af01d1ecc3",
+    "semantic_hash": "cb60732d1ea1be93908516af01d1ecc3"
+  },
+  "GJournal/Services/CrashReporter.swift": {
+    "mtime": 1783775897.1142898,
+    "ast_hash": "85375126aa86bb168ff0cf7217866ffc",
+    "semantic_hash": ""
+  },
+  "GJournal/Services/DBSCANClusterer.swift": {
+    "mtime": 1783429057.0319686,
+    "ast_hash": "68a1b5890ee9822e7a921233690a1b3f",
+    "semantic_hash": "68a1b5890ee9822e7a921233690a1b3f"
+  },
+  "GJournal/Services/EfficiencyBenchmark.swift": {
+    "mtime": 1783349703.631867,
+    "ast_hash": "87852b7aa92373426fa34d24632999da",
+    "semantic_hash": "87852b7aa92373426fa34d24632999da"
+  },
+  "GJournal/Services/EntitlementManager.swift": {
+    "mtime": 1783433592.5364428,
+    "ast_hash": "ce7418d44b1431da730b1be296281c3b",
+    "semantic_hash": "ce7418d44b1431da730b1be296281c3b"
+  },
+  "GJournal/Services/GGMEstimator.swift": {
+    "mtime": 1783429285.3023767,
+    "ast_hash": "1de07635aec70bd7d19517c22c4b4e75",
+    "semantic_hash": "1de07635aec70bd7d19517c22c4b4e75"
+  },
+  "GJournal/Services/GraphPhysicsEngine.swift": {
+    "mtime": 1783353724.9907248,
+    "ast_hash": "877ecda90954d184ac9116adfb2b1238",
+    "semantic_hash": "877ecda90954d184ac9116adfb2b1238"
+  },
+  "GJournal/Services/HDBSCANClusterer.swift": {
+    "mtime": 1783349332.585489,
+    "ast_hash": "a604e26e30948cb270bebec96827f19f",
+    "semantic_hash": "a604e26e30948cb270bebec96827f19f"
+  },
+  "GJournal/Services/HybridSearchService.swift": {
+    "mtime": 1783343312.9134517,
+    "ast_hash": "108edf8497f1f77bde3f2fbebdf53248",
+    "semantic_hash": "108edf8497f1f77bde3f2fbebdf53248"
+  },
+  "GJournal/Services/InsightEngine.swift": {
+    "mtime": 1783427627.214821,
+    "ast_hash": "6fb192ab2cb859637d1f5edafd509dfc",
+    "semantic_hash": "6fb192ab2cb859637d1f5edafd509dfc"
+  },
+  "GJournal/Services/MockAIService.swift": {
+    "mtime": 1781373319.224392,
+    "ast_hash": "cb58e0889a07dcd02c6f35dc5a8e2453",
+    "semantic_hash": "cb58e0889a07dcd02c6f35dc5a8e2453"
+  },
+  "GJournal/Services/NLEmbeddingService.swift": {
+    "mtime": 1781373344.7738407,
+    "ast_hash": "3f4cea837dd10fff94fce0a8dc766964",
+    "semantic_hash": "3f4cea837dd10fff94fce0a8dc766964"
+  },
+  "GJournal/Services/PersistentHomology.swift": {
+    "mtime": 1783429164.9630167,
+    "ast_hash": "f2ae1c0efa47ee2dc677a5840b72f0e4",
+    "semantic_hash": "f2ae1c0efa47ee2dc677a5840b72f0e4"
+  },
+  "GJournal/Services/ReminderScheduler.swift": {
+    "mtime": 1783704123.725918,
+    "ast_hash": "5023ef96bc7c49e1d6e26294b250e1b2",
+    "semantic_hash": "5023ef96bc7c49e1d6e26294b250e1b2"
+  },
+  "GJournal/Services/SafetyFilter.swift": {
+    "mtime": 1783704049.272088,
+    "ast_hash": "6cfdb66e98099eb2fed104b7e3570f8e",
+    "semantic_hash": "6cfdb66e98099eb2fed104b7e3570f8e"
+  },
+  "GJournal/Services/SemanticUtils.swift": {
+    "mtime": 1781374502.3097038,
+    "ast_hash": "71b779d7fc2ec873a80105b762cd27f4",
+    "semantic_hash": "71b779d7fc2ec873a80105b762cd27f4"
+  },
+  "GJournal/Services/ServiceContainer.swift": {
+    "mtime": 1783346213.112615,
+    "ast_hash": "9535b604c81febcdb8fe2fcc41445d4a",
+    "semantic_hash": "9535b604c81febcdb8fe2fcc41445d4a"
+  },
+  "GJournal/Services/TagExtractor.swift": {
+    "mtime": 1783426847.1705081,
+    "ast_hash": "a815077c9464ecf2a0a967f95868f1ca",
+    "semantic_hash": "a815077c9464ecf2a0a967f95868f1ca"
+  },
+  "GJournal/Services/TagProcessor.swift": {
+    "mtime": 1783426253.4635243,
+    "ast_hash": "72e42ef84d302eb213d8346507ecd048",
+    "semantic_hash": "72e42ef84d302eb213d8346507ecd048"
+  },
+  "GJournal/Services/TextFlattener.swift": {
+    "mtime": 1781374521.6797676,
+    "ast_hash": "68513703f9bfb7cd947f85d62fbe36c0",
+    "semantic_hash": "68513703f9bfb7cd947f85d62fbe36c0"
+  },
+  "GJournal/Services/TrajectoryEngine.swift": {
+    "mtime": 1783425060.365424,
+    "ast_hash": "8f08636dd49f22f8233c33295f905d2e",
+    "semantic_hash": "8f08636dd49f22f8233c33295f905d2e"
+  },
+  "GJournal/Services/TrajectoryPersonas.swift": {
+    "mtime": 1783424737.3903546,
+    "ast_hash": "bf62097a915e03490b14c7a3520e5802",
+    "semantic_hash": "bf62097a915e03490b14c7a3520e5802"
+  },
+  "GJournal/Services/TrajectoryService.swift": {
+    "mtime": 1783429376.1629825,
+    "ast_hash": "ce522f55a081a782e132c6e18a76eda4",
+    "semantic_hash": "ce522f55a081a782e132c6e18a76eda4"
+  },
+  "GJournal/Services/WordPieceTokenizer.swift": {
+    "mtime": 1781374521.6869013,
+    "ast_hash": "3bad89cb955f2e6a4d9e39ca2c0ab510",
+    "semantic_hash": "3bad89cb955f2e6a4d9e39ca2c0ab510"
+  },
+  "GJournal/Utilities/AppLogger.swift": {
+    "mtime": 1783349498.6345172,
+    "ast_hash": "2fe4b5c80bc60c0db6a0bfadb310a9a6",
+    "semantic_hash": "2fe4b5c80bc60c0db6a0bfadb310a9a6"
+  },
+  "GJournal/Views/AddEditBitView.swift": {
+    "mtime": 1783704078.8934429,
+    "ast_hash": "a3ea86cd6e34a8da2dbc2f6eff8b0010",
+    "semantic_hash": "a3ea86cd6e34a8da2dbc2f6eff8b0010"
+  },
+  "GJournal/Views/BiometricLockView.swift": {
+    "mtime": 1783774538.4038265,
+    "ast_hash": "53784db5b1b2741b791880dc9bb65e07",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/BitCard.swift": {
+    "mtime": 1783779802.1732388,
+    "ast_hash": "7ed6481a2ad6aefb4bfe8cd618e13837",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/BitsListView.swift": {
+    "mtime": 1783780377.4620662,
+    "ast_hash": "6f4c4dea6c8e5c0750d126f71318df76",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/CalendarView.swift": {
+    "mtime": 1781374521.7262292,
+    "ast_hash": "0856a0df6026e93fe2e7706b4acd862d",
+    "semantic_hash": "0856a0df6026e93fe2e7706b4acd862d"
+  },
+  "GJournal/Views/ChangePINView.swift": {
+    "mtime": 1783350090.1886108,
+    "ast_hash": "9f5698a0380f53e69dd6e0ce3062dca3",
+    "semantic_hash": "9f5698a0380f53e69dd6e0ce3062dca3"
+  },
+  "GJournal/Views/ClusterCardsView.swift": {
+    "mtime": 1783333766.7213445,
+    "ast_hash": "75792a80c1055d33b47e71cd69dd5271",
+    "semantic_hash": "75792a80c1055d33b47e71cd69dd5271"
+  },
+  "GJournal/Views/ClusterGraphView.swift": {
+    "mtime": 1783780317.358354,
+    "ast_hash": "9d1ab68759c52de4f9f2a7bc07deb277",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/CrisisResourcesView.swift": {
+    "mtime": 1783704064.0590982,
+    "ast_hash": "17135c9c3472b5288ac3b3190bdf841d",
+    "semantic_hash": "17135c9c3472b5288ac3b3190bdf841d"
+  },
+  "GJournal/Views/DayDetailView.swift": {
+    "mtime": 1783350148.6939902,
+    "ast_hash": "2627adb7b894ff3aa1fefd8a14acd73d",
+    "semantic_hash": "2627adb7b894ff3aa1fefd8a14acd73d"
+  },
+  "GJournal/Views/DebugSettingsView.swift": {
+    "mtime": 1783779366.0027719,
+    "ast_hash": "d92557e1ed8280816bb39d339f85f1e9",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/EmotionDetailView.swift": {
+    "mtime": 1783350168.0619757,
+    "ast_hash": "03fc2304826523ca9a02fa71a6f91a8d",
+    "semantic_hash": "03fc2304826523ca9a02fa71a6f91a8d"
+  },
+  "GJournal/Views/LoginView.swift": {
+    "mtime": 1783774524.8002825,
+    "ast_hash": "49617d4e0e95927a922c5009a84413f6",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/MainAppView.swift": {
+    "mtime": 1783428658.5586562,
+    "ast_hash": "0fff420eb5f7cfc2ef544f9ac1c085b7",
+    "semantic_hash": "0fff420eb5f7cfc2ef544f9ac1c085b7"
+  },
+  "GJournal/Views/NetworkGraphView.swift": {
+    "mtime": 1783776237.3294778,
+    "ast_hash": "59969af0c3272df3010f8db012f4c13f",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/OnboardingView.swift": {
+    "mtime": 1783704206.686136,
+    "ast_hash": "2d3fbc106c190cbd4e678c50df9ae414",
+    "semantic_hash": "2d3fbc106c190cbd4e678c50df9ae414"
+  },
+  "GJournal/Views/PINKeypadView.swift": {
+    "mtime": 1783776169.037408,
+    "ast_hash": "9b34e3e34ada5d155eb369deb1d92e0a",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/PaywallView.swift": {
+    "mtime": 1783344398.5422564,
+    "ast_hash": "97c55f394b3a67b292ecd88d2e39e81c",
+    "semantic_hash": "97c55f394b3a67b292ecd88d2e39e81c"
+  },
+  "GJournal/Views/RecentlyDeletedView.swift": {
+    "mtime": 1781374521.7987669,
+    "ast_hash": "f359ea47b401fd43d144c601508e5f5b",
+    "semantic_hash": "f359ea47b401fd43d144c601508e5f5b"
+  },
+  "GJournal/Views/SettingsView.swift": {
+    "mtime": 1783775966.1809614,
+    "ast_hash": "d4ede3c68077489035c3e5b8b119e06d",
+    "semantic_hash": ""
+  },
+  "GJournal/Views/StoreRecoveryView.swift": {
+    "mtime": 1783284751.8223836,
+    "ast_hash": "98c327d1a9e44eac04d7e8daaf601a88",
+    "semantic_hash": "98c327d1a9e44eac04d7e8daaf601a88"
+  },
+  "GJournal/Views/TagManagementView.swift": {
+    "mtime": 1783426506.6245244,
+    "ast_hash": "1f474444bd0902a1d9066a6729eb77c5",
+    "semantic_hash": "1f474444bd0902a1d9066a6729eb77c5"
+  },
+  "GJournal/Views/TopEmotionsView.swift": {
+    "mtime": 1780250456.484546,
+    "ast_hash": "d2004ab05433f6ad90a7812e426df377",
+    "semantic_hash": "d2004ab05433f6ad90a7812e426df377"
+  },
+  "GJournal/Views/TrajectoryView.swift": {
+    "mtime": 1783776285.0369687,
+    "ast_hash": "9a197e1f3def4b5f66a821eaee239ae1",
+    "semantic_hash": ""
+  },
+  "GJournal/data/seed_data.json": {
+    "mtime": 1783431452.9697282,
+    "ast_hash": "7674453479871fd9a44c820dcc0eebb8",
+    "semantic_hash": "7674453479871fd9a44c820dcc0eebb8"
+  },
+  "GJournalTests/AuthManagerTests.swift": {
+    "mtime": 1783331711.8246045,
+    "ast_hash": "d5e5ae389c831b3952d5335235833c6c",
+    "semantic_hash": "d5e5ae389c831b3952d5335235833c6c"
+  },
+  "GJournalTests/ExportAndModelChoiceTests.swift": {
+    "mtime": 1783779157.735579,
+    "ast_hash": "6df7358d793c967a3e3cbbe49718cef8",
+    "semantic_hash": ""
+  },
+  "GJournalTests/ForceDirectedLayoutTests.swift": {
+    "mtime": 1783353748.7692797,
+    "ast_hash": "4543d1dba1281ea4debf5fc9a0d3b624",
+    "semantic_hash": "4543d1dba1281ea4debf5fc9a0d3b624"
+  },
+  "GJournalTests/GGMEstimatorTests.swift": {
+    "mtime": 1783436419.7006423,
+    "ast_hash": "626263763b14be4cf048d22e3a8e9d0a",
+    "semantic_hash": "626263763b14be4cf048d22e3a8e9d0a"
+  },
+  "GJournalTests/HDBSCANTests.swift": {
+    "mtime": 1783346399.3169353,
+    "ast_hash": "b806ebd03b90afe28a13ae4163750dda",
+    "semantic_hash": "b806ebd03b90afe28a13ae4163750dda"
+  },
+  "GJournalTests/MigrationSmokeTests.swift": {
+    "mtime": 1783426171.9788382,
+    "ast_hash": "6380425b8362ababbf046cae45868e26",
+    "semantic_hash": "6380425b8362ababbf046cae45868e26"
+  },
+  "GJournalTests/PersistentHomologyTests.swift": {
+    "mtime": 1783424338.5756125,
+    "ast_hash": "dd9718588d32f153c7c2701dac153bce",
+    "semantic_hash": "dd9718588d32f153c7c2701dac153bce"
+  },
+  "GJournalTests/SemanticUtilsTests.swift": {
+    "mtime": 1783434901.754474,
+    "ast_hash": "9d2a84e7105bf21f264e42a6187d096a",
+    "semantic_hash": "9d2a84e7105bf21f264e42a6187d096a"
+  },
+  "GJournalTests/TagExtractorTests.swift": {
+    "mtime": 1783426779.9003549,
+    "ast_hash": "6fe43c70bd5aed94d961b86380491185",
+    "semantic_hash": "6fe43c70bd5aed94d961b86380491185"
+  },
+  "GJournalTests/TagProcessorTests.swift": {
+    "mtime": 1783426801.933546,
+    "ast_hash": "c02ca53d6f0373331570a69fa98a0eab",
+    "semantic_hash": "c02ca53d6f0373331570a69fa98a0eab"
+  },
+  "GJournalTests/TrajectoryServiceTests.swift": {
+    "mtime": 1783424723.6768632,
+    "ast_hash": "272cc5123b245d686724cb0a53d26d2e",
+    "semantic_hash": "272cc5123b245d686724cb0a53d26d2e"
+  },
+  "GJournalTests/WordPieceTokenizerTests.swift": {
+    "mtime": 1783331671.4712913,
+    "ast_hash": "a7ee05ec5a54c9737e5d4d6ebba8d87f",
+    "semantic_hash": "a7ee05ec5a54c9737e5d4d6ebba8d87f"
+  },
+  "GJournalUITests/GJournalUITests.swift": {
+    "mtime": 1783776191.6012204,
+    "ast_hash": "defab8f7f67b7f003f0f2d222c30c0f4",
+    "semantic_hash": ""
+  },
+  "tests/AuthManagerSecurityTests.swift": {
+    "mtime": 1783284891.2095108,
+    "ast_hash": "250b2f7217cd5a80f767ee939c4da7a4",
+    "semantic_hash": "250b2f7217cd5a80f767ee939c4da7a4"
+  },
+  "training/GJournalEmotionClassifier_fp32_backup.mlpackage/Manifest.json": {
+    "mtime": 1783336690.8206358,
+    "ast_hash": "5a3bc566b242e27bb84f988ccafd22ba",
+    "semantic_hash": "5a3bc566b242e27bb84f988ccafd22ba"
+  },
+  "training/ggm_oracle.py": {
+    "mtime": 1783427144.7175922,
+    "ast_hash": "429cfa1308e2d6f2bb83318bb9f842c4",
+    "semantic_hash": "429cfa1308e2d6f2bb83318bb9f842c4"
+  },
+  "training/hdbscan_oracle.py": {
+    "mtime": 1783346379.7866771,
+    "ast_hash": "0eabeb757ccb0226142b08f00df5993c",
+    "semantic_hash": "0eabeb757ccb0226142b08f00df5993c"
+  },
+  "training/ph_oracle.py": {
+    "mtime": 1783424048.1873524,
+    "ast_hash": "b3d6cfc4af4d195c73a84f27352e4175",
+    "semantic_hash": "b3d6cfc4af4d195c73a84f27352e4175"
+  },
+  "training/quantization_report.json": {
+    "mtime": 1783336692.1691303,
+    "ast_hash": "45d1d52ee4ae36a9ba6f57dcb09eca68",
+    "semantic_hash": "45d1d52ee4ae36a9ba6f57dcb09eca68"
+  },
+  "training/quantize_emotion.py": {
+    "mtime": 1783336675.0508168,
+    "ast_hash": "d11e17e3ad227eb7a70e64adad754cca",
+    "semantic_hash": "d11e17e3ad227eb7a70e64adad754cca"
+  },
+  ".superpowers/sdd/progress.md": {
+    "mtime": 1783352160.9519317,
+    "ast_hash": "6556811c720d0aba630db6c4336ae395",
+    "semantic_hash": "6556811c720d0aba630db6c4336ae395"
+  },
+  ".superpowers/sdd/task-1-brief.md": {
+    "mtime": 1783351194.0270817,
+    "ast_hash": "5f7e90d252eae088785ee58c275ede82",
+    "semantic_hash": "5f7e90d252eae088785ee58c275ede82"
+  },
+  ".superpowers/sdd/task-1-report.md": {
+    "mtime": 1783351912.8917296,
+    "ast_hash": "22e95fe7b7d09a5fc586c0e9fa179da6",
+    "semantic_hash": "22e95fe7b7d09a5fc586c0e9fa179da6"
+  },
+  ".superpowers/sdd/task-2-brief.md": {
+    "mtime": 1783351429.3972723,
+    "ast_hash": "16f279ea0d8f0bbaaa588eef860719d8",
+    "semantic_hash": "16f279ea0d8f0bbaaa588eef860719d8"
+  },
+  ".superpowers/sdd/task-2-report.md": {
+    "mtime": 1783351554.7399406,
+    "ast_hash": "04eb977a43794c5271045f47e9e176d6",
+    "semantic_hash": "04eb977a43794c5271045f47e9e176d6"
+  },
+  "GJournal/MLModels/vocab_emotion.txt": {
+    "mtime": 1780325231.2021923,
+    "ast_hash": "64800d5d8528ce344256daf115d4965e",
+    "semantic_hash": "64800d5d8528ce344256daf115d4965e"
+  },
+  "GJournal/MLModels/vocab_gjournalembeddingminilm.txt": {
+    "mtime": 1780264957.1662338,
+    "ast_hash": "64800d5d8528ce344256daf115d4965e",
+    "semantic_hash": "64800d5d8528ce344256daf115d4965e"
+  },
+  "README.md": {
+    "mtime": 1780250457.1977656,
+    "ast_hash": "4936a22344ceef85e0df3e656e0dd937",
+    "semantic_hash": "4936a22344ceef85e0df3e656e0dd937"
+  },
+  "plan.md": {
+    "mtime": 1783332504.7374096,
+    "ast_hash": "33503bdba8829b567b09fb6c9eda8966",
+    "semantic_hash": "33503bdba8829b567b09fb6c9eda8966"
+  },
+  "task_list.md": {
+    "mtime": 1783776404.5214052,
+    "ast_hash": "6d11ac8c38949908dbbdca693f288d60",
+    "semantic_hash": ""
+  },
+  "temp.md": {
+    "mtime": 1783704604.264987,
+    "ast_hash": "8923d9fecfd3618573a5761ead0e0c02",
+    "semantic_hash": "8923d9fecfd3618573a5761ead0e0c02"
+  },
+  "GJournal/Assets.xcassets/AppIcon.appiconset/AppIcon-1024-dark.png": {
+    "mtime": 1783331397.5597208,
+    "ast_hash": "a255d79da6a228d39901f629b56eb318",
+    "semantic_hash": "a255d79da6a228d39901f629b56eb318"
+  },
+  "GJournal/Assets.xcassets/AppIcon.appiconset/AppIcon-1024-tinted.png": {
+    "mtime": 1783331397.5992882,
+    "ast_hash": "aea0fb0d6901392197a64a618f00e1ef",
+    "semantic_hash": "aea0fb0d6901392197a64a618f00e1ef"
+  },
+  "GJournal/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png": {
+    "mtime": 1783331397.520729,
+    "ast_hash": "13f3f09d434bc611a4f37f9c5bc6bf03",
+    "semantic_hash": "13f3f09d434bc611a4f37f9c5bc6bf03"
+  },
+  ".gemini/settings.json": {
+    "mtime": 1783779331.1755495,
+    "ast_hash": "f080aabf772e803c9e24b9ad0acbf2b6",
+    "semantic_hash": ""
+  },
+  "GJournal/Utilities/UITestSupport.swift": {
+    "mtime": 1783776151.2201133,
+    "ast_hash": "bc1305c318ec303b2e436a9748d88fec",
+    "semantic_hash": ""
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1783779267.109305,
+    "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1783779267.110204,
+    "ast_hash": "0bc020d491fca99550c1ea3de0a5f862",
+    "semantic_hash": ""
+  },
+  "GEMINI.md": {
+    "mtime": 1783779331.171825,
+    "ast_hash": "82efb97a359f5c7290bf2513d14686be",
+    "semantic_hash": ""
+  }
+}
