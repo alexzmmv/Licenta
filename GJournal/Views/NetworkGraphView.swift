@@ -84,9 +84,6 @@ struct NetworkGraphView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }.foregroundColor(.white)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Text(tierLabel).font(.caption2).foregroundColor(.gray)
-                }
             }
         }
     }

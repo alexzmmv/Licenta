@@ -15,9 +15,9 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "GJournal/ContentView.swift": {
-    "mtime": 1783434810.802365,
-    "ast_hash": "0d64de224e6875295cb7e6f8d5dd36f9",
-    "semantic_hash": "0d64de224e6875295cb7e6f8d5dd36f9"
+    "mtime": 1783782164.632327,
+    "ast_hash": "74c47f42750be88ab5f71df998b6775f",
+    "semantic_hash": ""
   },
   "GJournal/Extensions/Collection+Bits.swift": {
     "mtime": 1781372454.4427478,
@@ -320,8 +320,8 @@
     "semantic_hash": "0fff420eb5f7cfc2ef544f9ac1c085b7"
   },
   "GJournal/Views/NetworkGraphView.swift": {
-    "mtime": 1783776237.3294778,
-    "ast_hash": "59969af0c3272df3010f8db012f4c13f",
+    "mtime": 1783782097.3001196,
+    "ast_hash": "0ebbc2d2c5aba6c449f8af69c9f7054b",
     "semantic_hash": ""
   },
   "GJournal/Views/OnboardingView.swift": {
@@ -520,14 +520,14 @@
     "semantic_hash": "33503bdba8829b567b09fb6c9eda8966"
   },
   "task_list.md": {
-    "mtime": 1783776404.5214052,
-    "ast_hash": "6d11ac8c38949908dbbdca693f288d60",
+    "mtime": 1783781254.6459131,
+    "ast_hash": "e7e034d7157004b3df4011d734e3723b",
     "semantic_hash": ""
   },
   "temp.md": {
-    "mtime": 1783704604.264987,
-    "ast_hash": "8923d9fecfd3618573a5761ead0e0c02",
-    "semantic_hash": "8923d9fecfd3618573a5761ead0e0c02"
+    "mtime": 1783781581.5908792,
+    "ast_hash": "2d2f5b6583b462532e4f1dd3c0354835",
+    "semantic_hash": ""
   },
   "GJournal/Assets.xcassets/AppIcon.appiconset/AppIcon-1024-dark.png": {
     "mtime": 1783331397.5597208,

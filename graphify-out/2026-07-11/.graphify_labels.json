@@ -371,5 +371,12 @@
   "369": ".compute",
   "370": "BehavioralTag",
   "371": "ObservableObject",
-  "372": "NLEmbeddingService"
+  "372": "NLEmbeddingService",
+  "373": "LocalJournalRepository.swift",
+  "374": "ExportAndModelChoiceTests",
+  "375": "UITestSupport",
+  "376": ".error",
+  "377": ".makeProduction",
+  "378": ".compute",
+  "379": "MainAppView"
 }

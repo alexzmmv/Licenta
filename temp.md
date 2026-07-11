@@ -1,18 +1,85 @@
-# GJournal New Features Test Plan
+# GJournal: Local Gemma LLM Integration Research Brief
 
-This test plan provides a structured verification matrix for developers and QA to test the new advanced mental health analytics features added in the **Tier 2 (Hard) Implementation**. 
-
-To run these tests, generate the newly enriched seed data from the **Debug Settings Menu** (`Generate Seed Data` button) to establish the necessary base journal state.
+This document serves as a comprehensive technical brief to copy-paste into Gemini Web (or other AI research systems) to investigate running a **local Gemma LLM** (or similar lightweight model) on iOS within a privacy-first, local-only micro-journaling application.
 
 ---
 
-| Feature / Module | Initial Baseline State | New Tier 2 Hard Implementation | How to Test (Step-by-Step) | Expected UI / Analytical Pass Criteria |
-| :--- | :--- | :--- | :--- | :--- |
-| **Topological Trajectory** ([TrajectoryView](file:///Users/constantin-alexandrudumitrascu/Desktop/Licenta/GJournal/Views/NetworkGraphView.swift)) | No timeline trajectory analysis; user only sees flat lists or basic average charts. | **Persistent Homology Engine:** Detects multi-dimensional loops ($\beta_1$ persistence) to map rumination, emotional volatility (Flare Index), and recovery speeds. | 1. Import the seed data.<br>2. Navigate to the **Trajectory** tab on the main dashboard.<br>3. Check the plotted PCA coordinates and the trajectory line. | 1. Plotted trajectory line forms a clean path/loop.<br>2. Displays the **Ruminator** or **Explorer** persona card.<br>3. Calculates and displays non-zero values for *Rumination Loops*, *Flare Index*, and *Recovery Velocity*. |
-| **Causal Psychological Networks** ([NetworkGraphView](file:///Users/constantin-alexandrudumitrascu/Desktop/Licenta/GJournal/Views/NetworkGraphView.swift)) | Spurious correlations create a dense "hairball" graph connecting almost every emotion. No connection to activities. | **Gaussian Graphical Models (GGM):** Uses Ledoit-Wolf regularization and partial correlations. Filters noise to display direct emotional links + behavioral tags. | 1. Open the **Network Graph** from the insights panel.<br>2. Check the types of nodes displayed (emotions vs tags).<br>3. Inspect the edge connections. | 1. Shows a clean, sparse network (not a hairball).<br>2. Emotional nodes (circles) are directly connected to behavioral tag nodes (squares, e.g., `sprint`, `dinner`, `run`).<br>3. Spurious indirect links are filtered out. |
-| **Density Topic Clustering** ([HDBSCANClusterer](file:///Users/constantin-alexandrudumitrascu/Desktop/Licenta/GJournal/Services/HDBSCANClusterer.swift)) | Simple K-Means/DBSCAN forces all entries into rigid clusters, hiding outliers or putting them in incorrect folders. | **Swift HDBSCAN (Hierarchical):** Groups entries based on dense topic pockets. Outer entries are softly assigned; genuine noise is grouped in `Unsorted`. | 1. Go to the **Clusters** tab.<br>2. Look at the topic cards list and the unclustered section. | 1. Displays cohesive topic folders (e.g. "Work Stress", "Fitness").<br>2. Random entries (e.g., "Overheard Kindness", "Coffee Order") appear cleanly inside the dedicated **Unsorted** card. |
-| **Semantic Tag Extraction** ([TagExtractor](file:///Users/constantin-alexandrudumitrascu/Desktop/Licenta/GJournal/Services/GGMEstimator.swift)) | No automatic text-tagging; user must manually type tags. No similarity merging. | **Behavioral Tags Engine (NLP):** Natural language parsing extracts event/action lemmas from text, automatically merging synonyms at similarity $\ge 0.85$. | 1. Add a new journal entry containing the words: *"I went for a quick jog today"*.<br>2. Check the extracted tags in entry detail.<br>3. Inspect Settings $\rightarrow$ Tags. | 1. Tag processor automatically extracts the tag `run` (lemmas/synonyms of jog/running are canonicalized into the `run` tag).<br>2. Tag count updates dynamically in the registry. |
-| **Smart Memory Search** ([HybridSearchService](file:///Users/constantin-alexandrudumitrascu/Desktop/Licenta/GJournal/Services/HybridSearchService.swift)) | Text-based substring matching. Searching for "family" fails to find entries containing only "parents". | **RRF Hybrid Search:** Combines BM25 keyword matching with vector cosine scans. Searches concepts, synonyms, and sentiment matches. | 1. Go to the Journal Search bar.<br>2. Type a conceptual query like *"family dinner"* or *"working under pressure"*.<br>3. View results. | 1. Semantic search finds matching entries (even if the exact query words do not exist in the text, e.g., surfacing "Midnight Deploy" for "working under pressure").<br>2. Results are ranked cleanly using Reciprocal Rank Fusion. |
-| **Interactive Graph Gestures** ([ClusterGraphView](file:///Users/constantin-alexandrudumitrascu/Desktop/Licenta/GJournal/Views/ClusterGraphView.swift)) | Clipping limits, zooming and panning is laggy, lines and cards don't align during zoom. | **2D Viewport Sliding Window:** Manual coordinate positioning + Canvas drawing scale/translation. Active gesture transitions use motion blur. | 1. Open the Graph view.<br>2. Perform pinch-to-zoom and drag-to-pan gestures.<br>3. Tap a cluster name in the bottom legend. | 1. Nodes and edges scale together smoothly.<br>2. A subtle motion blur is applied to lines and cards during pan/zoom, snapping back to sharp focus when released.<br>3. Tapping the legend centers and zooms focus onto that cluster's Hub Node. |
+## 1. Project Context & Technical Stack
+*   **Application Name:** GJournal (AI-Powered Micro-Journaling)
+*   **Core Principle:** 100% on-device local processing. Zero-knowledge privacy. No raw text or embeddings ever leave the host device.
+*   **Platform:** iOS 18.0+, SwiftUI, Swift 6 (Strict Concurrency).
+*   **Persistence Layer:** SwiftData (fully relational schema).
+*   **Target Devices:** iPhone 13 / 13 Pro, iPhone 14 / 14 Pro, and newer.
+    *   *Base iPhone 13 / 13 mini:* **4GB RAM** (Strict Jetsam limit is the primary constraint).
+    *   *iPhone 13 Pro, iPhone 14, and newer:* **6GB to 8GB RAM**.
+*   **Current AI Pipeline:**
+    *   **Embeddings:** MiniLM-L6-v2 (~43MB) via CoreML for semantic search and cluster preparation.
+    *   **Emotion Classifier:** Palettized / int8 quantized CoreML model (~25MB) predicting 12 distinct continuous emotion probabilities.
+    *   **Clustering:** Natively implemented DBSCAN/HDBSCAN in Swift.
+    *   **Psychological Network Graph:** A Gaussian Graphical Model (GGM) computed via Ledoit-Wolf shrinkage and partial correlation math in Swift, mapping emotional and behavioral variables (lemma-extracted tags) with FDR q=0.10 filtering.
+    *   **Topological Data Analysis (TDA):** Vietoris-Rips Persistent Homology (H0 & H1) to identify and gate rumination loops.
 
 ---
+
+## 2. Target Models & Integration Goals
+*   **Model Goal:** Gemma 2 2B Instruction-Tuned (4-bit quantized, ~1.4GB–1.7GB size) or ultra-lightweight alternatives (e.g., Qwen-1.5-1.8B, SmolLM-1.7B).
+*   **Features to Explore:**
+    *   *Dynamic Reflection Prompts:* Generating 2-3 tailored journal prompts based on the current context and historical network/clusters.
+    *   *Weekly/Monthly Summaries:* Synthesizing recent logs, identified clusters, and network correlations into a supportive, conversational text analysis.
+    *   *Behavioral Recommendations:* Recommending lifestyle adjustments or journaling exercises based on detected correlations (e.g., a strong negative partial correlation between "working late" and "joy").
+*   **Regulatory & Safety Boundaries:**
+    *   **EU MDR (Medical Device Regulations):** Must strictly remain a wellness product. It must not diagnose, treat, or act as a clinical therapist.
+    *   **EU AI Act:** Must avoid biometric emotion recognition (which is prohibited in certain settings). Since GJournal processes text semantics (and not voice or facial biometrics), it is exempt from biometric restrictions but must satisfy transparency requirements.
+
+---
+
+## 3. Local SwiftData Graph Representation
+The application maps user entries as **Bits** and **Clusters** with semantic tags.
+
+### Core Persistence Schemas
+1.  **Bit Model (`Bit.swift`):**
+    *   `feel: String` (Text describing emotion)
+    *   `event: String` (Text describing context)
+    *   `action: String` (Text describing user response)
+    *   `emotionProbabilities: [String: Float]` (JSON-mapped dictionary of 12 emotion strengths)
+    *   `tagLemmas: [String]` (Extracted noun/verb lemmas, e.g., `["work", "meeting", "sleep"]`)
+    *   `cluster: Cluster?` (Optional relationship to parent Cluster)
+2.  **Cluster Model (`Cluster.swift`):**
+    *   `index: Int`
+    *   `name: String`
+    *   `bits: [Bit]` (Reverse relationship)
+3.  **BehavioralTag Model (`BehavioralTag.swift`):**
+    *   `lemma: String`
+    *   `category: TagCategory` (`.event` or `.action`)
+    *   `count: Int`
+4.  **Psychological Network Graph:**
+    *   Generated dynamically by analyzing continuous emotion probabilities and binary behavioral-tag presence. Output is a list of node variables and partial correlation edges.
+
+---
+
+## 4. Key Technical Questions for Gemini Web
+
+When researching, paste the prompt below to ask Gemini Web:
+
+```text
+I am developing GJournal, a privacy-first iOS app (iOS 18+, Swift 6, SwiftData) targeting iPhone 13, 14, and newer devices. 
+I want to run a local Gemma 2 2B (or similar 1.5B–2B LLM) on-device to offer context-aware journal summaries and reflection prompts based on a local knowledge graph of entries, clusters, and tag correlations.
+
+Please research and provide detailed guidance on the following:
+
+1. iOS Local LLM Runtimes: 
+   Compare Google's MediaPipe LLM Inference API (which supports Gemma 2 2B on iOS using Metal) against llama.cpp (with Swift bindings) and Apple's MLX Swift. 
+   Which runtime offers the best performance, easiest integration with SwiftData, and lowest memory footprint on iOS?
+
+2. Low-Memory Lifecycle Management (4GB RAM Constraints):
+   Given that the base iPhone 13 has only 4GB of RAM and strict Jetsam limits, how can we load a 1.4GB–1.7GB model into RAM, perform inference, and aggressively deallocate it without crashing the app or causing background memory jetsams? 
+   Please provide a Swift actor or manager pattern for load-infer-unload lifecycle management.
+
+3. Structured Output & Safety Guardrails:
+   How can we enforce Gemma 2 2B to output strict JSON schemas (e.g. for structured recommendations) on-device without high CPU overhead? 
+   What system prompt guidelines and runtime safety filters should we implement to ensure the LLM strictly respects the "wellness-only" frame (avoiding EU MDR clinical device classification) and never gives clinical advice?
+
+4. Prompt Engineering & Graph Serialization:
+   How should we serialize a local knowledge graph (containing Bit models, Cluster groupings, and GGM partial correlation edges) into a text-based context prompt for a 2B LLM? 
+   Provide an example prompt template that merges this graph context with the user's latest journal entries.
+```

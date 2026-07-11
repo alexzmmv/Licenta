@@ -195,10 +195,6 @@ struct ContentView: View {
                                 .opacity(weekStripAppeared ? 1 : 0)
                                 .offset(y: weekStripAppeared ? 0 : 20)
 
-                            recentEntriesSection
-                                .opacity(recentAppeared ? 1 : 0)
-                                .offset(y: recentAppeared ? 0 : 20)
-
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Your Journey")
                                     .font(.title3)

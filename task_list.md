@@ -79,3 +79,8 @@ This list categorizes the remaining tasks from `plan.md` across 4 Tiers of Neces
 
 - [ ] **Co-occurrence Network (Pillar A Fallback):** If the GGM math proves too unstable on real-world small datasets, fall back to a simpler tag-emotion co-occurrence network.
 - [ ] **Flare Index (Pillar B Cut Order 1):** If the Trajectory math is too heavy, cut the PCA-2D hull area growth ("Flare Index") and keep only Rumination + Semantic Recovery Velocity.
+
+
+## 🟦 Feauture implementations
+- [ ] Implement LSTM-based sequence modeling for predicting future journal entries based on past patterns. This could enhance the app's ability to provide personalized insights and recommendations.
+- [ ] Introduce a local recommendation system (Local gemma llm with strict guardrails ) based on a local knowledge graph of user entries, allowing for more context-aware suggestions without relying on external servers.
