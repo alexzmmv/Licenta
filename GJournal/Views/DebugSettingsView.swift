@@ -17,6 +17,7 @@ struct DebugSettingsView: View {
     @State private var benchmarkStatusMessage: String?
     @State private var exportFileURL: URL?
     @State private var showingExportSheet = false
+    @State private var showingCrisisResources = false
 
     @AppStorage("embeddingModelChoice") private var embeddingModelRaw: String = EmbeddingModelChoice.miniLM.rawValue
     @AppStorage("clusteringStrategyChoice") private var clusteringStrategyRaw: String = ClusteringStrategyChoice.classic.rawValue
@@ -295,6 +296,149 @@ struct DebugSettingsView: View {
             } header: {
                 Text("Thesis Benchmark")
             }
+
+            Section {
+                // Notification triggers
+                Button {
+                    triggerTestNotification()
+                } label: {
+                    HStack {
+                        Image(systemName: "bell.badge")
+                            .foregroundColor(.yellow)
+                        VStack(alignment: .leading) {
+                            Text("Trigger Test Notification (5s)")
+                            Text("Schedules a daily reminder after a 5s delay")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Button {
+                    printPendingNotifications()
+                } label: {
+                    HStack {
+                        Image(systemName: "list.bullet")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading) {
+                            Text("Print Pending Notifications")
+                            Text("Print scheduled alerts to log console")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Button {
+                    cancelAllNotifications()
+                } label: {
+                    HStack {
+                        Image(systemName: "bell.slash")
+                            .foregroundColor(.red)
+                        VStack(alignment: .leading) {
+                            Text("Cancel All Notifications")
+                            Text("Removes all pending notifications")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // Crash triggers
+                Button(role: .destructive) {
+                    forceAppCrash()
+                } label: {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle")
+                        VStack(alignment: .leading) {
+                            Text("Force App Crash")
+                            Text("Immediately crash the app with fatalError")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Button {
+                    generateMockCrashReport()
+                } label: {
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .foregroundColor(.green)
+                        VStack(alignment: .leading) {
+                            Text("Generate Mock Crash Report")
+                            Text("Writes a dummy MetricKit payload to disk")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Button(role: .destructive) {
+                    clearSavedCrashReports()
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        VStack(alignment: .leading) {
+                            Text("Clear Saved Crash Reports")
+                            Text("Deletes all files in CrashReports directory")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // Safety trigger
+                Button {
+                    showingCrisisResources = true
+                } label: {
+                    HStack {
+                        Image(systemName: "heart.text.square")
+                            .foregroundColor(.red)
+                        VStack(alignment: .leading) {
+                            Text("Simulate Self-Harm Warning")
+                            Text("Triggers the Crisis Resources sheet immediately")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // Tag processor & Insight Engine triggers
+                Button {
+                    runTagBackfill()
+                } label: {
+                    HStack {
+                        Image(systemName: "tag.fill")
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading) {
+                            Text("Force Tag Processor Backfill")
+                            Text("Extracts and canonicalizes tags for all entries")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .disabled(isRunningDebugTask)
+
+                Button {
+                    runManualInsightEngine()
+                } label: {
+                    HStack {
+                        Image(systemName: "chart.bar.doc.horizontal.fill")
+                            .foregroundColor(.green)
+                        VStack(alignment: .leading) {
+                            Text("Run Insight Engine Analysis")
+                            Text("Re-runs GGM Psychological Network analysis")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .disabled(isRunningDebugTask)
+            } header: {
+                Text("Manual Diagnostic Triggers")
+            }
         }
         .navigationTitle("Developer")
         .navigationBarTitleDisplayMode(.inline)
@@ -318,6 +462,9 @@ struct DebugSettingsView: View {
             if let url = exportFileURL {
                 ActivityView(items: [url])
             }
+        }
+        .sheet(isPresented: $showingCrisisResources) {
+            CrisisResourcesView()
         }
     }
 
@@ -493,6 +640,137 @@ struct DebugSettingsView: View {
         } catch {
             benchmarkStatusMessage = "Failed: \(error.localizedDescription)"
             isBenchmarking = false
+        }
+    }
+
+    private func triggerTestNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "A moment for yourself"
+        content.body = "How are you feeling today? Your journal is waiting."
+        content.sound = .default
+        content.interruptionLevel = .passive
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+        let request = UNNotificationRequest(identifier: "gjournal.test.reminder", content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            Task { @MainActor in
+                if let error = error {
+                    debugStatusMessage = "Notification failed: \(error.localizedDescription)"
+                } else {
+                    debugStatusMessage = "Test notification scheduled (5s)"
+                }
+            }
+        }
+    }
+
+    private func printPendingNotifications() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let summary = requests.map { "\($0.identifier): \($0.content.title)" }.joined(separator: ", ")
+            Task { @MainActor in
+                debugStatusMessage = requests.isEmpty ? "No pending notifications" : "Pending: \(summary)"
+                AppLogger.log("[Debug] Pending notification requests: \(summary)")
+            }
+        }
+    }
+
+    private func cancelAllNotifications() {
+        ReminderScheduler.shared.cancel()
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["gjournal.test.reminder"])
+        debugStatusMessage = "All notifications cancelled"
+    }
+
+    private func forceAppCrash() {
+        fatalError("Developer triggered deliberate crash for testing CrashReporter")
+    }
+
+    private func generateMockCrashReport() {
+        guard let dir = CrashReporter.reportsDirectory else {
+            debugStatusMessage = "Error accessing reports directory"
+            return
+        }
+        let fm = FileManager.default
+        let stamp = UInt(Date().timeIntervalSince1970)
+        let fileURL = dir.appendingPathComponent("diagnostic-\(stamp)-mock.json")
+        
+        // A mock payload to simulate standard crash report metadata
+        let mockJSON = """
+        {
+          "crashDiagnostics": [
+            {
+              "signal": 11,
+              "exceptionType": 1,
+              "exceptionCode": 0,
+              "terminationReason": "NAMESPACE=SIGNAL CODE=0x0b",
+              "virtualMemoryAddress": 0
+            }
+          ],
+          "timeStampBegin": "2026-07-11T12:00:00Z",
+          "timeStampEnd": "2026-07-11T12:05:00Z"
+        }
+        """
+        do {
+            try mockJSON.write(to: fileURL, atomically: true, encoding: .utf8)
+            debugStatusMessage = "Generated mock report on disk"
+            AppLogger.log("[Debug] Persisted mock diagnostic payload to \(fileURL.lastPathComponent)")
+        } catch {
+            debugStatusMessage = "Failed to generate mock: \(error.localizedDescription)"
+        }
+    }
+
+    private func clearSavedCrashReports() {
+        guard let dir = CrashReporter.reportsDirectory else {
+            debugStatusMessage = "Error accessing reports directory"
+            return
+        }
+        let fm = FileManager.default
+        do {
+            let files = try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            for file in files {
+                try fm.removeItem(at: file)
+            }
+            debugStatusMessage = "Cleared \(files.count) reports"
+            AppLogger.log("[Debug] Cleared saved crash reports")
+        } catch {
+            debugStatusMessage = "Failed to clear reports: \(error.localizedDescription)"
+        }
+    }
+
+    private func runTagBackfill() {
+        guard let manager = aiManager else {
+            debugStatusMessage = "AI manager not available"
+            return
+        }
+        isRunningDebugTask = true
+        debugStatusMessage = "Starting tag backfill..."
+        Task {
+            await manager.backfillTags { done, total in
+                Task { @MainActor in
+                    debugStatusMessage = "Backfilled tags: \(done)/\(total)"
+                    if done == total {
+                        isRunningDebugTask = false
+                        (repository as? LocalJournalRepository)?.loadBitsFromContext()
+                    }
+                }
+            }
+        }
+    }
+
+    private func runManualInsightEngine() {
+        isRunningDebugTask = true
+        debugStatusMessage = "Running Insight Engine..."
+        Task {
+            let tags = (try? modelContext.fetch(FetchDescriptor<BehavioralTag>())) ?? []
+            let engine = InsightEngine()
+            await engine.compute(bits: repository.bits, allTags: tags)
+            await MainActor.run {
+                if let net = engine.network {
+                    debugStatusMessage = "Insight Engine complete — \(net.edges.count) edges"
+                } else {
+                    debugStatusMessage = "Insight Engine: no network generated"
+                }
+                isRunningDebugTask = false
+            }
         }
     }
 }

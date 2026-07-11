@@ -85,4 +85,35 @@ final class ExportAndModelChoiceTests: XCTestCase {
         let repository = LocalJournalRepository()
         XCTAssertThrowsError(try repository.generateExportFile())
     }
+
+    func testMockDiagnosticReportGenerationAndCleanup() throws {
+        guard let dir = CrashReporter.reportsDirectory else {
+            XCTFail("Crash reports directory should be accessible")
+            return
+        }
+        let fm = FileManager.default
+        
+        // Clear current files to isolate test
+        if let files = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
+            for file in files {
+                try? fm.removeItem(at: file)
+            }
+        }
+
+        // Write mock diagnostic file
+        let stamp = UInt(Date().timeIntervalSince1970)
+        let fileURL = dir.appendingPathComponent("diagnostic-\(stamp)-mocktest.json")
+        let mockJSON = "{\"crashes\": [{\"exceptionType\": 1, \"terminationReason\": \"Developer test\"}]}"
+        try mockJSON.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        let files = try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        XCTAssertTrue(files.contains(fileURL), "Mock diagnostic report was not generated on disk")
+
+        // Clear files
+        for file in files {
+            try fm.removeItem(at: file)
+        }
+        let filesAfter = try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        XCTAssertTrue(filesAfter.isEmpty, "Failed to clear the reports directory")
+    }
 }
