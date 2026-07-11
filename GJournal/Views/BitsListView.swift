@@ -18,6 +18,12 @@ struct BitsListView: View {
     @State private var showingDeleteAlert = false
     @State private var bitToDelete: Bit?
     @State private var selectedClusterForGraphID: Int? = nil
+    @State private var selectedTab: Tab = .entries
+
+    enum Tab: String, CaseIterable {
+        case entries = "Entries"
+        case themes = "Themes"
+    }
 
     enum SortOrder: String, CaseIterable {
         case relevance = "Relevance"
@@ -80,16 +86,19 @@ struct BitsListView: View {
             VStack(spacing: 0) {
                 headerView
 
-                searchBarView
-
-                if !selectedEmotions.isEmpty || !selectedClusters.isEmpty {
-                    activeFiltersView
+                Picker("View Mode", selection: $selectedTab) {
+                    ForEach(Tab.allCases, id: \.self) { tab in
+                        Text(tab.rawValue).tag(tab)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 12)
 
-                if filteredBits.isEmpty {
-                    emptyStateView
+                if selectedTab == .entries {
+                    entriesView
                 } else {
-                    bitListView
+                    themesGridView
                 }
             }
             .frame(maxWidth: 700)
@@ -428,6 +437,68 @@ struct BitsListView: View {
         }
     }
 
+    @ViewBuilder
+    private var entriesView: some View {
+        searchBarView
+
+        if !selectedEmotions.isEmpty || !selectedClusters.isEmpty {
+            activeFiltersView
+        }
+
+        if filteredBits.isEmpty {
+            emptyStateView
+        } else {
+            bitListView
+        }
+    }
+
+    private var clustersList: [Cluster] {
+        let all = repository.bits
+            .compactMap { $0.cluster }
+            .filter { $0.index >= 0 }
+        var seen = Set<ObjectIdentifier>()
+        let uniqueClusters = all.filter { seen.insert(ObjectIdentifier($0)).inserted }
+        return uniqueClusters.sorted {
+            ($0.bits.compactMap { $0.createdAt }.max() ?? .distantPast) >
+            ($1.bits.compactMap { $0.createdAt }.max() ?? .distantPast)
+        }
+    }
+
+    private var themesGridView: some View {
+        ScrollView {
+            if clustersList.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "circle.hexagongrid")
+                        .font(.system(size: 48))
+                        .foregroundColor(.gray.opacity(0.4))
+                    Text("No themes discovered yet")
+                        .foregroundColor(.gray)
+                    Text("Run the AI pipeline to analyze and group your journal entries.")
+                        .font(.caption)
+                        .foregroundColor(.gray.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                .padding(.top, 60)
+            } else {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+                    ForEach(clustersList) { cluster in
+                        ClusterCardInList(
+                            cluster: cluster,
+                            journalStart: repository.bits.compactMap { $0.createdAt }.min() ?? Date(),
+                            journalEnd: repository.bits.compactMap { $0.createdAt }.max() ?? Date()
+                        )
+                        .onTapGesture {
+                            selectedClusterForGraphID = cluster.index
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 40)
+            }
+        }
+    }
 }
 
 
@@ -654,4 +725,101 @@ struct FilterSheetView: View {
 
 struct IdentifiableInt: Identifiable {
     let id: Int
+}
+
+struct ClusterCardInList: View {
+    let cluster: Cluster
+    let journalStart: Date
+    let journalEnd: Date
+
+    private var activeBits: [Bit] { cluster.bits.filter { !$0.isDeleted } }
+
+    private var dominantEmotion: Emotion? { activeBits.dominantEmotion }
+
+    private var uniqueEmotions: [Emotion] {
+        Array(Set(activeBits.map { $0.emotion })).prefix(4).map { $0 }
+    }
+
+    private var dateRange: (min: Date, max: Date)? {
+        let dates = activeBits.map { $0.createdAt }
+        guard let lo = dates.min(), let hi = dates.max() else { return nil }
+        return (lo, hi)
+    }
+
+    private var spanLabel: String {
+        guard let range = dateRange else { return "" }
+        let days = Calendar.current.dateComponents([.day], from: range.min, to: range.max).day ?? 0
+        if days < 2 { return range.min.dayMonth }
+        if days < 30 { return "\(days)d span" }
+        let months = Int(round(Double(days) / 30.0))
+        return "\(months)mo span"
+    }
+
+    private var temporalFraction: CGFloat {
+        guard let range = dateRange else { return 0 }
+        let total = journalEnd.timeIntervalSince(journalStart)
+        guard total > 0 else { return 1 }
+        let span = range.max.timeIntervalSince(range.min)
+        return CGFloat(min(1, span / total))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 4) {
+                ForEach(Array(uniqueEmotions.prefix(4)), id: \.rawValue) { e in
+                    Text(e.emoji).font(.title3)
+                }
+                Spacer()
+                Text("\(activeBits.count)")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.gray)
+            }
+
+            Text(cluster.name)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .lineLimit(2)
+
+            if !spanLabel.isEmpty {
+                Text(spanLabel)
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+
+            if let dominant = dominantEmotion {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.08))
+                            .frame(height: 3)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(
+                                LinearGradient(
+                                    colors: [dominant.color.opacity(0.7), dominant.color],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(6, geo.size.width * temporalFraction), height: 3)
+                    }
+                }
+                .frame(height: 3)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(red: 0.12, green: 0.12, blue: 0.14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            (dominantEmotion?.color ?? .gray).opacity(0.25),
+                            lineWidth: 1
+                        )
+                )
+        )
+        .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
+    }
 }

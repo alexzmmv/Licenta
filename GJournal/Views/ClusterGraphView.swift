@@ -31,6 +31,7 @@ struct ClusterGraphView: View {
     @State private var isLoading = true
     @State private var isSpinning = false
     @State private var bitToEdit: Bit?
+    @State private var selectedClusterForGraphID: Int? = nil
     @State private var graphSize: CGSize = .zero
 
     // Blur and transition state
@@ -352,6 +353,14 @@ struct ClusterGraphView: View {
                 }
             )
         }
+        .fullScreenCover(item: Binding(
+            get: { selectedClusterForGraphID.map { IdentifiableClusterID(id: $0) } },
+            set: { selectedClusterForGraphID = $0?.id }
+        )) { ident in
+            NavigationView {
+                ClusterGraphView(repository: repository, filterClusterID: ident.id)
+            }
+        }
         .onChange(of: repository.bits) {
             guard !graphSize.width.isZero else { return }
             let bits = filterClusterID.map { id in repository.bits.filter { $0.clusterID == id } } ?? repository.bits
@@ -444,14 +453,17 @@ struct ClusterGraphView: View {
 
                     HStack(spacing: 8) {
                         if node.isHub {
-                            Text("Cluster Centroid Hub").font(.caption).foregroundColor(.gray)
+                            let entryCount = repository.bits.filter { !$0.isDeleted && $0.clusterID == node.clusterID }.count
+                            Text("Theme Hub \u{2022} \(entryCount) \(entryCount == 1 ? "entry" : "entries")")
+                                .font(.caption)
+                                .foregroundColor(.gray)
                         } else {
                             Text(node.emotion.rawValue).font(.caption).foregroundColor(node.emotion.color)
                             Text("\u{2022}").foregroundColor(.gray)
                             Text(node.createdAt.dayMonth).font(.caption).foregroundColor(.gray)
                         }
 
-                        if let clusterID = node.clusterID, clusterID >= 0 {
+                        if !node.isHub, let clusterID = node.clusterID, clusterID >= 0 {
                             Text("\u{2022}").foregroundColor(.gray)
                             HStack(spacing: 4) {
                                 Circle().fill(colorForCluster(clusterID)).frame(width: 8, height: 8)
@@ -464,7 +476,11 @@ struct ClusterGraphView: View {
 
                 Spacer()
 
-                if !node.isHub {
+                if node.isHub {
+                    Image(systemName: "chevron.right.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(colorForCluster(node.clusterID))
+                } else {
                     HStack(spacing: 2) {
                         ForEach(1...4, id: \.self) { level in
                             Circle()
@@ -490,6 +506,11 @@ struct ClusterGraphView: View {
                 .fill(Color(red: 0.12, green: 0.12, blue: 0.14))
                 .shadow(color: .black.opacity(0.3), radius: 10, y: -5)
         )
+        .onTapGesture {
+            if node.isHub, let clusterID = node.clusterID {
+                selectedClusterForGraphID = clusterID
+            }
+        }
         .padding(.horizontal, 20).padding(.bottom, 8)
     }
 
@@ -674,4 +695,8 @@ struct NodeView: View {
             .animation(.spring(response: 0.25, dampingFraction: 0.75), value: opacity)
         }
     }
+}
+
+private struct IdentifiableClusterID: Identifiable {
+    let id: Int
 }
