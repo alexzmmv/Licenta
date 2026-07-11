@@ -32,7 +32,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "swiftdata",
-      "community": 1,
+      "community": 371,
       "norm_label": "swiftdata"
     },
     {
@@ -42,7 +42,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "gjournal_contentview_identifiabledate",
-      "community": 73,
+      "community": 7,
       "norm_label": "identifiabledate"
     },
     {
@@ -333,7 +333,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_extensions_date_formatting_swift",
-      "community": 371,
+      "community": 73,
       "norm_label": "date+formatting.swift"
     },
     {
@@ -343,7 +343,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_extensions_date_formatting_formatter",
-      "community": 371,
+      "community": 73,
       "norm_label": "formatter()"
     },
     {
@@ -373,7 +373,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_extensions_date_formatting_date",
-      "community": 73,
+      "community": 7,
       "norm_label": "date"
     },
     {
@@ -473,7 +473,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_swift",
-      "community": 1,
+      "community": 23,
       "norm_label": "behavioraltag.swift"
     },
     {
@@ -483,7 +483,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_behavioraltag",
-      "community": 1,
+      "community": 23,
       "norm_label": "behavioraltag"
     },
     {
@@ -523,7 +523,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_behavioraltag_init",
-      "community": 1,
+      "community": 23,
       "norm_label": ".init()"
     },
     {
@@ -723,7 +723,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_swift",
-      "community": 23,
+      "community": 66,
       "norm_label": "clusterassignment.swift"
     },
     {
@@ -733,7 +733,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_clusterassignment",
-      "community": 23,
+      "community": 66,
       "norm_label": "clusterassignment"
     },
     {
@@ -863,7 +863,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_swift",
-      "community": 44,
+      "community": 14,
       "norm_label": "embeddingmodelchoice.swift"
     },
     {
@@ -873,7 +873,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_embeddingmodelchoice",
-      "community": 44,
+      "community": 14,
       "norm_label": "embeddingmodelchoice"
     },
     {
@@ -883,7 +883,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_embeddingmodelchoice_applenlp",
-      "community": 44,
+      "community": 14,
       "norm_label": "applenlp"
     },
     {
@@ -893,7 +893,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_embeddingmodelchoice_minilm",
-      "community": 44,
+      "community": 14,
       "norm_label": "minilm"
     },
     {
@@ -913,7 +913,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_notification_name",
-      "community": 44,
+      "community": 14,
       "norm_label": "notification.name"
     },
     {
@@ -943,7 +943,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "codable",
-      "community": 14,
+      "community": 65,
       "norm_label": "codable"
     },
     {
@@ -953,7 +953,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
-      "community": 378,
+      "community": 65,
       "norm_label": "joy"
     },
     {
@@ -963,7 +963,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
-      "community": 65,
+      "community": 378,
       "norm_label": "sadness"
     },
     {
@@ -1093,7 +1093,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_swift",
-      "community": 14,
+      "community": 65,
       "norm_label": "emotionprobability.swift"
     },
     {
@@ -1103,7 +1103,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_emotionprobability",
-      "community": 14,
+      "community": 65,
       "norm_label": "emotionprobability"
     },
     {
@@ -1133,7 +1133,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_schemaversions_swift",
-      "community": 71,
+      "community": 371,
       "norm_label": "schemaversions.swift"
     },
     {
@@ -1143,7 +1143,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_schemaversions_schemav1",
-      "community": 71,
+      "community": 371,
       "norm_label": "schemav1"
     },
     {
@@ -1153,7 +1153,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "versionedschema",
-      "community": 71,
+      "community": 371,
       "norm_label": "versionedschema"
     },
     {
@@ -1163,7 +1163,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "persistentmodel",
-      "community": 71,
+      "community": 371,
       "norm_label": "persistentmodel"
     },
     {
@@ -1173,7 +1173,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_schemaversions_schemav2",
-      "community": 71,
+      "community": 371,
       "norm_label": "schemav2"
     },
     {
@@ -1183,7 +1183,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_schemaversions_gjournalmigrationplan",
-      "community": 71,
+      "community": 371,
       "norm_label": "gjournalmigrationplan"
     },
     {
@@ -1193,7 +1193,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "schemamigrationplan",
-      "community": 71,
+      "community": 371,
       "norm_label": "schemamigrationplan"
     },
     {
@@ -1203,7 +1203,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "migrationstage",
-      "community": 71,
+      "community": 371,
       "norm_label": "migrationstage"
     },
     {
@@ -1213,7 +1213,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager",
-      "community": 15,
+      "community": 371,
       "norm_label": "authmanager.swift"
     },
     {
@@ -1224,7 +1224,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "combine",
-      "community": 53,
+      "community": 371,
       "norm_label": "combine"
     },
     {
@@ -1235,7 +1235,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "localauthentication",
-      "community": 32,
+      "community": 371,
       "norm_label": "localauthentication"
     },
     {
@@ -1246,7 +1246,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "cryptokit",
-      "community": 15,
+      "community": 371,
       "norm_label": "cryptokit"
     },
     {
@@ -1257,7 +1257,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "commoncrypto",
-      "community": 15,
+      "community": 371,
       "norm_label": "commoncrypto"
     },
     {
@@ -1657,7 +1657,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "equatable",
-      "community": 14,
+      "community": 65,
       "norm_label": "equatable"
     },
     {
@@ -1697,7 +1697,7 @@
       "source_location": "L374",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager_autherror",
-      "community": 42,
+      "community": 2,
       "norm_label": "autherror"
     },
     {
@@ -1707,7 +1707,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "localizederror",
-      "community": 42,
+      "community": 2,
       "norm_label": "localizederror"
     },
     {
@@ -1717,7 +1717,7 @@
       "source_location": "L375",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager_autherror_invalidname",
-      "community": 42,
+      "community": 2,
       "norm_label": "invalidname"
     },
     {
@@ -1727,7 +1727,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager_autherror_unauthorized",
-      "community": 42,
+      "community": 2,
       "norm_label": "unauthorized"
     },
     {
@@ -1737,7 +1737,7 @@
       "source_location": "L377",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager_autherror_usernotfound",
-      "community": 42,
+      "community": 2,
       "norm_label": "usernotfound"
     },
     {
@@ -1747,7 +1747,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager_autherror_useralreadyexists",
-      "community": 42,
+      "community": 2,
       "norm_label": "useralreadyexists"
     },
     {
@@ -1757,7 +1757,7 @@
       "source_location": "L379",
       "_origin": "ast",
       "id": "gjournal_repository_authmanager_autherror_keychainerror",
-      "community": 42,
+      "community": 2,
       "norm_label": "keychainerror"
     },
     {
@@ -1767,7 +1767,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_basejournalrepository_swift",
-      "community": 53,
+      "community": 371,
       "norm_label": "basejournalrepository.swift"
     },
     {
@@ -2027,7 +2027,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_swift",
-      "community": 373,
+      "community": 371,
       "norm_label": "localjournalrepository.swift"
     },
     {
@@ -2167,7 +2167,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_exporterror",
-      "community": 42,
+      "community": 2,
       "norm_label": "exporterror"
     },
     {
@@ -2177,7 +2177,7 @@
       "source_location": "L186",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_exporterror_contextunavailable",
-      "community": 42,
+      "community": 2,
       "norm_label": "contextunavailable"
     },
     {
@@ -2187,7 +2187,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_exporterror_serializationfailed",
-      "community": 42,
+      "community": 2,
       "norm_label": "serializationfailed"
     },
     {
@@ -2237,7 +2237,7 @@
       "source_location": "L346",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_seedfile",
-      "community": 373,
+      "community": 371,
       "norm_label": "seedfile"
     },
     {
@@ -2247,7 +2247,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "decodable",
-      "community": 373,
+      "community": 371,
       "norm_label": "decodable"
     },
     {
@@ -2257,7 +2257,7 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_seedentry",
-      "community": 373,
+      "community": 371,
       "norm_label": "seedentry"
     },
     {
@@ -2277,7 +2277,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_swift",
-      "community": 53,
+      "community": 371,
       "norm_label": "aiprocessingmanager.swift"
     },
     {
@@ -2288,7 +2288,7 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "uikit",
-      "community": 53,
+      "community": 371,
       "norm_label": "uikit"
     },
     {
@@ -2398,7 +2398,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_runpipeline",
-      "community": 1,
+      "community": 23,
       "norm_label": ".runpipeline()"
     },
     {
@@ -2428,7 +2428,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_schedulereclustering",
-      "community": 1,
+      "community": 66,
       "norm_label": ".schedulereclustering()"
     },
     {
@@ -2438,7 +2438,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_backfilltags",
-      "community": 1,
+      "community": 23,
       "norm_label": ".backfilltags()"
     },
     {
@@ -2448,7 +2448,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "mainactor",
-      "community": 1,
+      "community": 23,
       "norm_label": "mainactor"
     },
     {
@@ -2458,7 +2458,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_runclustering",
-      "community": 23,
+      "community": 66,
       "norm_label": ".runclustering()"
     },
     {
@@ -2528,7 +2528,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_clusterableentry",
-      "community": 23,
+      "community": 66,
       "norm_label": "clusterableentry"
     },
     {
@@ -2588,7 +2588,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_aiserviceerror",
-      "community": 42,
+      "community": 2,
       "norm_label": "aiserviceerror"
     },
     {
@@ -2598,7 +2598,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_aiserviceerror_modelnotloaded",
-      "community": 42,
+      "community": 2,
       "norm_label": "modelnotloaded"
     },
     {
@@ -2608,7 +2608,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_aiserviceerror_embeddinggenerationfailed",
-      "community": 42,
+      "community": 2,
       "norm_label": "embeddinggenerationfailed"
     },
     {
@@ -2618,7 +2618,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_aiserviceerror_emotiondetectionfailed",
-      "community": 42,
+      "community": 2,
       "norm_label": "emotiondetectionfailed"
     },
     {
@@ -2628,7 +2628,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_aiserviceerror_clusteringfailed",
-      "community": 42,
+      "community": 2,
       "norm_label": "clusteringfailed"
     },
     {
@@ -2638,7 +2638,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiserviceprotocol_aiserviceerror_insufficientdata",
-      "community": 42,
+      "community": 2,
       "norm_label": "insufficientdata"
     },
     {
@@ -3051,7 +3051,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "gjournal_services_crashreporter_crashreporter_start",
-      "community": 10,
+      "community": 70,
       "norm_label": ".start()"
     },
     {
@@ -3121,7 +3121,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_swift",
-      "community": 23,
+      "community": 66,
       "norm_label": "dbscanclusterer.swift"
     },
     {
@@ -3142,7 +3142,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_calibrationresult",
-      "community": 23,
+      "community": 66,
       "norm_label": "calibrationresult"
     },
     {
@@ -3152,7 +3152,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "customstringconvertible",
-      "community": 23,
+      "community": 66,
       "norm_label": "customstringconvertible"
     },
     {
@@ -3192,7 +3192,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer",
-      "community": 23,
+      "community": 66,
       "norm_label": "dbscanclusterer"
     },
     {
@@ -3202,7 +3202,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_init",
-      "community": 23,
+      "community": 66,
       "norm_label": ".init()"
     },
     {
@@ -3212,7 +3212,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_clusterentries",
-      "community": 23,
+      "community": 66,
       "norm_label": ".clusterentries()"
     },
     {
@@ -3222,7 +3222,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_dbscan",
-      "community": 23,
+      "community": 66,
       "norm_label": ".dbscan()"
     },
     {
@@ -3242,7 +3242,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_adaptiveminpoints",
-      "community": 23,
+      "community": 66,
       "norm_label": ".adaptiveminpoints()"
     },
     {
@@ -3252,7 +3252,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_buildsortedkdistances",
-      "community": 23,
+      "community": 66,
       "norm_label": ".buildsortedkdistances()"
     },
     {
@@ -3262,7 +3262,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_kneedleepsilon",
-      "community": 23,
+      "community": 66,
       "norm_label": ".kneedleepsilon()"
     },
     {
@@ -3272,7 +3272,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_calibrateepsilon",
-      "community": 23,
+      "community": 66,
       "norm_label": ".calibrateepsilon()"
     },
     {
@@ -3282,7 +3282,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_calibrateepsilonmrl",
-      "community": 23,
+      "community": 66,
       "norm_label": ".calibrateepsilonmrl()"
     },
     {
@@ -3292,7 +3292,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_silhouettescore",
-      "community": 23,
+      "community": 66,
       "norm_label": ".silhouettescore()"
     },
     {
@@ -3302,7 +3302,7 @@
       "source_location": "L258",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_dbscanwithmatrix",
-      "community": 23,
+      "community": 66,
       "norm_label": ".dbscanwithmatrix()"
     },
     {
@@ -3312,7 +3312,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_regionquerystatic",
-      "community": 23,
+      "community": 66,
       "norm_label": ".regionquerystatic()"
     },
     {
@@ -3322,7 +3322,7 @@
       "source_location": "L306",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_silhouettescorefrommatrix",
-      "community": 23,
+      "community": 66,
       "norm_label": ".silhouettescorefrommatrix()"
     },
     {
@@ -3332,7 +3332,7 @@
       "source_location": "L336",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_builddistancematrixfromnormalized",
-      "community": 23,
+      "community": 66,
       "norm_label": ".builddistancematrixfromnormalized()"
     },
     {
@@ -3342,7 +3342,7 @@
       "source_location": "L351",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_regionquery",
-      "community": 23,
+      "community": 66,
       "norm_label": ".regionquery()"
     },
     {
@@ -3352,7 +3352,7 @@
       "source_location": "L360",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_prenormalize",
-      "community": 23,
+      "community": 66,
       "norm_label": ".prenormalize()"
     },
     {
@@ -3362,7 +3362,7 @@
       "source_location": "L373",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_cosinedistanceaccelerate",
-      "community": 23,
+      "community": 66,
       "norm_label": ".cosinedistanceaccelerate()"
     },
     {
@@ -3372,7 +3372,7 @@
       "source_location": "L380",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_computedistancematrix",
-      "community": 23,
+      "community": 66,
       "norm_label": ".computedistancematrix()"
     },
     {
@@ -3382,7 +3382,7 @@
       "source_location": "L385",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_cosinedistance",
-      "community": 23,
+      "community": 66,
       "norm_label": ".cosinedistance()"
     },
     {
@@ -3392,7 +3392,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_swift",
-      "community": 2,
+      "community": 14,
       "norm_label": "efficiencybenchmark.swift"
     },
     {
@@ -3402,7 +3402,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_embeddingbenchmarkresult",
-      "community": 2,
+      "community": 14,
       "norm_label": "embeddingbenchmarkresult"
     },
     {
@@ -3412,7 +3412,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "encodable",
-      "community": 2,
+      "community": 14,
       "norm_label": "encodable"
     },
     {
@@ -3452,7 +3452,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_emotionbenchmarkresult",
-      "community": 2,
+      "community": 14,
       "norm_label": "emotionbenchmarkresult"
     },
     {
@@ -3462,7 +3462,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_benchmarkreport",
-      "community": 2,
+      "community": 14,
       "norm_label": "benchmarkreport"
     },
     {
@@ -3482,7 +3482,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark",
-      "community": 2,
+      "community": 14,
       "norm_label": "efficiencybenchmark"
     },
     {
@@ -3492,7 +3492,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_run",
-      "community": 2,
+      "community": 14,
       "norm_label": ".run()"
     },
     {
@@ -3512,7 +3512,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_makeembeddingservice",
-      "community": 2,
+      "community": 14,
       "norm_label": ".makeembeddingservice()"
     },
     {
@@ -3522,7 +3522,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_measureonce",
-      "community": 2,
+      "community": 14,
       "norm_label": ".measureonce()"
     },
     {
@@ -3542,7 +3542,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_mean",
-      "community": 2,
+      "community": 14,
       "norm_label": ".mean()"
     },
     {
@@ -3552,7 +3552,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_percentile",
-      "community": 2,
+      "community": 14,
       "norm_label": ".percentile()"
     },
     {
@@ -3562,7 +3562,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_bundlesize",
-      "community": 2,
+      "community": 14,
       "norm_label": ".bundlesize()"
     },
     {
@@ -3583,7 +3583,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "storekit",
-      "community": 10,
+      "community": 15,
       "norm_label": "storekit"
     },
     {
@@ -3704,7 +3704,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_entitlementmanager_entitlementmanager_loadproducts",
-      "community": 70,
+      "community": 10,
       "norm_label": ".loadproducts()"
     },
     {
@@ -4424,7 +4424,7 @@
       "source_location": "L415",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_hdbscanclusterer_hdbscanclusterer_adaptiveminpts",
-      "community": 23,
+      "community": 66,
       "norm_label": ".adaptiveminpts()"
     },
     {
@@ -4544,7 +4544,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_insightengine_swift",
-      "community": 378,
+      "community": 70,
       "norm_label": "insightengine.swift"
     },
     {
@@ -4554,7 +4554,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_insightengine_insightengine",
-      "community": 378,
+      "community": 70,
       "norm_label": "insightengine"
     },
     {
@@ -4564,7 +4564,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_insightengine_insightengine_compute",
-      "community": 378,
+      "community": 70,
       "norm_label": ".compute()"
     },
     {
@@ -4584,7 +4584,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_mockaiservice_mockembeddingservice",
-      "community": 1,
+      "community": 23,
       "norm_label": "mockembeddingservice"
     },
     {
@@ -4634,7 +4634,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_mockaiservice_mockemotiondetectionservice_detectemotions",
-      "community": 23,
+      "community": 65,
       "norm_label": ".detectemotions()"
     },
     {
@@ -4654,7 +4654,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_mockaiservice_mockclusteringservice_clusterentries",
-      "community": 23,
+      "community": 66,
       "norm_label": ".clusterentries()"
     },
     {
@@ -4884,7 +4884,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_reminderscheduler_swift",
-      "community": 371,
+      "community": 70,
       "norm_label": "reminderscheduler.swift"
     },
     {
@@ -4895,7 +4895,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "usernotifications",
-      "community": 371,
+      "community": 70,
       "norm_label": "usernotifications"
     },
     {
@@ -5145,7 +5145,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_servicecontainer_swift",
-      "community": 53,
+      "community": 371,
       "norm_label": "servicecontainer.swift"
     },
     {
@@ -5195,7 +5195,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagextractor_swift",
-      "community": 14,
+      "community": 371,
       "norm_label": "tagextractor.swift"
     },
     {
@@ -5205,7 +5205,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagextractor_tagcategory",
-      "community": 14,
+      "community": 65,
       "norm_label": "tagcategory"
     },
     {
@@ -5215,7 +5215,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagextractor_tagcategory_event",
-      "community": 14,
+      "community": 65,
       "norm_label": "event"
     },
     {
@@ -5225,7 +5225,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagextractor_tagcategory_action",
-      "community": 14,
+      "community": 65,
       "norm_label": "action"
     },
     {
@@ -5235,7 +5235,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagextractor_candidatetag",
-      "community": 14,
+      "community": 65,
       "norm_label": "candidatetag"
     },
     {
@@ -5325,7 +5325,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagprocessor_swift",
-      "community": 1,
+      "community": 23,
       "norm_label": "tagprocessor.swift"
     },
     {
@@ -5335,7 +5335,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagprocessor_tagprocessor",
-      "community": 1,
+      "community": 23,
       "norm_label": "tagprocessor"
     },
     {
@@ -5355,7 +5355,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_tagprocessor_tagprocessor_process",
-      "community": 1,
+      "community": 23,
       "norm_label": ".process()"
     },
     {
@@ -5495,7 +5495,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_trajectorypersonas_swift",
-      "community": 371,
+      "community": 40,
       "norm_label": "trajectorypersonas.swift"
     },
     {
@@ -6096,7 +6096,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gjournal_utilities_uitestsupport",
-      "community": 10,
+      "community": 371,
       "norm_label": "uitestsupport.swift"
     },
     {
@@ -6107,7 +6107,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "security",
-      "community": 10,
+      "community": 371,
       "norm_label": "security"
     },
     {
@@ -6197,7 +6197,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_addeditbitview",
-      "community": 76,
+      "community": 44,
       "norm_label": "addeditbitview"
     },
     {
@@ -6237,7 +6237,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep",
-      "community": 76,
+      "community": 44,
       "norm_label": "therapystep"
     },
     {
@@ -6247,7 +6247,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_welcome",
-      "community": 76,
+      "community": 44,
       "norm_label": "welcome"
     },
     {
@@ -6257,7 +6257,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_title",
-      "community": 76,
+      "community": 44,
       "norm_label": "title"
     },
     {
@@ -6267,7 +6267,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_feelcheck",
-      "community": 76,
+      "community": 44,
       "norm_label": "feelcheck"
     },
     {
@@ -6277,7 +6277,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_eventexplore",
-      "community": 76,
+      "community": 44,
       "norm_label": "eventexplore"
     },
     {
@@ -6287,7 +6287,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_actionplan",
-      "community": 76,
+      "community": 44,
       "norm_label": "actionplan"
     },
     {
@@ -6297,7 +6297,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_intensity",
-      "community": 76,
+      "community": 44,
       "norm_label": "intensity"
     },
     {
@@ -6307,7 +6307,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_therapystep_review",
-      "community": 76,
+      "community": 44,
       "norm_label": "review"
     },
     {
@@ -6347,7 +6347,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_addeditbitview_nextstep",
-      "community": 76,
+      "community": 44,
       "norm_label": ".nextstep()"
     },
     {
@@ -6357,7 +6357,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_addeditbitview_previousstep",
-      "community": 76,
+      "community": 44,
       "norm_label": ".previousstep()"
     },
     {
@@ -6367,7 +6367,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_addeditbitview_animatetostep",
-      "community": 76,
+      "community": 44,
       "norm_label": ".animatetostep()"
     },
     {
@@ -6377,7 +6377,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_addeditbitview_animatein",
-      "community": 76,
+      "community": 44,
       "norm_label": ".animatein()"
     },
     {
@@ -6387,7 +6387,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_addeditbitview_addeditbitview_loadbitdata",
-      "community": 76,
+      "community": 44,
       "norm_label": ".loadbitdata()"
     },
     {
@@ -6527,7 +6527,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gjournal_views_biometriclockview",
-      "community": 32,
+      "community": 371,
       "norm_label": "biometriclockview.swift"
     },
     {
@@ -6907,7 +6907,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "gjournal_views_bitslistview_swift_cluster",
-      "community": 44,
+      "community": 378,
       "norm_label": "cluster"
     },
     {
@@ -6957,7 +6957,7 @@
       "source_location": "L730",
       "_origin": "ast",
       "id": "gjournal_views_bitslistview_clustercardinlist",
-      "community": 44,
+      "community": 378,
       "norm_label": "clustercardinlist"
     },
     {
@@ -6967,7 +6967,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "gjournal_views_bitslistview_swift_cgfloat",
-      "community": 44,
+      "community": 378,
       "norm_label": "cgfloat"
     },
     {
@@ -7737,7 +7737,7 @@
       "source_location": "L621",
       "_origin": "ast",
       "id": "gjournal_views_debugsettingsview_debugsettingsview_runefficiencybenchmark",
-      "community": 2,
+      "community": 14,
       "norm_label": ".runefficiencybenchmark()"
     },
     {
@@ -7817,7 +7817,7 @@
       "source_location": "L759",
       "_origin": "ast",
       "id": "gjournal_views_debugsettingsview_debugsettingsview_runmanualinsightengine",
-      "community": 378,
+      "community": 70,
       "norm_label": ".runmanualinsightengine()"
     },
     {
@@ -8347,7 +8347,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_paywallview_swift",
-      "community": 10,
+      "community": 15,
       "norm_label": "paywallview.swift"
     },
     {
@@ -8357,7 +8357,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_paywallview_paywallview",
-      "community": 74,
+      "community": 15,
       "norm_label": "paywallview"
     },
     {
@@ -8367,7 +8367,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_paywallview_paywallview_featurerow",
-      "community": 74,
+      "community": 15,
       "norm_label": ".featurerow()"
     },
     {
@@ -8397,7 +8397,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_recentlydeletedview_swift",
-      "community": 65,
+      "community": 32,
       "norm_label": "recentlydeletedview.swift"
     },
     {
@@ -8407,7 +8407,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_recentlydeletedview_recentlydeletedview",
-      "community": 65,
+      "community": 32,
       "norm_label": "recentlydeletedview"
     },
     {
@@ -8417,7 +8417,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_recentlydeletedview_deletedentryrow",
-      "community": 65,
+      "community": 32,
       "norm_label": "deletedentryrow"
     },
     {
@@ -8557,7 +8557,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_storerecoveryview_swift",
-      "community": 0,
+      "community": 32,
       "norm_label": "storerecoveryview.swift"
     },
     {
@@ -8567,7 +8567,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_storerecoveryview_storerecoveryview",
-      "community": 0,
+      "community": 32,
       "norm_label": "storerecoveryview"
     },
     {
@@ -8607,7 +8607,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_storerecoveryview_storerecoveryview_exportrawstore",
-      "community": 0,
+      "community": 32,
       "norm_label": ".exportrawstore()"
     },
     {
@@ -8677,7 +8677,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_swift",
-      "community": 1,
+      "community": 74,
       "norm_label": "tagmanagementview.swift"
     },
     {
@@ -8687,7 +8687,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_tagmanagementview",
-      "community": 1,
+      "community": 74,
       "norm_label": "tagmanagementview"
     },
     {
@@ -8707,7 +8707,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_tagmanagementview_tagrows",
-      "community": 1,
+      "community": 74,
       "norm_label": ".tagrows()"
     },
     {
@@ -8947,7 +8947,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_authmanagertests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "authmanagertests.swift"
     },
     {
@@ -8958,7 +8958,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "xctest",
-      "community": 1,
+      "community": 371,
       "norm_label": "xctest"
     },
     {
@@ -8969,7 +8969,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "gjournal",
-      "community": 1,
+      "community": 371,
       "norm_label": "gjournal"
     },
     {
@@ -9089,7 +9089,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_authmanagertests_authmanagertests_deletekeychain",
-      "community": 3,
+      "community": 65,
       "norm_label": ".deletekeychain()"
     },
     {
@@ -9109,7 +9109,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gjournaltests_exportandmodelchoicetests",
-      "community": 1,
+      "community": 371,
       "norm_label": "exportandmodelchoicetests.swift"
     },
     {
@@ -9219,7 +9219,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_forcedirectedlayouttests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "forcedirectedlayouttests.swift"
     },
     {
@@ -9259,7 +9259,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_ggmestimatortests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "ggmestimatortests.swift"
     },
     {
@@ -9569,7 +9569,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_hdbscantests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "hdbscantests.swift"
     },
     {
@@ -9709,7 +9709,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_migrationsmoketests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "migrationsmoketests.swift"
     },
     {
@@ -9819,7 +9819,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_persistenthomologytests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "persistenthomologytests.swift"
     },
     {
@@ -10039,7 +10039,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_semanticutilstests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "semanticutilstests.swift"
     },
     {
@@ -10139,7 +10139,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagextractortests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "tagextractortests.swift"
     },
     {
@@ -10249,7 +10249,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagprocessortests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "tagprocessortests.swift"
     },
     {
@@ -10259,7 +10259,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagprocessortests_tagprocessortests",
-      "community": 1,
+      "community": 23,
       "norm_label": "tagprocessortests"
     },
     {
@@ -10269,7 +10269,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagprocessortests_tagprocessortests_makecontext",
-      "community": 1,
+      "community": 23,
       "norm_label": ".makecontext()"
     },
     {
@@ -10289,7 +10289,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagprocessortests_tagprocessortests_testprocesscreatescanonicaltags",
-      "community": 1,
+      "community": 23,
       "norm_label": ".testprocesscreatescanonicaltags()"
     },
     {
@@ -10299,7 +10299,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagprocessortests_tagprocessortests_testrepeatedlemmaincrementscountinsteadofduplicating",
-      "community": 1,
+      "community": 23,
       "norm_label": ".testrepeatedlemmaincrementscountinsteadofduplicating()"
     },
     {
@@ -10309,7 +10309,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_tagprocessortests_tagprocessortests_testggmeligibilityatthreshold",
-      "community": 1,
+      "community": 23,
       "norm_label": ".testggmeligibilityatthreshold()"
     },
     {
@@ -10319,7 +10319,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_trajectoryservicetests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "trajectoryservicetests.swift"
     },
     {
@@ -10409,7 +10409,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_wordpiecetokenizertests_swift",
-      "community": 1,
+      "community": 371,
       "norm_label": "wordpiecetokenizertests.swift"
     },
     {
@@ -10499,7 +10499,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests",
-      "community": 45,
+      "community": 1,
       "norm_label": "gjournaluitests.swift"
     },
     {
@@ -10509,7 +10509,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests",
-      "community": 45,
+      "community": 1,
       "norm_label": "gjournaluitests"
     },
     {
@@ -10519,7 +10519,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_setupwitherror",
-      "community": 45,
+      "community": 1,
       "norm_label": ".setupwitherror()"
     },
     {
@@ -10529,7 +10529,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_launchapp",
-      "community": 45,
+      "community": 1,
       "norm_label": ".launchapp()"
     },
     {
@@ -10539,7 +10539,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_swift_string",
-      "community": 45,
+      "community": 1,
       "norm_label": "string"
     },
     {
@@ -10549,7 +10549,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_swift_bool",
-      "community": 45,
+      "community": 1,
       "norm_label": "bool"
     },
     {
@@ -10559,7 +10559,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "xcuiapplication",
-      "community": 45,
+      "community": 1,
       "norm_label": "xcuiapplication"
     },
     {
@@ -10569,7 +10569,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_testapplauncheswithoutcrash",
-      "community": 45,
+      "community": 1,
       "norm_label": ".testapplauncheswithoutcrash()"
     },
     {
@@ -10579,7 +10579,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_testonboardingpagesthroughtogetstarted",
-      "community": 45,
+      "community": 1,
       "norm_label": ".testonboardingpagesthroughtogetstarted()"
     },
     {
@@ -10589,7 +10589,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_testlockscreenrejectswrongpinandacceptscorrectpin",
-      "community": 45,
+      "community": 1,
       "norm_label": ".testlockscreenrejectswrongpinandacceptscorrectpin()"
     },
     {
@@ -10599,7 +10599,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_enterpin",
-      "community": 45,
+      "community": 1,
       "norm_label": ".enterpin()"
     },
     {
@@ -10609,7 +10609,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_testpaywallrenderswhenlockedinsighttapped",
-      "community": 45,
+      "community": 1,
       "norm_label": ".testpaywallrenderswhenlockedinsighttapped()"
     },
     {
@@ -10619,7 +10619,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "gjournaluitests_gjournaluitests_gjournaluitests_testlaunchperformance",
-      "community": 45,
+      "community": 1,
       "norm_label": ".testlaunchperformance()"
     },
     {
@@ -10629,7 +10629,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_tests_authmanagersecuritytests_swift",
-      "community": 15,
+      "community": 371,
       "norm_label": "authmanagersecuritytests.swift"
     },
     {
@@ -10639,7 +10639,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_tests_authmanagersecuritytests_generaterandomsalt",
-      "community": 15,
+      "community": 371,
       "norm_label": "generaterandomsalt()"
     },
     {
@@ -10659,7 +10659,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_tests_authmanagersecuritytests_derivepbkdf2",
-      "community": 15,
+      "community": 371,
       "norm_label": "derivepbkdf2()"
     },
     {
@@ -10669,7 +10669,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_tests_authmanagersecuritytests_sha256legacy",
-      "community": 15,
+      "community": 371,
       "norm_label": "sha256legacy()"
     },
     {
@@ -10679,7 +10679,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_tests_authmanagersecuritytests_lockoutduration",
-      "community": 15,
+      "community": 371,
       "norm_label": "lockoutduration()"
     },
     {
@@ -10709,7 +10709,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "users_constantin_alexandrudumitrascu_desktop_licenta_tests_authmanagersecuritytests_assert",
-      "community": 15,
+      "community": 371,
       "norm_label": "assert()"
     },
     {
@@ -11536,7 +11536,7 @@
       "label": "GJournal \u2014 AI-Powered Micro-Journaling",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L3",
+      "source_location": "L1",
       "_origin": "ast",
       "id": "readme_gjournal_ai_powered_micro_journaling",
       "community": 89,
@@ -11563,30 +11563,50 @@
       "norm_label": "\ud83e\udde0 on-device ai pipeline"
     },
     {
-      "label": "\ud83d\udd78\ufe0f Knowledge Graph Visualization",
+      "label": "\ud83d\udd78\ufe0f Psychological Network (Pillar A)",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L15",
       "_origin": "ast",
-      "id": "readme_knowledge_graph_visualization",
+      "id": "readme_psychological_network_pillar_a",
       "community": 89,
-      "norm_label": "\ud83d\udd78\ufe0f knowledge graph visualization"
+      "norm_label": "\ud83d\udd78\ufe0f psychological network (pillar a)"
     },
     {
-      "label": "\ud83d\udcf1 Premium User Experience",
+      "label": "\ud83d\udcc8 Trajectory Analysis & Topology (Pillar B)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L20",
+      "source_location": "L22",
       "_origin": "ast",
-      "id": "readme_premium_user_experience",
+      "id": "readme_trajectory_analysis_topology_pillar_b",
       "community": 89,
-      "norm_label": "\ud83d\udcf1 premium user experience"
+      "norm_label": "\ud83d\udcc8 trajectory analysis & topology (pillar b)"
+    },
+    {
+      "label": "\ud83c\udff7\ufe0f Behavioral Tags Engine",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "readme_behavioral_tags_engine",
+      "community": 89,
+      "norm_label": "\ud83c\udff7\ufe0f behavioral tags engine"
+    },
+    {
+      "label": "\ud83d\udcf1 Premium UX & Accessibility",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "readme_premium_ux_accessibility",
+      "community": 89,
+      "norm_label": "\ud83d\udcf1 premium ux & accessibility"
     },
     {
       "label": "\ud83d\udee0\ufe0f Technology Stack",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L25",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "readme_technology_stack",
       "community": 89,
@@ -11596,17 +11616,27 @@
       "label": "\ud83c\udfd7\ufe0f Architecture",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L32",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "readme_architecture",
       "community": 89,
       "norm_label": "\ud83c\udfd7\ufe0f architecture"
     },
     {
+      "label": "\ud83e\uddea Testing & Validation",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "readme_testing_validation",
+      "community": 89,
+      "norm_label": "\ud83e\uddea testing & validation"
+    },
+    {
       "label": "\ud83d\udcc8 Project Status",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L41",
+      "source_location": "L68",
       "_origin": "ast",
       "id": "readme_project_status",
       "community": 89,
@@ -16254,7 +16284,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_extensions_collection_bits_collection",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -16605,28 +16635,6 @@
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "source_file": "GJournal/Services/InsightEngine.swift",
-      "source_location": "L14",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_insightengine_insightengine_compute",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_swift",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournal/Views/TagManagementView.swift",
-      "source_location": "L10",
-      "weight": 1.0,
-      "context": "field",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_tagmanagementview",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_swift",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
       "source_file": "GJournal/Models/BehavioralTag.swift",
       "source_location": "L15",
       "weight": 1.0,
@@ -16687,6 +16695,28 @@
       "context": "parameter_type",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_behavioraltag_init",
       "target": "string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Services/InsightEngine.swift",
+      "source_location": "L14",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_insightengine_insightengine_compute",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_behavioraltag_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Views/TagManagementView.swift",
+      "source_location": "L10",
+      "weight": 1.0,
+      "context": "field",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_tagmanagementview",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_behavioraltag_behavioraltag_init",
       "confidence_score": 1.0
     },
     {
@@ -16784,7 +16814,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_bit_bit",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster_init",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster",
       "confidence_score": 1.0
     },
     {
@@ -16795,7 +16825,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_bit_bit",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -16817,17 +16847,6 @@
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_bit_bit",
       "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_bit_bit_init",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournal/Models/Cluster.swift",
-      "source_location": "L12",
-      "weight": 1.0,
-      "context": "field",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_bit_bit",
       "confidence_score": 1.0
     },
     {
@@ -17249,23 +17268,12 @@
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "source_file": "GJournal/Models/Cluster.swift",
-      "source_location": "L17",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster_init",
-      "target": "string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
       "source_file": "GJournal/Views/ClusterCardsView.swift",
       "source_location": "L133",
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_clustercardsview_clustercard",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster_init",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster",
       "confidence_score": 1.0
     },
     {
@@ -17276,7 +17284,18 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_clustercardsview_clustercardsview",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster_init",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Models/Cluster.swift",
+      "source_location": "L17",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_cluster_cluster_init",
+      "target": "string",
       "confidence_score": 1.0
     },
     {
@@ -17290,16 +17309,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournal/Models/ClusterAssignment.swift",
-      "source_location": "L3",
-      "weight": 1.0,
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_clusterassignment",
-      "target": "sendable",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "references",
       "context": "return_type",
       "confidence": "EXTRACTED",
@@ -17307,7 +17316,7 @@
       "source_location": "L38",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_dbscanclusterer_dbscanclusterer_clusterentries",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_clusterassignment",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_swift",
       "confidence_score": 1.0
     },
     {
@@ -17318,7 +17327,7 @@
       "source_location": "L37",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_hdbscanclusterer_hdbscanclusterer_clusterentries",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_clusterassignment",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_swift",
       "confidence_score": 1.0
     },
     {
@@ -17329,7 +17338,17 @@
       "source_location": "L57",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_mockaiservice_mockclusteringservice_clusterentries",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_clusterassignment",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_swift",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Models/ClusterAssignment.swift",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_clusterassignment_clusterassignment",
+      "target": "sendable",
       "confidence_score": 1.0
     },
     {
@@ -18702,28 +18721,6 @@
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "source_file": "GJournal/Services/EfficiencyBenchmark.swift",
-      "source_location": "L145",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_makeembeddingservice",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_swift",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournal/Services/ServiceContainer.swift",
-      "source_location": "L41",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_servicecontainer_servicecontainer_makeproduction",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_swift",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
       "source_file": "GJournal/Views/DebugSettingsView.swift",
       "source_location": "L29",
       "weight": 1.0,
@@ -18750,6 +18747,28 @@
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_embeddingmodelchoice",
       "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_embeddingmodelchoice_minilm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Services/EfficiencyBenchmark.swift",
+      "source_location": "L145",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_efficiencybenchmark_efficiencybenchmark_makeembeddingservice",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_notification_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Services/ServiceContainer.swift",
+      "source_location": "L41",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_servicecontainer_servicecontainer_makeproduction",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_embeddingmodelchoice_notification_name",
       "confidence_score": 1.0
     },
     {
@@ -18986,7 +19005,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_emotionprobability",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -18997,7 +19016,7 @@
       "weight": 1.0,
       "context": "return_type",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_basejournalrepository_basejournalrepository_gettopemotionslast30days",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19008,7 +19027,7 @@
       "weight": 1.0,
       "context": "parameter_type",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_basejournalrepository_basejournalrepository_searchbits",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19019,7 +19038,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_ggmestimator_networkvariable",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19030,7 +19049,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_graphphysicsengine_graphnode",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19041,7 +19060,7 @@
       "weight": 1.0,
       "context": "parameter_type",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_graphphysicsengine_graphnode_init",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19052,7 +19071,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_clustercardsview_clustercard",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19063,7 +19082,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_emotiondetailview_emotiondetailview",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19074,7 +19093,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_topemotionsview_emotionbarrow",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19085,7 +19104,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_topemotionsview_topemotionsview",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_sadness",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotion_emotion_joy",
       "confidence_score": 1.0
     },
     {
@@ -19106,7 +19125,7 @@
       "source_location": "L47",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_coremlemotionservice_coremlemotionservice_detectemotions",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_emotionprobability",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_swift",
       "confidence_score": 1.0
     },
     {
@@ -19117,7 +19136,7 @@
       "source_location": "L23",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_mockaiservice_mockemotiondetectionservice_detectemotions",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_emotionprobability",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_models_emotionprobability_swift",
       "confidence_score": 1.0
     },
     {
@@ -21541,7 +21560,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_repository_localjournalrepository_localjournalrepository",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_schedulereclustering",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_configure",
       "confidence_score": 1.0
     },
     {
@@ -22148,6 +22167,17 @@
       "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_configure"
     },
     {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournal/Views/TagManagementView.swift",
+      "source_location": "L16",
+      "weight": 1.0,
+      "context": "field",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_tagmanagementview",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_configure",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -22256,17 +22286,6 @@
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_schedulereclustering",
       "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_utilities_applogger_applogger_error"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournal/Views/TagManagementView.swift",
-      "source_location": "L16",
-      "weight": 1.0,
-      "context": "field",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_views_tagmanagementview_tagmanagementview",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_aiprocessingmanager_aiprocessingmanager_schedulereclustering",
-      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -23066,7 +23085,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_coremlembeddingservice_coremlembeddingservice",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_swift",
       "confidence_score": 1.0
     },
     {
@@ -23110,7 +23129,7 @@
       "source_location": "L39",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_coremlembeddingservice_coremlembeddingservice_loadifneeded",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_swift",
       "confidence_score": 1.0
     },
     {
@@ -23193,7 +23212,7 @@
       "weight": 1.0,
       "context": "field",
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_coremlemotionservice_coremlemotionservice",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_swift",
       "confidence_score": 1.0
     },
     {
@@ -23237,7 +23256,7 @@
       "source_location": "L41",
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_coremlemotionservice_coremlemotionservice_loadifneeded",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_swift",
       "confidence_score": 1.0
     },
     {
@@ -28918,6 +28937,28 @@
     {
       "relation": "references",
       "confidence": "EXTRACTED",
+      "source_file": "GJournalTests/WordPieceTokenizerTests.swift",
+      "source_location": "L9",
+      "weight": 1.0,
+      "context": "field",
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_wordpiecetokenizertests_wordpiecetokenizertests",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_swift",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "GJournalTests/WordPieceTokenizerTests.swift",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_wordpiecetokenizertests_wordpiecetokenizertests_setupwitherror",
+      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_swift",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
       "source_file": "GJournal/Services/WordPieceTokenizer.swift",
       "source_location": "L5",
       "weight": 1.0,
@@ -29039,28 +29080,6 @@
       "weight": 1.0,
       "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
       "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_wordpiecetokenize",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournalTests/WordPieceTokenizerTests.swift",
-      "source_location": "L9",
-      "weight": 1.0,
-      "context": "field",
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_wordpiecetokenizertests_wordpiecetokenizertests",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "GJournalTests/WordPieceTokenizerTests.swift",
-      "source_location": "L29",
-      "weight": 1.0,
-      "source": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournaltests_wordpiecetokenizertests_wordpiecetokenizertests_setupwitherror",
-      "target": "users_constantin_alexandrudumitrascu_desktop_licenta_gjournal_services_wordpiecetokenizer_wordpiecetokenizer_tokenize",
       "confidence_score": 1.0
     },
     {
@@ -36048,7 +36067,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L3",
+      "source_location": "L1",
       "weight": 1.0,
       "source": "readme",
       "target": "readme_gjournal_ai_powered_micro_journaling",
@@ -36058,7 +36077,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L32",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "readme_gjournal_ai_powered_micro_journaling",
       "target": "readme_architecture",
@@ -36078,7 +36097,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L41",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "readme_gjournal_ai_powered_micro_journaling",
       "target": "readme_project_status",
@@ -36088,7 +36107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L25",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "readme_gjournal_ai_powered_micro_journaling",
       "target": "readme_technology_stack",
@@ -36098,10 +36117,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L15",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "readme_gjournal_ai_powered_micro_journaling",
+      "target": "readme_testing_validation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "readme_key_features",
-      "target": "readme_knowledge_graph_visualization",
+      "target": "readme_behavioral_tags_engine",
       "confidence_score": 1.0
     },
     {
@@ -36118,10 +36147,30 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L20",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "readme_key_features",
-      "target": "readme_premium_user_experience",
+      "target": "readme_premium_ux_accessibility",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "readme_key_features",
+      "target": "readme_psychological_network_pillar_a",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "readme_key_features",
+      "target": "readme_trajectory_analysis_topology_pillar_b",
       "confidence_score": 1.0
     },
     {
@@ -36576,5 +36625,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "47f6b0fde409739bc62a71a2f87448c2565b6be0"
+  "built_at_commit": "066461a4e0f951592f348370556703c503dc3532"
 }
