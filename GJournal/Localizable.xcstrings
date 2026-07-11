@@ -1,0 +1,161 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld connected variables and %lld connections." : {
+      "comment" : "VoiceOver: node and edge count in the psychological network",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld connected variables and %2$lld connections."
+          }
+        }
+      }
+    },
+    "%lld entries · last 30 days" : {
+      "comment" : "Trajectory dashboard subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld entries · last 30 days"
+          }
+        }
+      }
+    },
+    "behavioral tag" : {
+      "comment" : "VoiceOver: node kind",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "behavioral tag"
+          }
+        }
+      }
+    },
+    "buffering" : {
+      "comment" : "VoiceOver: describes a negative (protective) network edge",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "buffering"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "Double tap to focus this variable's connections" : {
+      "comment" : "VoiceOver hint on a network node",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to focus this variable's connections"
+          }
+        }
+      }
+    },
+    "emotion" : {
+      "comment" : "VoiceOver: node kind",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "emotion"
+          }
+        }
+      }
+    },
+    "Network overview" : {
+      "comment" : "VoiceOver summary element label for the psychological network graph",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network overview"
+          }
+        }
+      }
+    },
+    "No strong connections in your psychological network yet. Keep journaling to reveal stable patterns." : {
+      "comment" : "VoiceOver summary when the network is empty",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No strong connections in your psychological network yet. Keep journaling to reveal stable patterns."
+          }
+        }
+      }
+    },
+    "Psychological Network" : {
+      "comment" : "Navigation title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Psychological Network"
+          }
+        }
+      }
+    },
+    "reinforcing" : {
+      "comment" : "VoiceOver: describes a positive network edge",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reinforcing"
+          }
+        }
+      }
+    },
+    "Statistically significant." : {
+      "comment" : "VoiceOver: trajectory metric significance badge",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistically significant."
+          }
+        }
+      }
+    },
+    "Trajectory" : {
+      "comment" : "Navigation title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trajectory"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

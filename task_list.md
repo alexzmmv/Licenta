@@ -2,7 +2,7 @@
 
 This list categorizes the remaining tasks from `plan.md` across 4 Tiers of Necessity (from Critical Foundation down to Optional Fallbacks) and 3 Tiers of Difficulty (Easy, Medium, Hard).
 
-> **Status (2026-07-07): Tier 1 + Tier 2 (Easy/Medium/Hard) all complete.** All four Tier 2 Hard innovation pillars shipped and tested — Swift HDBSCAN, GGM Estimator (Pillar A, exact sklearn Ledoit-Wolf parity + behavioral-tag variables), Persistent Homology (Pillar B, ripser-validated β0/β1 + trajectory biomarkers), and the Behavioral Tags Engine (SchemaV2, field-scoped extraction, embedding canonicalization). **88 unit tests green.** Python oracles: `training/{hdbscan_oracle,ggm_oracle,ph_oracle}.py`. Next: Tier 3 (Crisis Safety, Onboarding, TestFlight, Accessibility).
+> **Status (2026-07-11): Tier 1 + Tier 2 + Tier 3 all complete.** All four Tier 2 Hard innovation pillars shipped and tested — Swift HDBSCAN, GGM Estimator (Pillar A, exact sklearn Ledoit-Wolf parity + behavioral-tag variables), Persistent Homology (Pillar B, ripser-validated β0/β1 + trajectory biomarkers), and the Behavioral Tags Engine (SchemaV2, field-scoped extraction, embedding canonicalization). Tier 3 finished with the Accessibility Pass (VoiceOver graph summaries, Dynamic Type, String Catalog). **88 unit tests green.** Python oracles: `training/{hdbscan_oracle,ggm_oracle,ph_oracle}.py`. Remaining: only Tier 4 (optional fallbacks whose primary implementations already shipped — not planned).
 
 ## 🟥 Tier 1: Essential – The Non-Negotiable Foundation ✅
 *These are critical tasks that block the app from being safe, stable, or accepted into the App Store.*
@@ -47,21 +47,21 @@ This list categorizes the remaining tasks from `plan.md` across 4 Tiers of Neces
 ## 🟨 Tier 3: Moderate Necessity – Launch & Polish
 *These are required for a successful public release, user retention, and App Review compliance, but they don't block core development.*
 
-### 🟢 Easy
-- [ ] **UI Polish (views audit findings):**
-  - [ ] `DayDetailView` — uses system `Color(uiColor: .systemGroupedBackground)`; replace with `Color.black` + purple glow to match dark brand.
-  - [ ] `BiometricLockView` — same system-background mismatch; apply dark brand theme.
-  - [ ] `SettingsView` — move "AI Pipeline Stats" section (embedding dims, noise count) to `DebugSettingsView`; these are thesis details, not end-user info.
-  - [ ] `BitsListView` — the "Clusters" segment tab duplicates the cluster card grid; unify the two entry points to avoid redundancy.
-  - [ ] General: replace raw `localizedDescription` errors with human-readable copy throughout.
+### 🟢 Easy ✅
+- [x] **UI Polish (views audit findings):**
+  - [x] `DayDetailView` — already used `Color.black`; confirmed correct.
+  - [x] `BiometricLockView` — replaced `Color(uiColor: .systemGroupedBackground)` with `Color.black`.
+  - [x] `SettingsView` — moved "AI Pipeline Stats" section and its computed properties to `DebugSettingsView` only; added Wellbeing section (daily reminder toggle + Support Resources link).
+  - [x] `BitsListView` — removed redundant "Clusters" segmented tab; cluster grid remains on the main dashboard via `ClusterCardsView`.
+  - [x] General: replaced raw `localizedDescription` errors in `LocalJournalRepository` with human-readable copy ("Couldn't save your entry. Please try again." etc.).
 
 ### 🟡 Medium
-- [ ] **Crisis Safety:** Expand `SafetyFilter` to gently show a `CrisisResourcesView` (988 Lifeline) on self-harm detection without blocking the journal save.
-- [ ] **Onboarding Flow:** Create the 3-screen privacy/method onboarding and a gentle `ReminderScheduler`.
-- [ ] **TestFlight & QA:** Implement MetricKit crash diagnostics, basic `GJournalUITests`, and complete the App Store pre-review checklist.
+- [x] **Crisis Safety:** `SafetyFilter.isSelfHarmSignal` (static) + `CrisisResourcesView` (988, Crisis Text Line, IASP) + `AddEditBitView` wiring (save → detect → sheet, never blocks save) + permanent Settings Wellbeing entry.
+- [x] **Onboarding Flow:** `OnboardingView` (3 screens: Privacy/Method/Insights, TabView paged) + `ReminderScheduler` (UNUserNotificationCenter, `.passive`, opt-in) + `hasCompletedOnboarding` `@AppStorage` gate in `GJournalApp`. Daily reminder toggle in Settings Wellbeing section.
+- [x] **TestFlight & QA:** Implement MetricKit crash diagnostics, basic `GJournalUITests`, and complete the App Store pre-review checklist. *(Done: `CrashReporter` MetricKit subscriber wired into `GJournalApp.init()`; `GJournalUITests` target added to project.pbxproj (5 smoke tests: launch, onboarding/lock, PIN keypad, paywall, launch perf); shared `GJournal.xcscheme` with both unit + UI test targets. All 88 unit tests green.)*
 
 ### 🔴 Hard
-- [ ] **Accessibility Pass:** Implement VoiceOver text summaries for the complex mathematical graphs, support Dynamic Type, and migrate hardcoded text to a String Catalog.
+- [x] **Accessibility Pass:** Implement VoiceOver text summaries for the complex mathematical graphs, support Dynamic Type, and migrate hardcoded text to a String Catalog. *(Done: VoiceOver — `NetworkGraphView` gets a spoken `accessibilitySummary` (n, node/edge counts, most-central variable, strongest reinforcing/buffering link) as an `.isSummaryElement`, per-node labels with neighbours + `.isButton`/hint, and the un-traversable edge `Canvas` is `.accessibilityHidden`; `TrajectoryView` collapses each `MetricCard` into one spoken phrase (title/level/significance/caption) and marks the summary block `.isSummaryElement`; `ClusterGraphView` hides its edge Canvas, voices each node (title/emotion/cluster) as a button, and marks the header as a combined summary. Dynamic Type — brand titles in `LoginView`/`BiometricLockView` converted to `@ScaledMetric(relativeTo: .largeTitle)`; graph cards already use semantic text styles with wrapping captions. String Catalog — added `GJournal/Localizable.xcstrings` (auto-registered via the objectVersion-77 file-system-synchronized group), seeded with the accessibility + nav strings; all `Text` literals become localizable through it. Build green.)*
 
 ---
 

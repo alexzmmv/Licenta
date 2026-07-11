@@ -142,6 +142,7 @@ struct ClusterGraphView: View {
                         }
                     }
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true) // edges aren't VoiceOver-traversable
                     .blur(radius: shouldApplyBlur ? 2.0 : 0)
                     .opacity(shouldApplyBlur ? 0.55 : 1.0)
                     .animation(.easeInOut(duration: 0.15), value: shouldApplyBlur)
@@ -190,6 +191,9 @@ struct ClusterGraphView: View {
                                         }
                                     }
                             )
+                            .accessibilityElement()
+                            .accessibilityLabel(Text(nodeAccessibilityLabel(node)))
+                            .accessibilityAddTraits(.isButton)
                         }
                     }
                 }
@@ -400,6 +404,8 @@ struct ClusterGraphView: View {
                      : "\(layout.nodes.count) entries \u{2022} \(clusterCount) clusters")
                     .font(.caption).foregroundColor(.gray)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
 
             Spacer()
 
@@ -524,6 +530,27 @@ struct ClusterGraphView: View {
             .padding(.horizontal, 20)
         }
         .padding(.bottom, 20)
+    }
+
+    // MARK: - VoiceOver
+
+    /// Spoken description for a node in the knowledge graph. Canvas edges are hidden from
+    /// VoiceOver, so each node carries its own cluster/emotion context.
+    private func nodeAccessibilityLabel(_ node: GraphNode) -> String {
+        let clusterName: String? = node.clusterID.flatMap { id in
+            id >= 0 ? (layout.clusterNames[id] ?? String(localized: "Cluster \(id)")) : nil
+        }
+        if node.isHub {
+            let name = clusterName ?? node.title
+            return String(localized: "\(name) cluster hub")
+        }
+        var label = String(localized: "\(node.title). Emotion \(node.emotion.rawValue).")
+        if let clusterName {
+            label += " " + String(localized: "In \(clusterName).")
+        } else {
+            label += " " + String(localized: "Unclustered.")
+        }
+        return label
     }
 
     // MARK: - Helpers

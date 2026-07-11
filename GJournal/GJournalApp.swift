@@ -16,6 +16,7 @@ struct GJournalApp: App {
 
     init() {
         containerResult = Result { try Self.makeModelContainer() }
+        CrashReporter.shared.start()
     }
 
     private static func makeModelContainer() throws -> ModelContainer {

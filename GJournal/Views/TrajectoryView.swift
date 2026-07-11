@@ -85,6 +85,8 @@ struct TrajectoryView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isSummaryElement)
     }
 
     private var disclaimer: some View {
@@ -202,5 +204,20 @@ private struct MetricCard: View {
                 .fill(Color(red: 0.10, green: 0.10, blue: 0.13))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(accent.opacity(0.2), lineWidth: 1))
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(accessibilityLabel))
+    }
+
+    /// The decorative progress bar can't be voiced meaningfully, so collapse the whole
+    /// card into one spoken phrase: title, level, significance, then the plain-language caption.
+    private var accessibilityLabel: String {
+        var label = "\(title): \(value)."
+        if let badge {
+            label += " " + (badge == "verified"
+                ? String(localized: "Statistically significant.")
+                : badge + ".")
+        }
+        label += " \(caption)"
+        return label
     }
 }

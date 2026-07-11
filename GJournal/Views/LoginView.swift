@@ -12,6 +12,8 @@ struct LoginView: View {
     @State private var name = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
+    /// Brand title scales with the user's Dynamic Type setting (base 38pt).
+    @ScaledMetric(relativeTo: .largeTitle) private var titleSize: CGFloat = 38
 
     var body: some View {
         ZStack {
@@ -79,7 +81,7 @@ struct LoginView: View {
                 }
                 VStack(spacing: 8) {
                     Text("GJournal")
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
+                        .font(.system(size: titleSize, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     Text("Your private emotional journal")
                         .font(.subheadline)

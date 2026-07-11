@@ -17,6 +17,48 @@ struct NetworkGraphView: View {
         }
     }
 
+    // MARK: - VoiceOver
+
+    /// Plain-language summary of the whole network, read first to VoiceOver users
+    /// since the Canvas-drawn edges cannot be traversed by assistive technology.
+    private var accessibilitySummary: String {
+        guard let hub = nodes.first else {
+            return String(localized: "No strong connections in your psychological network yet. Keep journaling to reveal stable patterns.")
+        }
+        let nodeCount = nodes.count
+        let edgeCount = network.edges.count
+        var parts: [String] = []
+        parts.append(String(localized: "Psychological network based on \(network.n) entries."))
+        parts.append(String(localized: "\(nodeCount) connected variables and \(edgeCount) connections."))
+        parts.append(String(localized: "The most central variable is \(hub.label)."))
+        if let strongest = network.edges.max(by: { $0.absWeight < $1.absWeight }) {
+            let kind = strongest.isPositive
+                ? String(localized: "reinforcing")
+                : String(localized: "buffering")
+            let r = String(format: "%.2f", strongest.weight)
+            parts.append(String(localized: "The strongest link is a \(kind) connection between \(strongest.first.label) and \(strongest.second.label), correlation \(r)."))
+        }
+        return parts.joined(separator: " ")
+    }
+
+    /// Spoken description for a single node, including its neighbours.
+    private func nodeAccessibilityLabel(_ variable: NetworkVariable) -> String {
+        let kind = variable.isEmotion
+            ? String(localized: "emotion")
+            : String(localized: "behavioral tag")
+        let centrality = String(format: "%.2f", network.centrality[variable] ?? 0)
+        let neighbors = network.edges.compactMap { edge -> String? in
+            if edge.first == variable { return edge.second.label }
+            if edge.second == variable { return edge.first.label }
+            return nil
+        }
+        var label = String(localized: "\(variable.label), \(kind). Centrality \(centrality).")
+        if !neighbors.isEmpty {
+            label += " " + String(localized: "Connected to \(neighbors.joined(separator: ", ")).")
+        }
+        return label
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -71,6 +113,15 @@ struct NetworkGraphView: View {
         let indexOf = Dictionary(uniqueKeysWithValues: nodes.enumerated().map { ($1, $0) })
 
         ZStack {
+            // VoiceOver summary — first in the traversal order, describes the graph in words.
+            Color.clear
+                .frame(width: 1, height: 1)
+                .position(x: 0, y: 0)
+                .accessibilityElement()
+                .accessibilityLabel(Text("Network overview"))
+                .accessibilityValue(Text(accessibilitySummary))
+                .accessibilityAddTraits(.isSummaryElement)
+
             Canvas { ctx, _ in
                 for edge in network.edges {
                     guard let i = indexOf[edge.first], let j = indexOf[edge.second] else { continue }
@@ -101,6 +152,7 @@ struct NetworkGraphView: View {
                 }
             }
             .frame(width: size.width, height: size.height)
+            .accessibilityHidden(true) // edges aren't VoiceOver-traversable; summary + nodes cover it
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onEnded { value in
@@ -142,7 +194,6 @@ struct NetworkGraphView: View {
 
     // MARK: - Node
 
-    @ViewBuilder
     private func node(_ variable: NetworkVariable, position: CGPoint) -> some View {
         let centrality = network.centrality[variable] ?? 0
         let maxCentrality = network.centrality.values.max() ?? 1
@@ -170,48 +221,57 @@ struct NetworkGraphView: View {
             }
         }
 
-        return Group {
-            switch variable {
-            case .emotion(let e):
-                VStack(spacing: 2) {
-                    Text(e.emoji).font(.system(size: 14))
-                    Text(e.rawValue).font(.system(size: 7, weight: .semibold))
-                        .foregroundColor(.white).lineLimit(1)
-                }
-                .frame(width: nodeRadius * 2 * scale, height: nodeRadius * 2 * scale)
+        return nodeShape(variable, scale: scale, isSelected: isSelected)
+            .opacity(op)
+            .scaleEffect(isSelected ? 1.05 : 1.0)
+            .position(position)
+            .onTapGesture {
+                selectNode(variable)
+            }
+            .accessibilityElement()
+            .accessibilityLabel(Text(nodeAccessibilityLabel(variable)))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(Text("Double tap to focus this variable's connections"))
+    }
+
+    /// The purely visual node glyph, split out so the modifier chain in `node(_:position:)`
+    /// stays short enough for the Swift type-checker.
+    @ViewBuilder
+    private func nodeShape(_ variable: NetworkVariable, scale: CGFloat, isSelected: Bool) -> some View {
+        switch variable {
+        case .emotion(let e):
+            VStack(spacing: 2) {
+                Text(e.emoji).font(.system(size: 14))
+                Text(e.rawValue).font(.system(size: 7, weight: .semibold))
+                    .foregroundColor(.white).lineLimit(1)
+            }
+            .frame(width: nodeRadius * 2 * scale, height: nodeRadius * 2 * scale)
+            .background(
+                Circle()
+                    .fill(e.color.opacity(0.85))
+                    .shadow(color: e.color.opacity(0.5), radius: 6)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white.opacity(isSelected ? 0.9 : 0), lineWidth: 2)
+                            .shadow(color: .white.opacity(isSelected ? 0.6 : 0), radius: 4)
+                    )
+            )
+        case .tag(let lemma, _):
+            Text(lemma.capitalized)
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundColor(.white).lineLimit(1).minimumScaleFactor(0.6)
+                .padding(.horizontal, 4)
+                .frame(width: nodeRadius * 2 * scale, height: nodeRadius * 1.5 * scale)
                 .background(
-                    Circle()
-                        .fill(e.color.opacity(0.85))
-                        .shadow(color: e.color.opacity(0.5), radius: 6)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(tagColor.opacity(0.85))
+                        .shadow(color: tagColor.opacity(0.5), radius: 6)
                         .overlay(
-                            Circle()
+                            RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.white.opacity(isSelected ? 0.9 : 0), lineWidth: 2)
                                 .shadow(color: .white.opacity(isSelected ? 0.6 : 0), radius: 4)
                         )
                 )
-            case .tag(let lemma, _):
-                Text(lemma.capitalized)
-                    .font(.system(size: 8, weight: .semibold))
-                    .foregroundColor(.white).lineLimit(1).minimumScaleFactor(0.6)
-                    .padding(.horizontal, 4)
-                    .frame(width: nodeRadius * 2 * scale, height: nodeRadius * 1.5 * scale)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(tagColor.opacity(0.85))
-                            .shadow(color: tagColor.opacity(0.5), radius: 6)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.white.opacity(isSelected ? 0.9 : 0), lineWidth: 2)
-                                    .shadow(color: .white.opacity(isSelected ? 0.6 : 0), radius: 4)
-                            )
-                    )
-            }
-        }
-        .opacity(op)
-        .scaleEffect(isSelected ? 1.05 : 1.0)
-        .position(position)
-        .onTapGesture {
-            selectNode(variable)
         }
     }
 
@@ -354,6 +414,7 @@ struct NetworkGraphView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 24)
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedNode == nil && selectedEdge == nil)
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Legend

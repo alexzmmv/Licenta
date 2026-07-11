@@ -7,6 +7,8 @@ struct BiometricLockView: View {
     @State private var pinError: String?
     @State private var showLogoutConfirmation = false
     @State private var biometricAvailable = false
+    /// Brand title scales with the user's Dynamic Type setting (base 36pt).
+    @ScaledMetric(relativeTo: .largeTitle) private var titleSize: CGFloat = 36
 
     var body: some View {
         Group {
@@ -52,7 +54,7 @@ struct BiometricLockView: View {
 
             VStack(spacing: 12) {
                 Text("GJournal")
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.system(size: titleSize, weight: .bold))
                 Text("Use Face ID to unlock")
                     .font(.subheadline)
                     .foregroundColor(.secondary)

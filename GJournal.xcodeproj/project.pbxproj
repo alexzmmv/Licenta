@@ -14,10 +14,18 @@
 			remoteGlobalIDString = F4F7EA512EA75BAC0058A8AD;
 			remoteInfo = GJournal;
 		};
+		E6F7EA0000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F4F7EA4A2EA75BAC0058A8AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F4F7EA512EA75BAC0058A8AD;
+			remoteInfo = GJournal;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		E5F7EA0000000000000000A2 /* GJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6F7EA0000000000000002 /* GJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4F7EA522EA75BAC0058A8AD /* GJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -25,6 +33,11 @@
 		E5F7EA0000000000000000A3 /* GJournalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GJournalTests;
+			sourceTree = "<group>";
+		};
+		E6F7EA0000000000000003 /* GJournalUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GJournalUITests;
 			sourceTree = "<group>";
 		};
 		F4F7EA542EA75BAC0058A8AD /* GJournal */ = {
@@ -36,6 +49,13 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		E5F7EA0000000000000000A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E6F7EA0000000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -56,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				E5F7EA0000000000000000A3 /* GJournalTests */,
+				E6F7EA0000000000000003 /* GJournalUITests */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -74,6 +95,7 @@
 			children = (
 				F4F7EA522EA75BAC0058A8AD /* GJournal.app */,
 				E5F7EA0000000000000000A2 /* GJournalTests.xctest */,
+				E6F7EA0000000000000002 /* GJournalUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -103,6 +125,29 @@
 			productName = GJournalTests;
 			productReference = E5F7EA0000000000000000A2 /* GJournalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E6F7EA0000000000000005 /* GJournalUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E6F7EA000000000000000B /* Build configuration list for PBXNativeTarget "GJournalUITests" */;
+			buildPhases = (
+				E6F7EA0000000000000007 /* Sources */,
+				E6F7EA0000000000000004 /* Frameworks */,
+				E6F7EA0000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E6F7EA0000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E6F7EA0000000000000003 /* GJournalUITests */,
+			);
+			name = GJournalUITests;
+			packageProductDependencies = (
+			);
+			productName = GJournalUITests;
+			productReference = E6F7EA0000000000000002 /* GJournalUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		F4F7EA512EA75BAC0058A8AD /* GJournal */ = {
 			isa = PBXNativeTarget;
@@ -140,6 +185,10 @@
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F4F7EA512EA75BAC0058A8AD;
 					};
+					E6F7EA0000000000000005 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F4F7EA512EA75BAC0058A8AD;
+					};
 					F4F7EA512EA75BAC0058A8AD = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
@@ -161,12 +210,20 @@
 			targets = (
 				F4F7EA512EA75BAC0058A8AD /* GJournal */,
 				E5F7EA0000000000000000A1 /* GJournalTests */,
+				E6F7EA0000000000000005 /* GJournalUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		E5F7EA0000000000000000A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E6F7EA0000000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -190,6 +247,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E6F7EA0000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F4F7EA4E2EA75BAC0058A8AD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -204,6 +268,11 @@
 			isa = PBXTargetDependency;
 			target = F4F7EA512EA75BAC0058A8AD /* GJournal */;
 			targetProxy = E5F7EA0000000000000000AA /* PBXContainerItemProxy */;
+		};
+		E6F7EA0000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F4F7EA512EA75BAC0058A8AD /* GJournal */;
+			targetProxy = E6F7EA0000000000000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -251,6 +320,50 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GJournal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GJournal";
+			};
+			name = Release;
+		};
+		E6F7EA0000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZRZ438TRQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = GJ.GJournalUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GJournal;
+			};
+			name = Debug;
+		};
+		E6F7EA000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZRZ438TRQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = GJ.GJournalUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GJournal;
 			};
 			name = Release;
 		};
@@ -477,6 +590,15 @@
 			buildConfigurations = (
 				E5F7EA0000000000000000A8 /* Debug */,
 				E5F7EA0000000000000000A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E6F7EA000000000000000B /* Build configuration list for PBXNativeTarget "GJournalUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E6F7EA0000000000000009 /* Debug */,
+				E6F7EA000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
