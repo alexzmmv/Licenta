@@ -1,23 +1,49 @@
-# App Store Launch & Regulatory Compliance Assessment
+# App Store Launch & Developer Account Enrollment Guide
 
 ## 1. Executive Summary
 
-GJournal is technically ready for App Store submission, with core features (Tiers 1–3) fully implemented and verified via 92 unit tests and 5 UI tests. Because the app operates entirely on-device (utilizing local CoreML models, SwiftData, and local analysis), it presents an exceptional privacy posture. However, because it touches mental health (mood/emotion tracking, topological trajectory analysis, and distress indicators), it falls under heightened scrutiny by both Apple App Review and EU regulators. 
+GJournal is technically ready for App Store submission, with core features (Tiers 1–3) fully implemented and verified via 92 unit tests and 5 UI tests. Because the app operates entirely on-device (utilizing local CoreML models, SwiftData, and local analysis), it presents an exceptional privacy posture. However, because it touches mental health (mood/emotion tracking, topological trajectory analysis, and distress indicators), it falls under heightened scrutiny by Apple App Review.
 
-This document provides a professional readiness assessment, mapping technical implementations to Apple's App Store Review Guidelines and European Union regulations (MDR & AI Act), followed by an actionable checklist for submission.
+This document provides a step-by-step Apple Developer Account enrollment guide, maps technical implementations to Apple's App Store Review Guidelines, and outlines an actionable checklist for submission.
 
 ---
 
-## 2. Apple App Store Guidelines Compliance
+## 2. Apple Developer Account Enrollment Guide
 
-### 2.1 Guideline 1.4: Physical and Mental Health (Safety Filter & Medical Disclaimer)
-* **Risk:** Apple restricts apps that claim to diagnose, treat, or manage clinical conditions without medical credentials or clinical validation. 
-* **Implementation Status:** 
+To publish GJournal on the App Store, you must enroll in the Apple Developer Program ($99 USD/year).
+
+### 2.1 Option A: Individual Account (Fastest & Simplest)
+Best if you do not have a registered company/legal entity. The App Store seller name will be your legal name.
+1. **Prepare:** Ensure your Apple ID has Two-Factor Authentication enabled and your personal details (name, address) are up to date.
+2. **Download the App:** On an iPhone or iPad, download the **Apple Developer** app from the App Store.
+3. **Register:** Open the app, tap the **Account** tab, and sign in with your Apple ID.
+4. **Enroll:** Tap **Enroll Now**, read the benefits, and fill in your personal legal name, address, and phone number.
+5. **Identity Verification:** You will be prompted to scan a government-issued photo ID (driver's license or passport) and perform a quick selfie check.
+6. **Payment:** Complete your enrollment by paying the $99 annual fee via Apple Pay.
+7. **Timeline:** Individual accounts enrolled through the app are typically approved within **24 to 48 hours**.
+
+### 2.2 Option B: Organization Account (For Companies)
+Best if you have a registered corporation, LLC, or partnership. The App Store seller name will be your company's legal name.
+1. **D-U-N-S Number:** Obtain a D-U-N-S (Dun & Bradstreet) number for your company. This is free and verify your organization's legal identity. (Takes 1–5 business days to generate).
+2. **Enrollment Portal:** Go to [developer.apple.com](https://developer.apple.com/) and sign in with your Apple ID.
+3. **Authority Check:** You must be the owner, founder, or have explicit signing authority to bind the company to Apple's legal contracts.
+4. **Submit Details:** Provide the company’s legal entity name, D-U-N-S number, headquarters address, phone number, and a public website.
+5. **Verification Call:** Apple will call the company's registration phone number to confirm your identity and authority.
+6. **Payment:** Upon approval, Apple will email you a purchase link to pay the $99 annual fee.
+7. **Timeline:** Organization accounts typically take **1 to 2 weeks** to be approved.
+
+---
+
+## 3. Apple App Store Guidelines Compliance
+
+### 3.1 Guideline 1.4: Physical and Mental Health (Safety Filter & Medical Disclaimer)
+* **Risk:** Apple restricts apps that claim to diagnose, treat, or manage clinical conditions without medical credentials.
+* **Implementation Status:**
   * [SafetyFilter](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/Services/SafetyFilter.swift) scans journal entries for self-harm signals. If detected, it triggers a gentle, non-blocking sheet displaying [CrisisResourcesView](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/Views/CrisisResourcesView.swift) (988 Lifeline, Crisis Text Line). Saving is never blocked, and the app does not attempt on-platform triage or treatment.
   * [OnboardingView](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/Views/OnboardingView.swift) contains an explicit disclaimer stating that GJournal is a general wellness tool, not a medical or diagnostic device.
 * **Assessment:** Highly compliant. To ensure zero rejection risk, the App Store description must reinforce this "wellness only" positioning and explicitly state: *"GJournal does not diagnose or treat medical conditions; consult a healthcare professional for clinical care."*
 
-### 2.2 Guideline 5.1: Privacy & Data Collection
+### 3.2 Guideline 5.1: Privacy & Data Collection
 * **Risk:** The App Store requires strict disclosures of data collection and explicit permission strings.
 * **Implementation Status:**
   * [PrivacyInfo.xcprivacy](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/PrivacyInfo.xcprivacy) is set to `NSPrivacyTracking = false` with empty collected data types, as all processing is strictly local.
@@ -25,48 +51,21 @@ This document provides a professional readiness assessment, mapping technical im
   * File-level encryption is configured in [GJournalApp.swift](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/GJournalApp.swift) with `URLFileProtection.completeUnlessOpen` applied to the SwiftData store.
 * **Assessment:** Outstanding. The App Privacy label on App Store Connect can truthfully declare **"Data Not Collected,"** which serves as a key marketing differentiator.
 
-### 2.3 Guideline 3.1: Payments & Entitlements (StoreKit 2)
+### 3.3 Guideline 3.1: Payments & Entitlements (StoreKit 2)
 * **Risk:** Incomplete paywall restoration flows or broken Sandbox transactions cause immediate rejections.
 * **Implementation Status:**
-  * `EntitlementManager` and `PaywallView` utilize StoreKit 2 APIs. 
+  * `EntitlementManager` and `PaywallView` utilize StoreKit 2 APIs.
   * Features are correctly gated behind a non-consumable, one-time unlock (`com.gjournal.insights`).
   * Sandbox environment checks are integrated into UI tests using [UITestSupport](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournalTests/UITestSupport.swift) hooks.
 * **Assessment:** Ready. The reviewer instructions must explain that sandbox accounts are required and how they can purchase/restore the premium tier.
 
 ---
 
-## 3. European Union Regulatory Compliance
-
-### 3.1 EU Medical Device Regulation (MDR) — Rule 11
-* **SaMD Boundary:** Under the EU MDR, software that predicts, prognoses, or monitors clinical conditions falls under Class IIa/IIb medical device classification.
-* **GJournal Positioning:**
-  * GJournal maps psychological networks (GGM Estimator) and topological trajectories (Persistent Homology) but intentionally frames them using general wellness terms. 
-  * The term "recovery" has been replaced by **"Semantic Recovery Velocity"** defined as *“distance gained from difficult moments.”*
-  * It avoids clinical questionnaires (like PHQ-9 or GAD-7) and does not automate diagnostic classification.
-* **Assessment:** The app safely sits on the "General Wellness" side of the boundary.
-
-### 3.2 EU AI Act — Article 5 & Article 50 (Emotion Recognition Systems)
-* **Prohibition Check:** Article 5(1)(f) of the EU AI Act prohibits Emotion Recognition Systems (ERS) in workplaces and educational settings.
-* **Biometric Exemption:** ERS is legally defined as processing *biometric data* (voice tone, facial expressions, physiological sensors) to infer emotions. GJournal processes strictly *written text* using NLP and local CoreML embeddings, which is legally exempt.
-* **Transparency Check:** Article 50(3) requires apps interacting with users to disclose that they are interacting with AI.
-* **Assessment:** GJournal is fully exempt from the ERS ban, but must comply with the Article 50(3) transparency disclosure. This is achieved via the onboarding screens which explain that emotion recognition runs via local CoreML models.
-
----
-
-## 4. Cluj-Napoca Academic Validation Strategy
-
-To solidify the app's scientific positioning and protect against regulatory challenges, the developers should leverage the local mental health research ecosystem in Cluj-Napoca:
-
-1. **Babeș-Bolyai University (UBB) DATA Lab:** Establish a validation partnership with the Digital Affective Technologies in Therapy and Assessment Lab (DATA Lab) directed by Prof. Dr. Oana David.
-2. **Clinical Correlation Study:** Run a pilot study correlating the app's *Semantic Recovery Velocity* (Persistent Homology slope) and *Reinforcing/Buffering Network Links* (GGM graph) with validated psychological instruments (e.g., PANAS or EMA logs).
-3. **Scientific Credibility:** Shifting the narrative from "AI marketing" to "scientifically validated topological wellness biomarkers" will build immense trust for App Store reviewers and target users.
-
----
-
-## 5. Actionable App Store Submission Checklist
+## 4. Actionable App Store Submission Checklist
 
 | Category | Task / Requirement | Verification File / Location | Status |
 | :--- | :--- | :--- | :--- |
+| **Account Setup** | Enroll in Developer Program | Apple Developer App / Web Portal | Pending User |
 | **Identity & Assets** | Upload 1024x1024 App Store Icon | `Assets.xcassets/AppIcon.appiconset` | Ready |
 | **Privacy Manifest** | Declare zero data collection, CA92.1, and C617.1 API access | [PrivacyInfo.xcprivacy](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/PrivacyInfo.xcprivacy) | Verified |
 | **User Safety** | Non-blocking Crisis Resources sheet on self-harm detection | [CrisisResourcesView.swift](file:///Users/constantin-alexandrudumitrascu/Desktop/GJournal/GJournal/Views/CrisisResourcesView.swift) | Verified |
