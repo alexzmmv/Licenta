@@ -45,6 +45,14 @@ class AuthManager: ObservableObject {
             // isSessionAuthenticated intentionally not restored — always require biometric/PIN after any launch/crash
         }
         refreshLockoutState()
+
+        #if DEBUG
+        // UI-test hook: land directly on the dashboard without biometric/PIN.
+        // The registered-user defaults are prepared by UITestSupport before this runs.
+        if ProcessInfo.processInfo.arguments.contains("UI_TESTING_STATE_DASHBOARD") {
+            isSessionAuthenticated = isAuthenticated
+        }
+        #endif
     }
 
     // MARK: - Registration & Login

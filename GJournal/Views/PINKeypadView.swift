@@ -68,6 +68,8 @@ struct PINKeypadView: View {
                     }
                     .frame(width: 76, height: 76)
                     .foregroundColor(.primary)
+                    .accessibilityIdentifier("PINDelete")
+                    .accessibilityLabel(Text("Delete"))
                 }
             }
         }
@@ -92,6 +94,7 @@ struct PINKeypadView: View {
                 .clipShape(Circle())
         }
         .foregroundColor(.primary)
+        .accessibilityIdentifier("PINDigit\(digit)")
     }
 }
 

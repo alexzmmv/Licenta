@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ cluster hub" : {
+      "comment" : "VoiceOver: hub node of a cluster in the knowledge graph",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cluster hub"
+          }
+        }
+      }
+    },
+    "%@, %@. Centrality %@." : {
+      "comment" : "VoiceOver: network node — label, kind (emotion/behavioral tag), centrality score",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@. Centrality %3$@."
+          }
+        }
+      }
+    },
+    "%@. Emotion %@." : {
+      "comment" : "VoiceOver: knowledge-graph node — entry title and its emotion",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. Emotion %2$@."
+          }
+        }
+      }
+    },
     "%lld connected variables and %lld connections." : {
       "comment" : "VoiceOver: node and edge count in the psychological network",
       "extractionState" : "manual",
@@ -49,6 +85,30 @@
         }
       }
     },
+    "Cluster %lld" : {
+      "comment" : "VoiceOver: fallback name for an unnamed cluster",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster %lld"
+          }
+        }
+      }
+    },
+    "Connected to %@." : {
+      "comment" : "VoiceOver: comma-separated list of a node's neighbours",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected to %@."
+          }
+        }
+      }
+    },
     "Done" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -80,6 +140,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "emotion"
+          }
+        }
+      }
+    },
+    "In %@." : {
+      "comment" : "VoiceOver: cluster membership of a knowledge-graph node",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %@."
           }
         }
       }
@@ -120,6 +192,18 @@
         }
       }
     },
+    "Psychological network based on %lld entries." : {
+      "comment" : "VoiceOver: opening sentence of the network summary",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Psychological network based on %lld entries."
+          }
+        }
+      }
+    },
     "reinforcing" : {
       "comment" : "VoiceOver: describes a positive network edge",
       "extractionState" : "manual",
@@ -144,6 +228,30 @@
         }
       }
     },
+    "The most central variable is %@." : {
+      "comment" : "VoiceOver: names the hub variable of the psychological network",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The most central variable is %@."
+          }
+        }
+      }
+    },
+    "The strongest link is a %@ connection between %@ and %@, correlation %@." : {
+      "comment" : "VoiceOver: strongest edge — kind (reinforcing/buffering), two variable names, correlation value",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The strongest link is a %1$@ connection between %2$@ and %3$@, correlation %4$@."
+          }
+        }
+      }
+    },
     "Trajectory" : {
       "comment" : "Navigation title",
       "extractionState" : "manual",
@@ -152,6 +260,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trajectory"
+          }
+        }
+      }
+    },
+    "Unclustered." : {
+      "comment" : "VoiceOver: knowledge-graph node that belongs to no cluster",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unclustered."
           }
         }
       }

@@ -43,7 +43,7 @@ struct TrajectoryView: View {
                     value: ruminationLevel(m),
                     fraction: min(1, m.loopPersistence / 1.5),
                     caption: ruminationCaption(m),
-                    badge: m.ruminationSignificant ? "verified" : nil
+                    isSignificant: m.ruminationSignificant
                 )
 
                 MetricCard(
@@ -53,7 +53,7 @@ struct TrajectoryView: View {
                     value: percentLabel(m.flareIndex),
                     fraction: m.flareIndex,
                     caption: explorationCaption(m),
-                    badge: nil
+                    isSignificant: false
                 )
 
                 MetricCard(
@@ -63,7 +63,7 @@ struct TrajectoryView: View {
                     value: recoveryLabel(m),
                     fraction: recoveryFraction(m),
                     caption: recoveryCaption(m),
-                    badge: nil
+                    isSignificant: false
                 )
 
                 disclaimer
@@ -169,7 +169,8 @@ private struct MetricCard: View {
     let value: String
     let fraction: Double
     let caption: String
-    let badge: String?
+    /// Shows the "verified" capsule and voices "Statistically significant."
+    let isSignificant: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -177,8 +178,8 @@ private struct MetricCard: View {
                 Image(systemName: icon).foregroundColor(accent)
                 Text(title).font(.subheadline).fontWeight(.semibold).foregroundColor(.white)
                 Spacer()
-                if let badge {
-                    Text(badge)
+                if isSignificant {
+                    Text("verified")
                         .font(.caption2).fontWeight(.semibold)
                         .foregroundColor(accent)
                         .padding(.horizontal, 8).padding(.vertical, 3)
@@ -212,10 +213,8 @@ private struct MetricCard: View {
     /// card into one spoken phrase: title, level, significance, then the plain-language caption.
     private var accessibilityLabel: String {
         var label = "\(title): \(value)."
-        if let badge {
-            label += " " + (badge == "verified"
-                ? String(localized: "Statistically significant.")
-                : badge + ".")
+        if isSignificant {
+            label += " " + String(localized: "Statistically significant.")
         }
         label += " \(caption)"
         return label

@@ -14,6 +14,9 @@ struct SettingsView: View {
     @State private var exportErrorMessage: String?
     @State private var showingChangePIN = false
     @State private var reminderEnabled = ReminderScheduler.shared.isEnabled
+    @State private var diagnosticFileURLs: [URL] = []
+    @State private var showingDiagnosticsSheet = false
+    @State private var diagnosticsStatusMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -156,6 +159,21 @@ struct SettingsView: View {
                             .foregroundColor(.red)
                     }
 
+                    Button {
+                        exportDiagnostics()
+                    } label: {
+                        HStack {
+                            Image(systemName: "stethoscope")
+                            Text("Export Crash Diagnostics")
+                        }
+                    }
+
+                    if let diagnosticsStatusMessage {
+                        Text(diagnosticsStatusMessage)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
                     Button(role: .destructive) {
                         showingDeleteAllAlert = true
                     } label: {
@@ -233,7 +251,26 @@ struct SettingsView: View {
                     ActivityView(items: [url])
                 }
             }
+            .sheet(isPresented: $showingDiagnosticsSheet) {
+                ActivityView(items: diagnosticFileURLs)
+            }
         }
+    }
+
+    // MARK: - Diagnostics export
+
+    /// Share the MetricKit diagnostic payloads persisted by `CrashReporter`.
+    /// These contain call stacks and system metadata only — never journal content.
+    private func exportDiagnostics() {
+        guard let dir = CrashReporter.reportsDirectory,
+              let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil),
+              !files.isEmpty else {
+            diagnosticsStatusMessage = "No crash diagnostics recorded — nothing to export."
+            return
+        }
+        diagnosticsStatusMessage = nil
+        diagnosticFileURLs = files
+        showingDiagnosticsSheet = true
     }
 
     // MARK: - Export

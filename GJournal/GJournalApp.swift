@@ -15,8 +15,16 @@ struct GJournalApp: App {
     private let containerResult: Result<ModelContainer, Error>
 
     init() {
+        #if DEBUG
+        UITestSupport.configureLaunchState()   // no-op without the UI_TESTING launch argument
+        #endif
         containerResult = Result { try Self.makeModelContainer() }
         CrashReporter.shared.start()
+        #if DEBUG
+        if case .success(let container) = containerResult {
+            UITestSupport.seedIfRequested(container: container)
+        }
+        #endif
     }
 
     private static func makeModelContainer() throws -> ModelContainer {

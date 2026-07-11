@@ -35,7 +35,7 @@ struct NetworkGraphView: View {
             let kind = strongest.isPositive
                 ? String(localized: "reinforcing")
                 : String(localized: "buffering")
-            let r = String(format: "%.2f", strongest.weight)
+            let r = strongest.weight.formatted(.number.precision(.fractionLength(2)))
             parts.append(String(localized: "The strongest link is a \(kind) connection between \(strongest.first.label) and \(strongest.second.label), correlation \(r)."))
         }
         return parts.joined(separator: " ")
@@ -46,7 +46,7 @@ struct NetworkGraphView: View {
         let kind = variable.isEmotion
             ? String(localized: "emotion")
             : String(localized: "behavioral tag")
-        let centrality = String(format: "%.2f", network.centrality[variable] ?? 0)
+        let centrality = (network.centrality[variable] ?? 0).formatted(.number.precision(.fractionLength(2)))
         let neighbors = network.edges.compactMap { edge -> String? in
             if edge.first == variable { return edge.second.label }
             if edge.second == variable { return edge.first.label }
@@ -113,15 +113,6 @@ struct NetworkGraphView: View {
         let indexOf = Dictionary(uniqueKeysWithValues: nodes.enumerated().map { ($1, $0) })
 
         ZStack {
-            // VoiceOver summary — first in the traversal order, describes the graph in words.
-            Color.clear
-                .frame(width: 1, height: 1)
-                .position(x: 0, y: 0)
-                .accessibilityElement()
-                .accessibilityLabel(Text("Network overview"))
-                .accessibilityValue(Text(accessibilitySummary))
-                .accessibilityAddTraits(.isSummaryElement)
-
             Canvas { ctx, _ in
                 for edge in network.edges {
                     guard let i = indexOf[edge.first], let j = indexOf[edge.second] else { continue }
@@ -152,7 +143,13 @@ struct NetworkGraphView: View {
                 }
             }
             .frame(width: size.width, height: size.height)
-            .accessibilityHidden(true) // edges aren't VoiceOver-traversable; summary + nodes cover it
+            // Canvas-drawn edges aren't individually traversable, so the Canvas itself
+            // becomes the summary element — first in traversal order and reachable by
+            // touch exploration, describing the whole graph in words.
+            .accessibilityElement()
+            .accessibilityLabel(Text("Network overview"))
+            .accessibilityValue(Text(accessibilitySummary))
+            .accessibilityAddTraits(.isSummaryElement)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onEnded { value in
