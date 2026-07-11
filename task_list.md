@@ -66,12 +66,16 @@ This list categorizes the remaining tasks from `plan.md` across 4 Tiers of Neces
 
 ---
 
-## 🟦 Tier 4: Low Necessity – Optional / Fallbacks
+## 🟦 Tier 4: bugs/things neded
+
+- [ ] update helpline numbers and links to crisis resource based on regional availability and user location. 
+- [ ] Improve list view of bits ui and enforce editing to current day only. in all posible views.
+- [ ] repair emotions at the bottom of the list as they open empty first time but when open another one they are filled normaly, happends only after app open then it works normaly.
+
+## 🟦 Tier 5: Low Necessity – Optional / Fallbacks
 *These are fallback plans or features that are the first to be cut if timelines or technical risks become too high.*
 
-### 🟢 Easy
 - [ ] **Search Demotion:** If Hybrid Search (Pillar C) is too complex, demote the feature to a simple "Related entries" section based on cosine distance.
 
-### 🟡 Medium
 - [ ] **Co-occurrence Network (Pillar A Fallback):** If the GGM math proves too unstable on real-world small datasets, fall back to a simpler tag-emotion co-occurrence network.
 - [ ] **Flare Index (Pillar B Cut Order 1):** If the Trajectory math is too heavy, cut the PCA-2D hull area growth ("Flare Index") and keep only Rumination + Semantic Recovery Velocity.
