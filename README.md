@@ -1,5 +1,3 @@
-/Users/constantin-alexandrudumitrascu/Desktop/Licenta
-
 # GJournal — AI-Powered Micro-Journaling
 
 GJournal is a modern, privacy-focused native iOS application designed to help users track their emotional well-being through micro-journaling and advanced AI analysis. It leverages on-device machine learning to discover patterns in thoughts, emotions, and behaviors without compromising user privacy.
