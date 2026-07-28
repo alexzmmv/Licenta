@@ -3,7 +3,10 @@
     "allow": [
       "Bash(find \"\\\\\\\\wsl.localhost\\\\Ubuntu\\\\home\\\\alex\\\\Licenta\\\\GJournal\" -name \"*.swift\")",
       "Bash(xargs grep -l -i \"embed\\\\|pool\\\\|tokeniz\")",
-      "Bash(xcodebuild -scheme GJournal -destination 'platform=iOS Simulator,name=iPhone 17' -configuration Debug build)"
+      "Bash(xcodebuild -scheme GJournal -destination 'platform=iOS Simulator,name=iPhone 17' -configuration Debug build)",
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(python3 *)",
+      "Bash(sort -u -t: -k2)"
     ]
   }
 }
