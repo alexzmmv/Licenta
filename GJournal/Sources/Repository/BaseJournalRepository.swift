@@ -93,13 +93,13 @@ open class BaseJournalRepository: ObservableObject {
         return Set(bits.map { calendar.startOfDay(for: $0.createdAt) })
     }
 
+    /// Entries are editable only on the day they were written. Journalling
+    /// integrity depends on entries not being rewritten after the fact.
+    ///
+    /// This is enforced in `updateBit`, not just used to hide UI — hiding a
+    /// button is not a rule.
     func canEdit(bit: Bit) -> Bool {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? Date.distantPast
-        let bitDay = calendar.startOfDay(for: bit.createdAt)
-
-        return bitDay == today || bitDay == yesterday
+        Calendar.current.isDateInToday(bit.createdAt)
     }
 
     func canCreate(for date: Date) -> Bool {

@@ -4,6 +4,7 @@ private enum LoginStep {
     case name
     case pinSetup
     case pinConfirm(first: String)
+    case biometricOptIn(pin: String)
 }
 
 struct LoginView: View {
@@ -43,6 +44,9 @@ struct LoginView: View {
             case .pinConfirm(let first):
                 pinConfirmView(first: first)
                     .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+            case .biometricOptIn(let pin):
+                biometricOptInView(pin: pin)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
             }
         }
         .preferredColorScheme(.dark)
@@ -51,9 +55,10 @@ struct LoginView: View {
 
     private var stepIndex: Int {
         switch step {
-        case .name:        return 0
-        case .pinSetup:    return 1
-        case .pinConfirm:  return 2
+        case .name:           return 0
+        case .pinSetup:       return 1
+        case .pinConfirm:     return 2
+        case .biometricOptIn: return 3
         }
     }
 
@@ -200,7 +205,11 @@ struct LoginView: View {
                 }
             ) { pin in
                 if pin == first {
-                    finishRegistration(pin: pin)
+                    if authManager.canUseBiometric() {
+                        withAnimation { step = .biometricOptIn(pin: pin) }
+                    } else {
+                        finishRegistration(pin: pin, enableBiometric: false)
+                    }
                 } else {
                     errorMessage = "PINs don't match — try again"
                     withAnimation { step = .pinSetup }
@@ -210,8 +219,72 @@ struct LoginView: View {
         }
     }
 
+    // MARK: - Biometric opt-in step
+
+    /// Shown only when the device has biometrics enrolled. Previously the app
+    /// switched Face ID on silently at registration, which is a consent problem
+    /// for a journal.
+    private func biometricOptInView(pin: String) -> some View {
+        VStack(spacing: 28) {
+            Spacer()
+
+            Image(systemName: "faceid")
+                .font(.system(size: 64))
+                .foregroundColor(.pink)
+
+            VStack(spacing: 12) {
+                Text("Unlock faster?")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+
+                Text("Use \(authManager.biometryDisplayName) to open GJournal instead of typing your PIN each time. Your PIN still works, and you can change this later in Settings.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            VStack(spacing: 12) {
+                Button {
+                    finishRegistration(pin: pin, enableBiometric: true)
+                } label: {
+                    Text("Enable \(authManager.biometryDisplayName)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(Color.pink)
+                        .cornerRadius(14)
+                }
+
+                Button {
+                    finishRegistration(pin: pin, enableBiometric: false)
+                } label: {
+                    Text("Not now")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+            }
+            .padding(.horizontal, 32)
+
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            Spacer()
+        }
+    }
+
     // MARK: - Actions
 
+    /// This screen is only reachable when no account exists — `GJournalApp`
+    /// routes registered users straight to `BiometricLockView`. So there is no
+    /// login branch here, only registration.
     private func continueWithName() async {
         guard isNameValid else { return }
         isLoading = true
@@ -219,27 +292,18 @@ struct LoginView: View {
 
         try? await Task.sleep(nanoseconds: 200_000_000)
 
-        do {
-            if authManager.isUserRegistered() {
-                try authManager.loginWithNameOnly(name: name)
-            } else {
-                withAnimation { step = .pinSetup }
-            }
-        } catch let error as AuthError {
-            errorMessage = error.errorDescription
-        } catch {
-            errorMessage = "Something went wrong. Please try again."
-        }
+        withAnimation { step = .pinSetup }
 
         isLoading = false
     }
 
-    private func finishRegistration(pin: String) {
+    /// Registration is the last step: `completeRegistration` flips
+    /// `isAuthenticated`, at which point `GJournalApp` replaces this view. So the
+    /// biometric choice has to be collected *before* we call it.
+    private func finishRegistration(pin: String, enableBiometric: Bool) {
         do {
             try authManager.completeRegistration(name: name, pin: pin)
-            if authManager.canUseBiometric() {
-                authManager.isBiometricEnabled = true
-            }
+            authManager.isBiometricEnabled = enableBiometric
         } catch let error as AuthError {
             errorMessage = error.errorDescription
             withAnimation { step = .name }

@@ -14,12 +14,16 @@ class LocalJournalRepository: BaseJournalRepository {
     override func configure(with modelContext: ModelContext) {
         super.configure(with: modelContext)
         aiProcessingManager?.configure(with: modelContext)
-        
+
         aiProcessingManager?.onClusteringComplete = { [weak self] in
             DispatchQueue.main.async {
                 self?.loadBitsFromContext()
             }
         }
+
+        // Honour the 72-hour retention promise made in RecentlyDeletedView on
+        // every launch, not just while the app happens to be running.
+        purgeExpiredBits()
     }
     
     // MARK: - CRUD Operations
@@ -64,6 +68,14 @@ class LocalJournalRepository: BaseJournalRepository {
         }
 
         if let index = bits.firstIndex(where: { $0.id == id }) {
+            // The edit window is a rule, not a UI hint. Enforce it here so no
+            // caller can write to an entry from a previous day.
+            guard canEdit(bit: bits[index]) else {
+                errorMessage = "Entries can only be edited on the day they were written."
+                AppLogger.error("[LocalRepository] Rejected edit outside the allowed window: \(id)")
+                return
+            }
+
             bits[index].title = title
             bits[index].feel = feel
             bits[index].event = event
@@ -161,10 +173,13 @@ class LocalJournalRepository: BaseJournalRepository {
         }
     }
 
+    /// Permanently removes soft-deleted entries whose 72-hour retention window
+    /// has elapsed. Must scan `deletedBits` — `bits` only ever holds entries
+    /// with `deletedAt == nil`, for which `isPastRetention` is always false.
     func purgeExpiredBits() {
         guard let modelContext = modelContext else { return }
 
-        let expiredBits = bits.filter { $0.isPastRetention }
+        let expiredBits = deletedBits.filter { $0.isPastRetention }
         guard !expiredBits.isEmpty else { return }
 
         for bit in expiredBits {

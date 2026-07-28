@@ -1,5 +1,38 @@
 import SwiftUI
 import SwiftData
+import Combine
+
+/// Non-blocking notice that background AI analysis failed. The entry itself is
+/// saved either way, so this must never interrupt the user with an alert.
+struct AIErrorBanner: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
+            Text(message)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 4)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+            .accessibilityLabel(Text("Dismiss"))
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.orange.opacity(0.12))
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+    }
+}
 
 struct IdentifiableDate: Identifiable {
     let id = UUID()
@@ -26,8 +59,8 @@ struct ContentView: View {
     @State private var trajectoryEngine = TrajectoryEngine()
     @State private var bitToEdit: Bit?
     @State private var selectedEmotion: Emotion?
-    @State private var showingEmotionSheet = false
     @State private var focusSearchOnAppear = false
+    @State private var aiError: String?
 
     @State private var headerAppeared = false
     @State private var moodCardAppeared = false
@@ -82,8 +115,8 @@ struct ContentView: View {
 
     private var weekData: [(date: Date, emotion: Emotion?, intensity: Double)] {
         let calendar = Calendar.current
-        return (0..<7).reversed().map { offset in
-            let date = calendar.date(byAdding: .day, value: -offset, to: Date())!
+        return (0..<7).reversed().compactMap { offset -> (date: Date, emotion: Emotion?, intensity: Double)? in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: Date()) else { return nil }
             let dayStart = calendar.startOfDay(for: date)
             let dayBits = repository.bits.filter {
                 !$0.isDeleted && calendar.startOfDay(for: $0.createdAt) == dayStart
@@ -92,6 +125,16 @@ struct ContentView: View {
                 Double(dayBits.map(\.intensity).reduce(0, +)) / Double(dayBits.count)
             return (date: date, emotion: dayBits.dominantEmotion, intensity: avgIntensity)
         }
+    }
+
+    /// AI pipeline failures, if this repository has a processing manager.
+    /// Falls back to a never-firing publisher so the view builds identically
+    /// against a mock repository in previews and tests.
+    private var aiErrorPublisher: AnyPublisher<String?, Never> {
+        guard let manager = (repository as? LocalJournalRepository)?.aiProcessingManager else {
+            return Empty<String?, Never>().eraseToAnyPublisher()
+        }
+        return manager.$lastError.eraseToAnyPublisher()
     }
 
     private var displayName: String {
@@ -136,7 +179,11 @@ struct ContentView: View {
             } else {
                 VStack(spacing: 8) {
                     ForEach(recent) { bit in
-                        RecentEntryRow(bit: bit) { bitToEdit = bit }
+                        // Only offer the editor when the repository would accept
+                        // the write — otherwise the sheet opens and Save fails.
+                        RecentEntryRow(bit: bit) {
+                            if repository.canEdit(bit: bit) { bitToEdit = bit }
+                        }
                             .padding(.horizontal, 20)
                     }
                 }
@@ -175,6 +222,19 @@ struct ContentView: View {
                         headerSection
                             .opacity(headerAppeared ? 1 : 0)
                             .offset(y: headerAppeared ? 0 : -12)
+
+                        // AI failures used to be published to `lastError` and shown
+                        // nowhere, so a broken pipeline just looked like an empty
+                        // graph. Surfaced inline rather than as an alert — the entry
+                        // is already saved, so interrupting the user would be wrong.
+                        if let aiError {
+                            AIErrorBanner(message: aiError) {
+                                self.aiError = nil
+                                (repository as? LocalJournalRepository)?
+                                    .aiProcessingManager?.lastError = nil
+                            }
+                            .padding(.horizontal, 20)
+                        }
 
                         if isFirstTimeUser {
                             FirstTimeWelcomeView { showingAddBit = true }
@@ -219,7 +279,6 @@ struct ContentView: View {
 
                             TopEmotionsView(topEmotions: topEmotions) { emotion in
                                 selectedEmotion = emotion
-                                showingEmotionSheet = true
                             }
                             .opacity(emotionsAppeared ? 1 : 0)
                             .offset(y: emotionsAppeared ? 0 : 20)
@@ -239,6 +298,13 @@ struct ContentView: View {
                             )
                             .opacity(insightsAppeared ? 1 : 0)
                             .offset(y: insightsAppeared ? 0 : 20)
+
+                            // Written but never placed in the layout — the whole
+                            // section, including its "See all" button, was
+                            // unreachable until now.
+                            recentEntriesSection
+                                .opacity(insightsAppeared ? 1 : 0)
+                                .offset(y: insightsAppeared ? 0 : 20)
                         }
 
                         Color.clear.frame(height: 100)
@@ -285,6 +351,8 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView(repository: repository)
+                    .environmentObject(authManager)
+                    .environment(entitlementManager)
             }
             .sheet(item: $bitToEdit) { bit in
                 AddEditBitView(repository: repository, bitToEdit: bit, date: bit.createdAt)
@@ -295,10 +363,8 @@ struct ContentView: View {
             .fullScreenCover(isPresented: $showingGraph) {
                 NavigationStack { ClusterGraphView(repository: repository) }
             }
-            .sheet(isPresented: $showingEmotionSheet) {
-                if let emotion = selectedEmotion {
-                    NavigationStack { EmotionDetailView(repository: repository, emotion: emotion) }
-                }
+            .sheet(item: $selectedEmotion) { emotion in
+                NavigationStack { EmotionDetailView(repository: repository, emotion: emotion) }
             }
             .sheet(isPresented: $showingPaywall) {
                 PaywallView()
@@ -326,6 +392,9 @@ struct ContentView: View {
             }
             .onReceive(repository.$errorMessage) { new in
                 showingRepoError = new != nil
+            }
+            .onReceive(aiErrorPublisher) { new in
+                aiError = new
             }
             .alert("Error", isPresented: $showingRepoError) {
                 Button("OK") { repository.errorMessage = nil }

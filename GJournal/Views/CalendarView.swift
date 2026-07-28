@@ -39,7 +39,10 @@ struct CalendarView: View {
         var currentDate = monthInterval.start
         while currentDate < monthInterval.end {
             days.append(currentDate)
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+            // A force unwrap here crashes the whole month grid; bail out of the
+            // loop instead if the calendar can't advance (non-Gregorian, DST).
+            guard let next = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+            currentDate = next
         }
         
         return days

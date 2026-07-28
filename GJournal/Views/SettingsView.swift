@@ -1,13 +1,15 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
+    @Environment(EntitlementManager.self) private var entitlementManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) var dismiss
     @ObservedObject var repository: BaseJournalRepository
-    @State private var showingLogoutAlert = false
     @State private var showingDeleteAllAlert = false
+    @State private var showingDeleteAccountAlert = false
     @State private var exportFileURL: URL?
     @State private var showingExportSheet = false
     @State private var isExporting = false
@@ -17,24 +19,41 @@ struct SettingsView: View {
     @State private var diagnosticFileURLs: [URL] = []
     @State private var showingDiagnosticsSheet = false
     @State private var diagnosticsStatusMessage: String?
+    @State private var deleteErrorMessage: String?
+    @State private var notificationsDenied = false
+    @State private var reminderTime: Date = ReminderScheduler.shared.scheduledTime
+    @State private var isRestoring = false
+    @State private var restoreStatusMessage: String?
+
+    private var appVersionString: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = info?["CFBundleVersion"] as? String ?? "—"
+        return "\(version) (\(build))"
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    HStack {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.pink)
-                        VStack(alignment: .leading) {
-                            Text("Name")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(authManager.currentUser ?? "Unknown")
-                                .font(.body)
+                    NavigationLink {
+                        EditNameView()
+                            .environmentObject(authManager)
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.circle.fill")
+                                .font(.title)
+                                .foregroundColor(.pink)
+                            VStack(alignment: .leading) {
+                                Text("Name")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text(authManager.currentUser ?? "Not set")
+                                    .font(.body)
+                            }
                         }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
                 } header: {
                     Text("Profile")
                 }
@@ -87,10 +106,29 @@ struct SettingsView: View {
                         Task {
                             if enabled {
                                 let granted = await ReminderScheduler.shared.requestPermissionAndEnable()
-                                if !granted { reminderEnabled = false }
+                                if !granted {
+                                    reminderEnabled = false
+                                    notificationsDenied = true
+                                }
                             } else {
                                 ReminderScheduler.shared.isEnabled = false
                             }
+                        }
+                    }
+
+                    if reminderEnabled {
+                        DatePicker(
+                            selection: $reminderTime,
+                            displayedComponents: .hourAndMinute
+                        ) {
+                            HStack {
+                                Image(systemName: "clock.fill")
+                                    .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                                Text("Reminder Time")
+                            }
+                        }
+                        .onChange(of: reminderTime) { _, newTime in
+                            ReminderScheduler.shared.scheduledTime = newTime
                         }
                     }
 
@@ -174,25 +212,94 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
 
+                    Button {
+                        authManager.requireSessionAuthentication()
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Image(systemName: "lock.fill")
+                            Text("Lock Now")
+                        }
+                    }
+                } footer: {
+                    Text("Exports include your entries and AI analysis as JSON. Everything stays on your device unless you choose to share it.")
+                }
+
+                Section {
                     Button(role: .destructive) {
                         showingDeleteAllAlert = true
                     } label: {
                         HStack {
                             Image(systemName: "trash.fill")
-                            Text("Delete All Data")
+                            Text("Delete All Entries")
                         }
                     }
 
                     Button(role: .destructive) {
-                        showingLogoutAlert = true
+                        showingDeleteAccountAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: "arrow.right.square")
-                            Text("Log Out")
+                            Image(systemName: "person.crop.circle.badge.xmark")
+                            Text("Delete Account & All Data")
                         }
                     }
+                } header: {
+                    Text("Danger Zone")
                 } footer: {
-                    Text("Exports include your entries and AI analysis as JSON. Everything stays on your device unless you choose to share it.")
+                    Text("Deleting your account removes your entries, your PIN, and your name from this device, and returns GJournal to a fresh install. Neither action can be undone.")
+                }
+
+                Section {
+                    Button {
+                        Task {
+                            isRestoring = true
+                            await entitlementManager.restore()
+                            isRestoring = false
+                            restoreStatusMessage = entitlementManager.hasInsights
+                                ? "Insights restored."
+                                : (entitlementManager.purchaseError ?? "No previous purchase found.")
+                        }
+                    } label: {
+                        HStack {
+                            if isRestoring {
+                                ProgressView().scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                            Text("Restore Purchases")
+                        }
+                    }
+                    .disabled(isRestoring)
+
+                    if let restoreStatusMessage {
+                        Text(restoreStatusMessage)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } header: {
+                    Text("Purchases")
+                } footer: {
+                    Text("Already bought GJournal Insights on another device? Restore it here.")
+                }
+
+                Section {
+                    Link(destination: AppLinks.privacyPolicy) {
+                        Label("Privacy Policy", systemImage: "hand.raised.fill")
+                    }
+                    Link(destination: AppLinks.termsOfUse) {
+                        Label("Terms of Use", systemImage: "doc.text.fill")
+                    }
+                    Link(destination: AppLinks.supportEmail) {
+                        Label("Contact Support", systemImage: "envelope.fill")
+                    }
+                    HStack {
+                        Label("Version", systemImage: "info.circle.fill")
+                        Spacer()
+                        Text(appVersionString)
+                            .foregroundColor(.secondary)
+                    }
+                } header: {
+                    Text("About")
                 }
 
                 #if DEBUG
@@ -220,31 +327,47 @@ struct SettingsView: View {
                     }
                 }
             }
-            .alert("Log Out", isPresented: $showingLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Log Out", role: .destructive) {
-                    authManager.logout()
-                    dismiss()
-                }
-            } message: {
-                Text("Are you sure you want to log out?")
-            }
-            .alert("Delete All Data", isPresented: $showingDeleteAllAlert) {
+            .alert("Delete All Entries", isPresented: $showingDeleteAllAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
-                    do {
-                        try modelContext.delete(model: Bit.self)
-                        try modelContext.delete(model: Cluster.self)
-                        try modelContext.save()
+                    if AccountEraser.eraseData(modelContext: modelContext) {
                         (repository as? LocalJournalRepository)?.aiProcessingManager?.resetState()
                         (repository as? LocalJournalRepository)?.loadBitsFromContext()
-                        AppLogger.log("[Settings] Deleted all data.")
-                    } catch {
-                        AppLogger.error("[Settings] Failed to delete all data: \(error)")
+                    } else {
+                        deleteErrorMessage = "Couldn't delete your entries. Please try again."
                     }
                 }
             } message: {
-                Text("This will permanently delete all your journal entries. This action cannot be undone.")
+                Text("This permanently deletes all your journal entries and AI analysis. Your account and PIN stay. This cannot be undone.")
+            }
+            .alert("Delete Account & All Data", isPresented: $showingDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete Everything", role: .destructive) {
+                    AccountEraser.eraseAll(modelContext: modelContext, authManager: authManager)
+                    (repository as? LocalJournalRepository)?.aiProcessingManager?.resetState()
+                    (repository as? LocalJournalRepository)?.loadBitsFromContext()
+                    dismiss()
+                }
+            } message: {
+                Text("This permanently deletes your entries, your PIN, and your name, and returns GJournal to a fresh install. This cannot be undone.")
+            }
+            .alert("Couldn't Delete", isPresented: Binding(
+                get: { deleteErrorMessage != nil },
+                set: { if !$0 { deleteErrorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { deleteErrorMessage = nil }
+            } message: {
+                Text(deleteErrorMessage ?? "")
+            }
+            .alert("Notifications Are Off", isPresented: $notificationsDenied) {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("Not Now", role: .cancel) { }
+            } message: {
+                Text("GJournal can't send reminders because notifications are turned off for this app. You can enable them in iOS Settings.")
             }
             .sheet(isPresented: $showingExportSheet) {
                 if let url = exportFileURL {

@@ -5,8 +5,8 @@ struct BiometricLockView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var showPINEntry = false
     @State private var pinError: String?
-    @State private var showLogoutConfirmation = false
     @State private var biometricAvailable = false
+    @State private var showForgotPIN = false
     /// Brand title scales with the user's Dynamic Type setting (base 36pt).
     @ScaledMetric(relativeTo: .largeTitle) private var titleSize: CGFloat = 36
 
@@ -19,14 +19,31 @@ struct BiometricLockView: View {
                 lockScreenView
             }
         }
-        .onAppear {
-            biometricAvailable = authManager.canUseBiometric()
-            guard authManager.isAuthenticated && !authManager.isSessionAuthenticated else { return }
-            if authManager.isBiometricEnabled && biometricAvailable {
-                Task { await attemptBiometric() }
-            } else {
-                showPINEntry = true
-            }
+        .onAppear { armLockScreen() }
+        // `.onAppear` fires once for the enclosing Group, which never disappears
+        // when the session relocks on backgrounding — without this the user
+        // returns to a stale lock screen that never prompts for biometrics.
+        .onChange(of: authManager.isSessionAuthenticated) { _, isAuthenticated in
+            guard !isAuthenticated else { return }
+            armLockScreen()
+        }
+        .sheet(isPresented: $showForgotPIN) {
+            ForgotPINView()
+                .environmentObject(authManager)
+        }
+    }
+
+    /// Reset transient lock-screen state and choose the unlock affordance.
+    private func armLockScreen() {
+        biometricAvailable = authManager.canUseBiometric()
+        pinError = nil
+        authManager.refreshLockoutState()
+        guard authManager.isAuthenticated && !authManager.isSessionAuthenticated else { return }
+        if authManager.isBiometricEnabled && biometricAvailable {
+            showPINEntry = false
+            Task { await attemptBiometric() }
+        } else {
+            showPINEntry = true
         }
     }
 
@@ -68,7 +85,7 @@ struct BiometricLockView: View {
                 } label: {
                     HStack {
                         Image(systemName: "faceid")
-                        Text("Unlock with Face ID")
+                        Text("Unlock with \(authManager.biometryDisplayName)")
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
@@ -84,22 +101,8 @@ struct BiometricLockView: View {
                 }
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-
-                Button(role: .destructive) {
-                    showLogoutConfirmation = true
-                } label: {
-                    Text("Log Out")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
                 .padding(.bottom, 20)
             }
-        }
-        .confirmationDialog("Log Out", isPresented: $showLogoutConfirmation) {
-            Button("Log Out", role: .destructive) { authManager.logout() }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This will remove your session. Your journal data stays on the device.")
         }
     }
 
@@ -146,34 +149,28 @@ struct BiometricLockView: View {
                         authManager.completeSessionAuthentication()
                     case .incorrect:
                         pinError = "Incorrect PIN — try again"
-                    case .lockedOut(let seconds):
+                    case .lockedOut:
+                        // The lockout UI swaps in automatically via the published
+                        // lockoutRemainingSeconds.
                         pinError = nil
                         authManager.refreshLockoutState()
-                        // lockout UI will show automatically via published property
-                        _ = seconds  // suppress unused warning
                     }
                 }
             }
 
             Spacer()
 
-            Button(role: .destructive) {
-                showLogoutConfirmation = true
+            Button {
+                showForgotPIN = true
             } label: {
-                Text("Log Out")
-                    .font(.caption)
-                    .foregroundColor(.red)
+                Text("Forgot PIN?")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
             .padding(.bottom, 32)
         }
         .onAppear {
             authManager.refreshLockoutState()
-        }
-        .confirmationDialog("Log Out", isPresented: $showLogoutConfirmation) {
-            Button("Log Out", role: .destructive) { authManager.logout() }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This will remove your session. Your journal data stays on the device.")
         }
     }
 

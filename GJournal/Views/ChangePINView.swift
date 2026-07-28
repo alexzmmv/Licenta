@@ -58,8 +58,16 @@ struct ChangePINView: View {
                             onCancel: { withAnimation { step = .enterNew } }
                         ) { pin in
                             if pin == first {
-                                authManager.setPIN(pin)
-                                withAnimation { step = .success }
+                                // A failed Keychain write must never report success —
+                                // the old PIN would keep working while the user
+                                // believes it changed.
+                                if authManager.setPIN(pin) {
+                                    errorMessage = nil
+                                    withAnimation { step = .success }
+                                } else {
+                                    errorMessage = AuthError.keychainError.errorDescription
+                                    withAnimation { step = .enterNew }
+                                }
                             } else {
                                 errorMessage = "PINs don't match — try again"
                                 withAnimation { step = .enterNew }

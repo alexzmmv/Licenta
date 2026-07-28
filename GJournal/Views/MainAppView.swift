@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainAppView: View {
     @EnvironmentObject var authManager: AuthManager
+    @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var repository: LocalJournalRepository = {
         let repo = LocalJournalRepository()
@@ -18,6 +19,11 @@ struct MainAppView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .clusteringStrategyDidChange)) { _ in
                 rebuildServices()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                // Entries whose retention elapsed while the app was backgrounded
+                // must disappear on return, not linger until the next cold start.
+                if newPhase == .active { repository.purgeExpiredBits() }
             }
     }
 

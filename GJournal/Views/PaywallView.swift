@@ -157,8 +157,10 @@ struct PaywallView: View {
                             Image(systemName: "lock.open.fill")
                             if let product = entitlementManager.product {
                                 Text("Unlock for \(product.displayPrice)")
+                            } else if entitlementManager.productLoadFailed {
+                                Text("Store Unavailable")
                             } else {
-                                Text("Unlock Insights")
+                                Text("Loading…")
                             }
                         }
                         .font(.headline)
@@ -176,8 +178,20 @@ struct PaywallView: View {
                 )
                 .cornerRadius(16)
                 .shadow(color: accentPurple.opacity(0.4), radius: 12, x: 0, y: 6)
+                .opacity(entitlementManager.product == nil ? 0.5 : 1)
             }
-            .disabled(entitlementManager.isLoading)
+            .disabled(entitlementManager.isLoading || entitlementManager.product == nil)
+
+            if entitlementManager.productLoadFailed {
+                Button {
+                    Task { await entitlementManager.loadProducts() }
+                } label: {
+                    Text("Try Again")
+                        .font(.subheadline)
+                        .foregroundColor(accentPurple)
+                }
+                .disabled(entitlementManager.isLoading)
+            }
 
             Button {
                 Task { await entitlementManager.restore() }
@@ -193,15 +207,26 @@ struct PaywallView: View {
     // MARK: - Privacy note
 
     private var privacyNote: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "lock.shield.fill")
-                .font(.caption)
-                .foregroundColor(.gray)
-            Text("One-time purchase · Family Sharing · No subscription · 100% on-device")
-                .font(.caption2)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Text("One-time purchase · Family Sharing · No subscription · 100% on-device")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+
+            // Required by App Review on any screen offering in-app purchase.
+            HStack(spacing: 6) {
+                Link("Terms of Use", destination: AppLinks.termsOfUse)
+                Text("·").foregroundColor(.gray)
+                Link("Privacy Policy", destination: AppLinks.privacyPolicy)
+            }
+            .font(.caption2)
+            .foregroundColor(accentPurple)
         }
         .padding(.horizontal, 8)
     }

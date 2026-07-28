@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-enum Emotion: String, CaseIterable, Codable {
+enum Emotion: String, CaseIterable, Codable, Identifiable {
     case joy = "Joy"
     case sadness = "Sadness"
     case anger = "Anger"
@@ -14,7 +14,9 @@ enum Emotion: String, CaseIterable, Codable {
     case gratitude = "Gratitude"
     case hope = "Hope"
     case guilt = "Guilt"
-    
+
+    nonisolated var id: String { rawValue }
+
     nonisolated var emoji: String {
         switch self {
         case .joy: return "😊"

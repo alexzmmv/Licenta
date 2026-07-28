@@ -7,6 +7,7 @@ struct GJournalApp: App {
     @State private var entitlementManager = EntitlementManager()
     @Environment(\.scenePhase) var scenePhase
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var isObscured = false
 
     /// Holds either a successfully created ModelContainer or the error that
     /// prevented creation. The wipe-and-retry fallback has been intentionally
@@ -41,12 +42,17 @@ struct GJournalApp: App {
         )
 
         // File-level encryption: data is accessible while the device is
-        // unlocked or while our process holds a file handle.
+        // unlocked or while our process holds a file handle. A failure here
+        // leaves the journal unprotected at rest, so it must not be swallowed.
         let storeURL = config.url
-        try? (storeURL as NSURL).setResourceValue(
-            URLFileProtection.completeUnlessOpen,
-            forKey: .fileProtectionKey
-        )
+        do {
+            try (storeURL as NSURL).setResourceValue(
+                URLFileProtection.completeUnlessOpen,
+                forKey: .fileProtectionKey
+            )
+        } catch {
+            AppLogger.error("[App] Failed to apply file protection to the store: \(error)")
+        }
 
         return container
     }
@@ -71,17 +77,48 @@ struct GJournalApp: App {
                     }
                 }
                 .modelContainer(container)
-                .task { await entitlementManager.refreshEntitlements() }
+                // Journal content must not appear in the iOS app-switcher
+                // snapshot, which is taken while the scene is inactive.
+                .overlay {
+                    if isObscured {
+                        PrivacyShieldView()
+                    }
+                }
+                .task {
+                    await entitlementManager.refreshEntitlements()
+                    ReminderScheduler.shared.refreshOnLaunch()
+                }
 
             case .failure(let error):
                 StoreRecoveryView(error: error)
             }
         }
-        .onChange(of: scenePhase) { oldPhase, newPhase in
-            if newPhase == .background {
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .background:
+                isObscured = true
                 authManager.requireSessionAuthentication()
+            case .inactive:
+                isObscured = true
+            case .active:
+                isObscured = false
+            @unknown default:
+                isObscured = false
             }
         }
+    }
+}
+
+/// Opaque cover shown while the app is inactive or backgrounded.
+private struct PrivacyShieldView: View {
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            Image(systemName: "lock.fill")
+                .font(.system(size: 44))
+                .foregroundColor(.pink)
+        }
+        .transition(.opacity)
     }
 }
 

@@ -27,6 +27,37 @@ final class ReminderScheduler {
         set { UserDefaults.standard.set(newValue, forKey: minuteKey) }
     }
 
+    /// `hour`/`minute` as a `Date` for binding to a SwiftUI `DatePicker`.
+    var scheduledTime: Date {
+        get {
+            Calendar.current.date(
+                from: DateComponents(hour: hour, minute: minute)
+            ) ?? Date()
+        }
+        set {
+            let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+            hour = components.hour ?? 20
+            minute = components.minute ?? 0
+            if isEnabled { schedule() }
+        }
+    }
+
+    /// Re-register the pending request on launch. iOS can drop pending
+    /// notifications (restore from backup, reinstall), and the only previous
+    /// call site was the `isEnabled` setter — so reminders silently stopped
+    /// forever and never came back.
+    func refreshOnLaunch() {
+        guard isEnabled else { return }
+        UNUserNotificationCenter.current().getPendingNotificationRequests { [weak self] requests in
+            guard let self else { return }
+            let alreadyScheduled = requests.contains { $0.identifier == self.notificationID }
+            if !alreadyScheduled {
+                AppLogger.error("[Reminder] Pending request missing — rescheduling")
+                self.schedule()
+            }
+        }
+    }
+
     func requestPermissionAndEnable() async -> Bool {
         let center = UNUserNotificationCenter.current()
         do {

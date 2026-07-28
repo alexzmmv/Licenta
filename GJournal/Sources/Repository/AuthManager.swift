@@ -15,7 +15,6 @@ class AuthManager: ObservableObject {
     private let nameKey                = "user_name"
     private let biometricEnabledKey    = "biometric_enabled"
     private let userRegisteredKey      = "user_registered"
-    private let userLoggedInKey        = "user_logged_in"
 
     // MARK: - Keychain keys
     private let pinHashKey             = "user_pin_hash"       // legacy SHA-256 or PBKDF2-derived key
@@ -62,32 +61,53 @@ class AuthManager: ObservableObject {
         guard isValidName(trimmed) else { throw AuthError.invalidName }
         guard !UserDefaults.standard.bool(forKey: userRegisteredKey) else { throw AuthError.userAlreadyExists }
 
+        // Store the PIN *before* marking the account registered. If the Keychain
+        // write fails we must not leave a registered account with no verifiable
+        // PIN — that state is unopenable.
+        guard storePBKDF2(pin: pin) else { throw AuthError.keychainError }
+
         UserDefaults.standard.set(trimmed, forKey: nameKey)
         UserDefaults.standard.set(true, forKey: userRegisteredKey)
-        UserDefaults.standard.set(true, forKey: userLoggedInKey)
-        storePBKDF2(pin: pin)
 
         currentUser = trimmed
         isAuthenticated = true
         isSessionAuthenticated = true
     }
 
-    func loginWithNameOnly(name: String) throws {
+    /// Rename the account. The name is a display label only — it is not a
+    /// credential and grants no access.
+    func updateName(_ name: String) throws {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard isValidName(trimmed) else { throw AuthError.invalidName }
         guard UserDefaults.standard.bool(forKey: userRegisteredKey) else { throw AuthError.userNotFound }
 
-        let stored = UserDefaults.standard.string(forKey: nameKey) ?? ""
-        guard trimmed == stored else { throw AuthError.unauthorized }
-
+        UserDefaults.standard.set(trimmed, forKey: nameKey)
         currentUser = trimmed
-        isAuthenticated = true
-        UserDefaults.standard.set(true, forKey: userLoggedInKey)
-        isSessionAuthenticated = false   // BiometricLockView will require PIN or biometric
     }
 
-    func logout() {
-        UserDefaults.standard.set(false, forKey: userLoggedInKey)
+    /// Set a new PIN after the user proved identity with biometrics. Callers
+    /// **must** have just awaited a successful `authenticateWithBiometric()`.
+    /// Clears the lockout counter so a locked-out user is released.
+    func resetPINAfterBiometric(newPIN: String) throws {
+        guard isBiometricEnabled, canUseBiometric() else { throw AuthError.biometricUnavailable }
+        guard storePBKDF2(pin: newPIN) else { throw AuthError.keychainError }
+        clearFailCounter()
+    }
+
+    /// Erase the account: PIN, salt, lockout counters, name, and all auth flags.
+    /// Journal data is owned by SwiftData and must be deleted separately by the
+    /// caller — this only tears down the credential surface.
+    func eraseAccount() {
+        clearPIN()
+        deleteFromKeychain(key: failCountKey)
+        deleteFromKeychain(key: lastFailTimestampKey)
+
+        UserDefaults.standard.removeObject(forKey: nameKey)
+        UserDefaults.standard.removeObject(forKey: userRegisteredKey)
+        UserDefaults.standard.removeObject(forKey: biometricEnabledKey)
+
+        lockoutTimer?.invalidate()
+        lockoutRemainingSeconds = 0
         currentUser = nil
         isAuthenticated = false
         isSessionAuthenticated = false
@@ -105,12 +125,10 @@ class AuthManager: ObservableObject {
         UserDefaults.standard.bool(forKey: userRegisteredKey)
     }
 
-    func getToken() -> String? {
-        UserDefaults.standard.string(forKey: nameKey)
-    }
-
     // MARK: - PIN
 
+    /// Returns false if the Keychain write failed. Callers **must** check this —
+    /// reporting success on a failed write locks the user out permanently.
     @discardableResult
     func setPIN(_ pin: String) -> Bool {
         storePBKDF2(pin: pin)
@@ -212,6 +230,19 @@ class AuthManager: ObservableObject {
         let context = LAContext()
         var error: NSError?
         return context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+    }
+
+    /// User-facing name for the device's biometry. The UI previously hardcoded
+    /// "Face ID", which is wrong on every Touch ID device.
+    var biometryDisplayName: String {
+        let context = LAContext()
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        switch context.biometryType {
+        case .faceID:  return "Face ID"
+        case .touchID: return "Touch ID"
+        case .opticID: return "Optic ID"
+        default:       return "biometric unlock"
+        }
     }
 
     func authenticateWithBiometric() async throws -> Bool {
@@ -373,18 +404,18 @@ enum PINVerificationResult: Equatable {
 
 enum AuthError: LocalizedError {
     case invalidName
-    case unauthorized
     case userNotFound
     case userAlreadyExists
     case keychainError
+    case biometricUnavailable
 
     var errorDescription: String? {
         switch self {
-        case .invalidName:       return "Please enter a valid name (at least 2 characters)"
-        case .unauthorized:      return "Name does not match the account on this device"
-        case .userNotFound:      return "No account found on this device"
-        case .userAlreadyExists: return "An account already exists on this device"
-        case .keychainError:     return "Security error — please try again"
+        case .invalidName:          return "Please enter a valid name (at least 2 characters)"
+        case .userNotFound:         return "No account found on this device"
+        case .userAlreadyExists:    return "An account already exists on this device"
+        case .keychainError:        return "Couldn't save securely to this device. Please try again."
+        case .biometricUnavailable: return "Face ID or Touch ID isn't available on this device"
         }
     }
 }

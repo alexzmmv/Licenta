@@ -63,7 +63,9 @@ final class AIProcessingManager: ObservableObject {
                 self.lastError = nil
             } catch {
                 AppLogger.error("[AI] Pipeline error for bit \(bitID): \(error)")
-                self.lastError = error.localizedDescription
+                // Surfaced by ContentView. Deliberately non-technical: the entry
+                // itself is saved and safe, only the analysis failed.
+                self.lastError = "Your entry was saved, but we couldn't analyse it. Insights may be incomplete."
             }
         }
     }
@@ -133,7 +135,13 @@ final class AIProcessingManager: ObservableObject {
         await Task.detached(priority: .utility) {
             let context = ModelContext(container)
             let predicate = #Predicate<Bit> { $0.deletedAt == nil && $0.embeddingGeneratedAt != nil }
-            guard let bits = try? context.fetch(FetchDescriptor<Bit>(predicate: predicate)) else { return }
+            let bits: [Bit]
+            do {
+                bits = try context.fetch(FetchDescriptor<Bit>(predicate: predicate))
+            } catch {
+                AppLogger.error("[AI] Tag backfill fetch failed: \(error)")
+                return
+            }
             let pending = bits.filter { $0.tagLemmas.isEmpty }
             let total = pending.count
             guard total > 0 else { await progress(0, 0); return }
@@ -144,11 +152,14 @@ final class AIProcessingManager: ObservableObject {
                 bit.tagLemmas = await processor.process(event: bit.event, action: bit.action, into: context)
                 done += 1
                 if done % 5 == 0 || done == total {
-                    try? context.save()
+                    // Losing a save here silently discards the whole backfill batch.
+                    do { try context.save() }
+                    catch { AppLogger.error("[AI] Tag backfill save failed at \(done)/\(total): \(error)") }
                     await progress(done, total)
                 }
             }
-            try? context.save()
+            do { try context.save() }
+            catch { AppLogger.error("[AI] Tag backfill final save failed: \(error)") }
             await progress(total, total)
         }.value
     }
