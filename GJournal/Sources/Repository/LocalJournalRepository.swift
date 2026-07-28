@@ -225,8 +225,13 @@ class LocalJournalRepository: BaseJournalRepository {
         let model = EmbeddingModelChoice.current
         let strategy = ClusteringStrategyChoice.current
 
+        // The doc comment has always promised soft-deleted entries, but this
+        // loop iterated `bits`, which excludes them — so anything in the trash
+        // was silently dropped from the user's backup.
+        let exportableBits = bits + deletedBits
+
         var bitsJSON: [[String: Any]] = []
-        for bit in bits {
+        for bit in exportableBits {
             var entry: [String: Any] = [
                 "id": bit.id.uuidString,
                 "feel": bit.feel,
@@ -254,6 +259,9 @@ class LocalJournalRepository: BaseJournalRepository {
             }
             if let t = bit.flattenedText { entry["flattenedText"] = t }
             if let d = bit.embeddingGeneratedAt { entry["embeddingGeneratedAt"] = iso.string(from: d) }
+            // Preserved so a restored trash entry keeps its retention countdown
+            // instead of resetting to a fresh 72 hours.
+            if let d = bit.deletedAt { entry["deletedAt"] = iso.string(from: d) }
             bitsJSON.append(entry)
         }
 
@@ -299,8 +307,8 @@ class LocalJournalRepository: BaseJournalRepository {
             ],
             "calibration": calibrationJSON,
             "summary": [
-                "totalBits": bits.count,
-                "bitsWithEmbeddings": bits.filter { $0.hasBeenProcessed }.count,
+                "totalBits": exportableBits.count,
+                "bitsWithEmbeddings": exportableBits.filter { $0.hasBeenProcessed }.count,
                 "clusterCount": clustersJSON.count
             ],
             "clusters": clustersJSON,
@@ -324,8 +332,170 @@ class LocalJournalRepository: BaseJournalRepository {
             [.protectionKey: FileProtectionType.completeUnlessOpen],
             ofItemAtPath: url.path
         )
-        AppLogger.log("[LocalRepository] Exported \(bits.count) bits to \(filename)")
+        AppLogger.log("[LocalRepository] Exported \(exportableBits.count) bits to \(filename)")
         return url
+    }
+
+    // MARK: - Versioned JSON Import
+
+    enum ImportError: LocalizedError {
+        case contextUnavailable
+        case unreadableFile
+        case malformedPayload
+        case unsupportedVersion(Int)
+        case saveFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .contextUnavailable:
+                return "Data context not available"
+            case .unreadableFile:
+                return "Couldn't read that file. Make sure it's a GJournal export."
+            case .malformedPayload:
+                return "That file isn't a valid GJournal export."
+            case .unsupportedVersion(let v):
+                return "This backup was made by a newer version of GJournal (format \(v)). Please update the app and try again."
+            case .saveFailed:
+                return "Couldn't save the imported entries. Please try again."
+            }
+        }
+    }
+
+    struct ImportSummary {
+        var imported: Int = 0
+        var skipped: Int = 0
+        var clustersCreated: Int = 0
+
+        /// Plain-language result for the user — no jargon, no counts of things
+        /// they didn't ask about.
+        var message: String {
+            switch (imported, skipped) {
+            case (0, 0):  return "That backup was empty — nothing to import."
+            case (0, _):  return "Everything in that backup is already here."
+            case (_, 0):  return "Imported \(imported) \(imported == 1 ? "entry" : "entries")."
+            default:      return "Imported \(imported) \(imported == 1 ? "entry" : "entries"). \(skipped) already here."
+            }
+        }
+    }
+
+    /// Restores entries from a file produced by `generateExportFile()`.
+    ///
+    /// Merges by `Bit.id`: entries already present are left untouched rather
+    /// than overwritten, so importing the same backup twice is a no-op and a
+    /// user can safely merge two devices. Clusters are recreated by index and
+    /// re-linked. Callers that want a clean slate should erase first.
+    @discardableResult
+    func importData(from url: URL, replaceExisting: Bool = false) throws -> ImportSummary {
+        guard let modelContext = modelContext else { throw ImportError.contextUnavailable }
+
+        // Security-scoped access is required for files handed over by the
+        // document picker from outside the app container.
+        let needsScopedAccess = url.startAccessingSecurityScopedResource()
+        defer { if needsScopedAccess { url.stopAccessingSecurityScopedResource() } }
+
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            AppLogger.error("[LocalRepository] Import read failed: \(error)")
+            throw ImportError.unreadableFile
+        }
+
+        guard let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let bitsJSON = root["bits"] as? [[String: Any]] else {
+            throw ImportError.malformedPayload
+        }
+
+        let fileVersion = root["formatVersion"] as? Int ?? 1
+        guard fileVersion <= Self.exportFormatVersion else {
+            throw ImportError.unsupportedVersion(fileVersion)
+        }
+
+        if replaceExisting {
+            guard AccountEraser.eraseData(modelContext: modelContext) else {
+                throw ImportError.saveFailed
+            }
+        }
+
+        let iso = ISO8601DateFormatter()
+        var summary = ImportSummary()
+
+        // Existing IDs drive the merge; fetch once rather than per entry.
+        let existingIDs = Set(((try? modelContext.fetch(FetchDescriptor<Bit>())) ?? []).map(\.id))
+
+        // Reuse clusters by index so imported entries join the right island.
+        var clustersByIndex: [Int: Cluster] = [:]
+        for cluster in (try? modelContext.fetch(FetchDescriptor<Cluster>())) ?? [] {
+            clustersByIndex[cluster.index] = cluster
+        }
+
+        for entry in bitsJSON {
+            guard let idString = entry["id"] as? String,
+                  let id = UUID(uuidString: idString) else {
+                summary.skipped += 1
+                continue
+            }
+            guard !existingIDs.contains(id) else {
+                summary.skipped += 1
+                continue
+            }
+
+            let bit = Bit(
+                id: id,
+                title: entry["title"] as? String,
+                feel: entry["feel"] as? String ?? "",
+                event: entry["event"] as? String ?? "",
+                action: entry["action"] as? String ?? "",
+                intensity: entry["intensity"] as? Int ?? 1,
+                lastModified: (entry["lastModified"] as? String).flatMap(iso.date(from:)) ?? Date(),
+                createdAt: (entry["createdAt"] as? String).flatMap(iso.date(from:)) ?? Date(),
+                isHidden: entry["isHidden"] as? Bool ?? false
+            )
+
+            bit.deletedAt = (entry["deletedAt"] as? String).flatMap(iso.date(from:))
+            bit.flattenedText = entry["flattenedText"] as? String
+            bit.embeddingGeneratedAt = (entry["embeddingGeneratedAt"] as? String).flatMap(iso.date(from:))
+
+            if let embedding = entry["embedding"] as? [Double] {
+                bit.embedding = embedding.map(Float.init)
+            }
+            if let probabilities = entry["emotionProbabilities"] as? [String: Double] {
+                bit.emotionProbabilities = probabilities.mapValues(Float.init)
+            }
+
+            if let clusterIndex = entry["clusterIndex"] as? Int {
+                if let existing = clustersByIndex[clusterIndex] {
+                    bit.cluster = existing
+                } else {
+                    let name = entry["clusterName"] as? String ?? "Cluster \(clusterIndex)"
+                    let cluster = Cluster(index: clusterIndex, name: name)
+                    modelContext.insert(cluster)
+                    clustersByIndex[clusterIndex] = cluster
+                    bit.cluster = cluster
+                    summary.clustersCreated += 1
+                }
+            }
+
+            modelContext.insert(bit)
+            summary.imported += 1
+        }
+
+        do {
+            try modelContext.save()
+        } catch {
+            AppLogger.error("[LocalRepository] Import save failed: \(error)")
+            throw ImportError.saveFailed
+        }
+
+        loadBitsFromContext()
+        // Imported entries carry embeddings but no behavioral tags, so let the
+        // pipeline reconcile them in the background.
+        if summary.imported > 0, let manager = aiProcessingManager {
+            Task { await manager.backfillTags { _, _ in } }
+        }
+
+        AppLogger.log("[LocalRepository] Imported \(summary.imported), skipped \(summary.skipped)")
+        return summary
     }
 
     override func toggleHideBit(id: UUID) {

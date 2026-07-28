@@ -13,12 +13,13 @@ struct BitCard: View {
             HStack {
                 Text(bit.emotion.emoji)
                     .font(.title)
+                    .accessibilityHidden(true)   // the name is spoken instead
                 Text(bit.emotion.rawValue.capitalized)
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 Menu {
                     if canEdit {
                         Button {
@@ -44,6 +45,8 @@ struct BitCard: View {
                         .foregroundColor(.secondary)
                         .padding(8)
                 }
+                .accessibilityLabel(Text("Entry options"))
+                .accessibilityHint(Text(canEdit ? "Edit, hide or delete this entry" : "Hide or delete this entry"))
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -69,7 +72,9 @@ struct BitCard: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
-            
+            // Read as one passage rather than a stack of "Feel" / text fragments.
+            .accessibilityElement(children: .combine)
+
             HStack {
                 Text(bit.lastModified.timeOfDay)
                     .font(.caption)
@@ -81,9 +86,9 @@ struct BitCard: View {
                     } label: {
                         HStack(spacing: 3) {
                             Image(systemName: "circle.grid.hex.fill")
-                                .font(.system(size: 8))
+                                .font(.caption2)
                             Text(bit.cluster?.displayName ?? "Cluster \(clusterID)")
-                                .font(.system(size: 10))
+                                .font(.caption2)
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -92,15 +97,17 @@ struct BitCard: View {
                         .foregroundColor(Color(red: 0.55, green: 0.4, blue: 0.95))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Theme: \(bit.cluster?.displayName ?? "Cluster \(clusterID)")"))
+                    .accessibilityHint(Text("Shows this theme in the graph"))
                 }
-                
+
                 Spacer()
-                
+
                 HStack(spacing: 4) {
                     Text("Intensity")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    
+
                     HStack(spacing: 3) {
                         ForEach(1...4, id: \.self) { level in
                             Circle()
@@ -109,6 +116,9 @@ struct BitCard: View {
                         }
                     }
                 }
+                // Four dots convey nothing spoken; say the number.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text("Intensity \(bit.intensity) of 4"))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)

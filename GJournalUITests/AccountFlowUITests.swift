@@ -24,24 +24,33 @@ final class AccountFlowUITests: XCTestCase {
                       "Settings should open")
     }
 
+    /// `List` only instantiates visible cells, so a row below the fold reports
+    /// `exists == false`. Scroll until it materialises rather than assuming a
+    /// particular settings length.
+    @discardableResult
+    private func scrollToRow(_ app: XCUIApplication, _ label: String,
+                             file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+        let element = app.staticTexts[label]
+        for _ in 0..<8 {
+            if element.exists && element.isHittable { return element }
+            app.swipeUp()
+        }
+        XCTAssertTrue(element.exists, "\(label) should be reachable in Settings", file: file, line: line)
+        return element
+    }
+
     func testSettingsExposesTheProductionAccountRows() {
         let app = launchDashboard()
         openSettings(app)
 
         // Rows that did not exist before this work.
         XCTAssertTrue(app.staticTexts["Change PIN"].exists, "Change PIN should be reachable")
-        XCTAssertTrue(app.staticTexts["Lock Now"].exists, "Lock Now should replace the old Log Out")
         XCTAssertFalse(app.staticTexts["Log Out"].exists, "Log Out should be gone — it never survived relaunch")
 
-        app.swipeUp()
-        app.swipeUp()
-
-        XCTAssertTrue(app.staticTexts["Delete Account & All Data"].exists,
-                      "The danger zone must offer account deletion")
-        XCTAssertTrue(app.staticTexts["Restore Purchases"].exists,
-                      "Restore must be reachable outside the paywall")
-        XCTAssertTrue(app.staticTexts["Privacy Policy"].exists,
-                      "App Review requires a reachable privacy policy")
+        scrollToRow(app, "Lock Now")            // replaced the old Log Out
+        scrollToRow(app, "Delete Account & All Data")
+        scrollToRow(app, "Restore Purchases")   // must work outside the paywall
+        scrollToRow(app, "Privacy Policy")      // App Review requires this reachable
     }
 
     /// The headline gap: the display name was read-only with no way to change it.
@@ -114,7 +123,7 @@ final class AccountFlowUITests: XCTestCase {
         let app = launchDashboard()
         openSettings(app)
 
-        app.staticTexts["Lock Now"].tap()
+        scrollToRow(app, "Lock Now").tap()
 
         XCTAssertTrue(app.buttons["PINDigit1"].waitForExistence(timeout: 6),
                       "Lock Now should return the app to the PIN screen")

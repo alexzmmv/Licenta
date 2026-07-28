@@ -51,6 +51,7 @@ struct PaywallView: View {
                     .clipShape(Circle())
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
+            .accessibilityLabel(Text("Close"))
 
             ZStack {
                 Circle()
@@ -63,6 +64,7 @@ struct PaywallView: View {
                     .frame(width: 90, height: 90)
                 Text("✨")
                     .font(.system(size: 44))
+                    .accessibilityHidden(true)   // decorative
             }
 
             VStack(spacing: 8) {

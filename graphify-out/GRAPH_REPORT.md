@@ -1,437 +1,451 @@
-# Graph Report - GJournal  (2026-07-11)
+# Graph Report - .  (2026-07-28)
 
 ## Corpus Check
-- 110 files · ~150,239 words
+- 128 files · ~159,833 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1254 nodes · 2528 edges · 152 communities (54 shown, 98 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 163 edges (avg confidence: 0.8)
-- Token cost: 0 input · 0 output
-
-## Graph Freshness
-- Built from commit: `a06444b7`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
+- 1354 nodes · 2964 edges · 110 communities (68 shown, 42 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 240 edges (avg confidence: 0.81)
+- Token cost: 106,328 input · 0 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_GGM Estimator Service|GGM Estimator Service]]
-- [[_COMMUNITY_Bit Data Model|Bit Data Model]]
-- [[_COMMUNITY_Persistent Homology Engine|Persistent Homology Engine]]
-- [[_COMMUNITY_Auth Manager & Biometrics|Auth Manager & Biometrics]]
-- [[_COMMUNITY_AI Service Errors|AI Service Errors]]
-- [[_COMMUNITY_Local Journal Repository|Local Journal Repository]]
-- [[_COMMUNITY_CoreML Embedding Service|CoreML Embedding Service]]
-- [[_COMMUNITY_Schema Migration|Schema Migration]]
-- [[_COMMUNITY_Graph Physics Engine|Graph Physics Engine]]
+- [[_COMMUNITY_GGM Network Estimation|GGM Network Estimation]]
+- [[_COMMUNITY_PIN & Biometric Auth|PIN & Biometric Auth]]
+- [[_COMMUNITY_Trajectory Analysis|Trajectory Analysis]]
+- [[_COMMUNITY_Hybrid Search & Cluster Naming|Hybrid Search & Cluster Naming]]
+- [[_COMMUNITY_On-Device Embedding & Emotion|On-Device Embedding & Emotion]]
+- [[_COMMUNITY_Force-Directed Graph Physics|Force-Directed Graph Physics]]
+- [[_COMMUNITY_Export & Model Choice Tests|Export & Model Choice Tests]]
+- [[_COMMUNITY_Crash Reporting & App Lifecycle|Crash Reporting & App Lifecycle]]
 - [[_COMMUNITY_HDBSCAN Clustering|HDBSCAN Clustering]]
-- [[_COMMUNITY_App Entry Point|App Entry Point]]
+- [[_COMMUNITY_Efficiency Benchmarking|Efficiency Benchmarking]]
+- [[_COMMUNITY_Persistent Homology|Persistent Homology]]
 - [[_COMMUNITY_DBSCAN Clustering|DBSCAN Clustering]]
-- [[_COMMUNITY_Emotion Model|Emotion Model]]
-- [[_COMMUNITY_Clustering Strategy Choice|Clustering Strategy Choice]]
-- [[_COMMUNITY_Settings View & Export|Settings View & Export]]
-- [[_COMMUNITY_Bit Collection Extensions|Bit Collection Extensions]]
 - [[_COMMUNITY_Dashboard ContentView|Dashboard ContentView]]
-- [[_COMMUNITY_Auth Crypto & Errors|Auth Crypto & Errors]]
-- [[_COMMUNITY_AI Processing Manager|AI Processing Manager]]
-- [[_COMMUNITY_Emotion Model Quantization|Emotion Model Quantization]]
-- [[_COMMUNITY_Efficiency Benchmark|Efficiency Benchmark]]
-- [[_COMMUNITY_AddEdit Entry View|Add/Edit Entry View]]
-- [[_COMMUNITY_Competitor Research Notes|Competitor Research Notes]]
-- [[_COMMUNITY_Trajectory Dashboard View|Trajectory Dashboard View]]
-- [[_COMMUNITY_Graph Physics Tests|Graph Physics Tests]]
-- [[_COMMUNITY_AddEdit View Animation|Add/Edit View Animation]]
+- [[_COMMUNITY_Behavioral Tag Substrate|Behavioral Tag Substrate]]
+- [[_COMMUNITY_Cluster Model & Dashboard Data|Cluster Model & Dashboard Data]]
+- [[_COMMUNITY_Bits List View|Bits List View]]
+- [[_COMMUNITY_Repository Base Layer|Repository Base Layer]]
+- [[_COMMUNITY_Crisis Directory Tests|Crisis Directory Tests]]
+- [[_COMMUNITY_AI Processing Pipeline|AI Processing Pipeline]]
+- [[_COMMUNITY_Emotion Taxonomy|Emotion Taxonomy]]
+- [[_COMMUNITY_Import & Delete Operations|Import & Delete Operations]]
+- [[_COMMUNITY_Local Repository Core|Local Repository Core]]
+- [[_COMMUNITY_StoreKit Entitlements|StoreKit Entitlements]]
+- [[_COMMUNITY_PBKDF2 Security Tests|PBKDF2 Security Tests]]
+- [[_COMMUNITY_Statistical Design Rationale|Statistical Design Rationale]]
+- [[_COMMUNITY_Export Error Handling|Export Error Handling]]
+- [[_COMMUNITY_Entry Composer Steps|Entry Composer Steps]]
+- [[_COMMUNITY_Tag Extraction|Tag Extraction]]
+- [[_COMMUNITY_Add & Edit Entry Flow|Add & Edit Entry Flow]]
+- [[_COMMUNITY_Crisis Resources|Crisis Resources]]
+- [[_COMMUNITY_Model Training Scripts|Model Training Scripts]]
+- [[_COMMUNITY_Bit Card & Detail|Bit Card & Detail]]
+- [[_COMMUNITY_Login & Registration|Login & Registration]]
+- [[_COMMUNITY_Settings Screen|Settings Screen]]
+- [[_COMMUNITY_Account Flow UI Tests|Account Flow UI Tests]]
+- [[_COMMUNITY_Reorganization Progress Ledger|Reorganization Progress Ledger]]
 - [[_COMMUNITY_Behavioral Tag Model|Behavioral Tag Model]]
-- [[_COMMUNITY_Base Repository CRUD|Base Repository CRUD]]
-- [[_COMMUNITY_Regulatory Compliance Concepts|Regulatory Compliance Concepts]]
-- [[_COMMUNITY_Tag Processor Pipeline|Tag Processor Pipeline]]
-- [[_COMMUNITY_ML Model Manifest|ML Model Manifest]]
-- [[_COMMUNITY_GGM Math Concepts|GGM Math Concepts]]
-- [[_COMMUNITY_Crisis Resources View|Crisis Resources View]]
-- [[_COMMUNITY_Calendar View|Calendar View]]
-- [[_COMMUNITY_HDBSCAN Math Concepts|HDBSCAN Math Concepts]]
-- [[_COMMUNITY_Security & PH Concepts|Security & PH Concepts]]
-- [[_COMMUNITY_AI Service Protocols|AI Service Protocols]]
-- [[_COMMUNITY_SafetyFilter|SafetyFilter]]
-- [[_COMMUNITY_Cluster Cards View|Cluster Cards View]]
-- [[_COMMUNITY_AIServiceError|AIServiceError]]
-- [[_COMMUNITY_Date Formatting Utilities|Date Formatting Utilities]]
-- [[_COMMUNITY_NLEmbeddingService|NLEmbeddingService]]
-- [[_COMMUNITY_DeletedEntryRow|DeletedEntryRow]]
-- [[_COMMUNITY_task-3-brief|task-3-brief.md]]
-- [[_COMMUNITY_Repository Query Methods|Repository Query Methods]]
+- [[_COMMUNITY_Safety Filter|Safety Filter]]
+- [[_COMMUNITY_Training Pipeline Scripts|Training Pipeline Scripts]]
+- [[_COMMUNITY_Auth Design Rationale|Auth Design Rationale]]
+- [[_COMMUNITY_Legacy Path Orphans|Legacy Path Orphans]]
+- [[_COMMUNITY_Network Graph View|Network Graph View]]
+- [[_COMMUNITY_Service Container & Protocols|Service Container & Protocols]]
+- [[_COMMUNITY_Debug Settings|Debug Settings]]
+- [[_COMMUNITY_Forgot PIN Recovery|Forgot PIN Recovery]]
+- [[_COMMUNITY_Reminder Scheduling|Reminder Scheduling]]
+- [[_COMMUNITY_Edit Window Enforcement|Edit Window Enforcement]]
+- [[_COMMUNITY_Tag Processing|Tag Processing]]
+- [[_COMMUNITY_AI Service Errors|AI Service Errors]]
+- [[_COMMUNITY_Data Model Specs|Data Model Specs]]
+- [[_COMMUNITY_Regulatory & Validation Notes|Regulatory & Validation Notes]]
+- [[_COMMUNITY_Cluster Assignment|Cluster Assignment]]
+- [[_COMMUNITY_Mock AI Services|Mock AI Services]]
+- [[_COMMUNITY_Search & Competitor Notes|Search & Competitor Notes]]
+- [[_COMMUNITY_Schema Migration|Schema Migration]]
+- [[_COMMUNITY_Paywall View|Paywall View]]
+- [[_COMMUNITY_Change PIN Flow|Change PIN Flow]]
+- [[_COMMUNITY_Graphify Agent Rules|Graphify Agent Rules]]
+- [[_COMMUNITY_Settings Actions|Settings Actions]]
+- [[_COMMUNITY_Trajectory Metrics Design|Trajectory Metrics Design]]
+- [[_COMMUNITY_Clustering Strategy Choice|Clustering Strategy Choice]]
+- [[_COMMUNITY_Auth Error Types|Auth Error Types]]
+- [[_COMMUNITY_Account Erasure|Account Erasure]]
 - [[_COMMUNITY_Onboarding Flow|Onboarding Flow]]
-- [[_COMMUNITY_PIN Keypad View|PIN Keypad View]]
-- [[_COMMUNITY_Emotion Classifier Model|Emotion Classifier Model]]
-- [[_COMMUNITY_App Icon (Dark)|App Icon (Dark)]]
-- [[_COMMUNITY_App Icon (Default)|App Icon (Default)]]
-- [[_COMMUNITY_App Icon (Tinted)|App Icon (Tinted)]]
-- [[_COMMUNITY_.log|.log]]
-- [[_COMMUNITY_Bit|Bit]]
-- [[_COMMUNITY_love|love]]
-- [[_COMMUNITY_AD71AD21-7802-4497-ADB4-4D07D94B0834|AD71AD21-7802-4497-ADB4-4D07D94B0834]]
-- [[_COMMUNITY_Task 1 Report Engine State & Focus Calculation|Task 1 Report: Engine State & Focus Calculation]]
-- [[_COMMUNITY_MockEmbeddingService|MockEmbeddingService]]
-- [[_COMMUNITY_CoreMLEmbeddingService|CoreMLEmbeddingService]]
-- [[_COMMUNITY_.tokenize|.tokenize]]
-- [[_COMMUNITY_WordPieceTokenizer|WordPieceTokenizer]]
-- [[_COMMUNITY_SafetyFilter|SafetyFilter]]
-- [[_COMMUNITY_MigrationSmokeTests|MigrationSmokeTests]]
-- [[_COMMUNITY_GJournal — AI-Powered Micro-Journaling|GJournal — AI-Powered Micro-Journaling]]
-- [[_COMMUNITY_CalendarView|CalendarView]]
-- [[_COMMUNITY_Task 2 Report Interaction State & Two-Pass Rendering|Task 2 Report: Interaction State & Two-Pass Rendering]]
-- [[_COMMUNITY_cosine_distance_matrix|cosine_distance_matrix]]
-- [[_COMMUNITY_ported_lw_shrinkage|ported_lw_shrinkage]]
-- [[_COMMUNITY_diagram|diagram]]
-- [[_COMMUNITY_graphify|graphify.md]]
-- [[_COMMUNITY_graphify|graphify.md]]
-- [[_COMMUNITY_GEMINI|GEMINI.md]]
-- [[_COMMUNITY_progress|progress.md]]
-- [[_COMMUNITY_task-1-brief|task-1-brief.md]]
-- [[_COMMUNITY_task-2-brief|task-2-brief.md]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Bool|Bool]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Bool|Bool]]
-- [[_COMMUNITY_CGFloat|CGFloat]]
-- [[_COMMUNITY_Double|Double]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Void|Void]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Void|Void]]
-- [[_COMMUNITY_Bool|Bool]]
-- [[_COMMUNITY_ClosedRange|ClosedRange]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_Set|Set]]
-- [[_COMMUNITY_Binding|Binding]]
-- [[_COMMUNITY_Bool|Bool]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_Set|Set]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Void|Void]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_CGFloat|CGFloat]]
-- [[_COMMUNITY_Cluster|Cluster]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Color|Color]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_URL|URL]]
-- [[_COMMUNITY_Bool|Bool]]
-- [[_COMMUNITY_Float|Float]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Color|Color]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Void|Void]]
-- [[_COMMUNITY_Color|Color]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Any|Any]]
-- [[_COMMUNITY_Context|Context]]
-- [[_COMMUNITY_Error|Error]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_UIActivityViewController|UIActivityViewController]]
-- [[_COMMUNITY_URL|URL]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_CGFloat|CGFloat]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_Void|Void]]
-- [[_COMMUNITY_String|String]]
-- [[_COMMUNITY_Float|Float]]
-- [[_COMMUNITY_UInt64|UInt64]]
-- [[_COMMUNITY_Float|Float]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_StaticString|StaticString]]
-- [[_COMMUNITY_UInt|UInt]]
-- [[_COMMUNITY_ModelContainer|ModelContainer]]
-- [[_COMMUNITY_Double|Double]]
-- [[_COMMUNITY_Int|Int]]
-- [[_COMMUNITY_StaticString|StaticString]]
-- [[_COMMUNITY_UInt|UInt]]
-- [[_COMMUNITY_ModelContext|ModelContext]]
-- [[_COMMUNITY_ndarray|ndarray]]
-- [[_COMMUNITY_MLModel|MLModel]]
-- [[_COMMUNITY_ndarray|ndarray]]
-- [[_COMMUNITY_ClusteringService|ClusteringService]]
-- [[_COMMUNITY_EmbeddingService|EmbeddingService]]
-- [[_COMMUNITY_EmotionService|EmotionService]]
-- [[_COMMUNITY_Obsidian Graph Focus Mode Progress Ledger|Obsidian Graph Focus Mode Progress Ledger]]
-- [[_COMMUNITY_Task 1 Engine State & Focus Calculation (complete)|Task 1: Engine State & Focus Calculation (complete)]]
-- [[_COMMUNITY_Task 2 Interaction State & Two-Pass Rendering (complete)|Task 2: Interaction State & Two-Pass Rendering (complete)]]
-- [[_COMMUNITY_ForceDirectedLayoutTests.swift (brief)|ForceDirectedLayoutTests.swift (brief)]]
-- [[_COMMUNITY_Task 1 Fixes Performance Optimization (edge index precompute, bitsDict O(1) lookup)|Task 1 Fixes: Performance Optimization (edge index precompute, bitsDict O(1) lookup)]]
-- [[_COMMUNITY_Task 2 Brief Interaction State & Two-Pass Rendering|Task 2 Brief: Interaction State & Two-Pass Rendering]]
-- [[_COMMUNITY_ClusterGraphView|ClusterGraphView]]
-- [[_COMMUNITY_ClusterGraphView.drawNode(_contextisSelectedisDimmedisFocused)|ClusterGraphView.drawNode(_:context:isSelected:isDimmed:isFocused:)]]
-- [[_COMMUNITY_ObservableObject|ObservableObject]]
-- [[_COMMUNITY_.compute|.compute]]
+- [[_COMMUNITY_PIN Keypad|PIN Keypad]]
+- [[_COMMUNITY_Training Utilities|Training Utilities]]
+- [[_COMMUNITY_Freemium Gating Design|Freemium Gating Design]]
+- [[_COMMUNITY_Biometric Lock Screen|Biometric Lock Screen]]
+- [[_COMMUNITY_Training Helpers|Training Helpers]]
+- [[_COMMUNITY_Training Helpers (Aux)|Training Helpers (Aux)]]
+- [[_COMMUNITY_Backup Without Cloud|Backup Without Cloud]]
+- [[_COMMUNITY_App Icon Asset|App Icon Asset]]
+- [[_COMMUNITY_App Icon Asset|App Icon Asset]]
+- [[_COMMUNITY_App Icon Asset|App Icon Asset]]
+- [[_COMMUNITY_Emotion Vocab File|Emotion Vocab File]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Path Orphan|Legacy Path Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Legacy Test Orphan|Legacy Test Orphan]]
+- [[_COMMUNITY_Training Script Orphan|Training Script Orphan]]
+- [[_COMMUNITY_Training Script Orphan|Training Script Orphan]]
+- [[_COMMUNITY_Training Script Orphan|Training Script Orphan]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `View` - 77 edges
-2. `Bit` - 50 edges
-3. `AuthManager` - 48 edges
-4. `Foundation` - 43 edges
+1. `View` - 83 edges
+2. `Bit` - 58 edges
+3. `AuthManager` - 56 edges
+4. `Foundation` - 45 edges
 5. `BaseJournalRepository` - 39 edges
-6. `Emotion` - 34 edges
-7. `SwiftUI` - 28 edges
-8. `Date` - 28 edges
-9. `HDBSCANClusterer` - 27 edges
-10. `NetworkVariable` - 27 edges
+6. `Date` - 35 edges
+7. `Emotion` - 35 edges
+8. `SwiftUI` - 31 edges
+9. `LocalJournalRepository` - 31 edges
+10. `SwiftData` - 28 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `vocab_gjournalembeddingminilm.txt (MiniLM embedding vocabulary)` --shares_data_with--> `BERT Embeddings`  [INFERRED]
-  GJournal/MLModels/vocab_gjournalembeddingminilm.txt → README.md
-- `ContentView` --calls--> `InsightEngine`  [INFERRED]
-  GJournal/ContentView.swift → GJournal/Sources/Services/Insight/InsightEngine.swift
-- `NetworkGraphLoadingView` --references--> `View`  [EXTRACTED]
-  GJournal/Views/NetworkGraphView.swift → GJournal/ContentView.swift
-- `DayCell` --references--> `View`  [EXTRACTED]
-  GJournal/Views/CalendarView.swift → GJournal/ContentView.swift
-- `UnsortedCard` --references--> `View`  [EXTRACTED]
-  GJournal/Views/ClusterCardsView.swift → GJournal/ContentView.swift
+- `Knowledge-Graph Serialization into LLM Prompt Context` --semantically_similar_to--> `Graphify Knowledge Graph Consultation Rule`  [INFERRED] [semantically similar]
+  docs/planning/temp.md → .agents/rules/graphify.md
+- `GEMINI.md Graphify Rules (god nodes, communities)` --semantically_similar_to--> `Graphify Knowledge Graph Consultation Rule`  [INFERRED] [semantically similar]
+  GEMINI.md → .agents/rules/graphify.md
+- `HDBSCANClusterer (Swift)` --semantically_similar_to--> `DBSCAN Clustering of Journal Entries`  [INFERRED] [semantically similar]
+  docs/planning/plan.md → README.md
+- `Task 2: Reorganize GJournal Models and Repositories` --references--> `Cluster Model (index / name / bits)`  [INFERRED]
+  .superpowers/sdd/task-2-brief.md → docs/planning/temp.md
+- `EU AI Act Article 5(1)(f) / Article 50(3) Position` --conceptually_related_to--> `On-Device AI Pipeline`  [INFERRED]
+  docs/planning/plan.md → README.md
 
 ## Import Cycles
 - None detected.
 
-## Communities (152 total, 98 thin omitted)
+## Hyperedges (group relationships)
+- **The Three Paid Insight Pillars (GGM network, TDA trajectory, semantic recall)** — docs_planning_plan_ggm_estimator, docs_planning_plan_trajectory_service, docs_planning_plan_hybrid_search_service, docs_planning_plan_entitlement_manager, docs_planning_task_list_insight_gating_section [EXTRACTED 1.00]
+- **Statistical Safeguards Against Algorithmic Apophenia** — docs_planning_plan_permutation_null_test, docs_planning_plan_fdr_association_network, docs_planning_plan_ledoit_wolf_shrinkage, docs_planning_plan_goemotions_validation, docs_planning_task_list_python_oracles [INFERRED 0.85]
+- **Regulatory Wellness-Framing Compliance Flow (MDR + AI Act)** — docs_planning_plan_eu_mdr_samd_boundary, docs_planning_plan_eu_ai_act_compliance, docs_planning_plan_crisis_safety_filter, docs_planning_plan_semantic_recovery_velocity, docs_planning_temp_llm_safety_guardrails [INFERRED 0.85]
 
-### Community 0 - "GGM Estimator Service"
-Cohesion: 0.26
-Nodes (7): CustomStringConvertible, CalibrationResult, DBSCANClusterer, Double, Float, Int, String
+## Communities (110 total, 42 thin omitted)
 
-### Community 1 - "Bit Data Model"
-Cohesion: 0.26
-Nodes (4): GJournalUITests, Bool, String, XCUIApplication
-
-### Community 2 - "Persistent Homology Engine"
-Cohesion: 0.08
-Nodes (24): Character, CoreML, CoreMLEmbeddingService, PoolingMode, cls, mean, Float, MLModel (+16 more)
-
-### Community 3 - "Auth Manager & Biometrics"
-Cohesion: 0.07
-Nodes (26): Equatable, AuthManager, PINVerificationResult, correct, incorrect, lockedOut, Bool, Int (+18 more)
-
-### Community 4 - "AI Service Errors"
-Cohesion: 0.19
-Nodes (8): CondensedEdge, DendrogramMerge, HDBSCANClusterer, Bool, Double, Float, Int, HDBSCANTests
-
-### Community 5 - "Local Journal Repository"
-Cohesion: 0.09
-Nodes (21): 1.1 Data safety (blocks everything else) ✅, 1.3 Bundle & config ✅ (except quantization), 1.4 HDBSCAN in Swift (quality-first decision) ⏳ REMAINING, 1.5 Tests ✅ (HDBSCAN oracle fixtures pending with §1.4), 1.6 App Store mechanics ✅, 2.0 Shared substrate — behavioral tags (feeds GGM), 2.1 Pillar A — FEA network graph (GGM), 2.2 Pillar B — trajectory biomarkers (real PH + proxies) (+13 more)
-
-### Community 6 - "CoreML Embedding Service"
-Cohesion: 0.25
-Nodes (5): AuthManagerSecurityTests, Int, String, TimeInterval, UInt32
-
-### Community 7 - "Schema Migration"
-Cohesion: 0.06
-Nodes (39): Codable, ContentView, FirstTimeWelcomeView, IdentifiableDate, InsightGateCard, InsightGatingSection, RecentEntryRow, Bool (+31 more)
-
-### Community 8 - "Graph Physics Engine"
-Cohesion: 0.11
-Nodes (26): ForceDirectedLayout, GraphEdge, GraphNode, Bool, CGFloat, CGPoint, CGSize, Float (+18 more)
-
-### Community 9 - "HDBSCAN Clustering"
-Cohesion: 0.12
-Nodes (16): 🟢 Easy, 🟢 Easy ✅, 🟢 Easy ✅, 🟦 Feauture implementations, GJournal Task List (Tiered), 🔴 Hard, 🔴 Hard, 🔴 Hard (+8 more)
-
-### Community 10 - "App Entry Point"
-Cohesion: 0.07
-Nodes (19): App, GJournalApp, Error, ModelContainer, EntitlementManager, Bool, Never, String (+11 more)
-
-### Community 11 - "DBSCAN Clustering"
-Cohesion: 0.14
-Nodes (8): Combine, Foundation, Notification.Name, Notification.Name, JournalRepositoryProtocol, NaturalLanguage, ObservableObject, UIKit
-
-### Community 12 - "Emotion Model"
-Cohesion: 0.10
-Nodes (9): EmbeddingModelChoice, appleNLP, miniLM, Int, DebugSettingsView, Binding, Int, String (+1 more)
-
-### Community 14 - "Settings View & Export"
-Cohesion: 0.20
-Nodes (9): AddEditBitView, TherapyStep, actionPlan, eventExplore, feelCheck, intensity, review, title (+1 more)
-
-### Community 15 - "Bit Collection Extensions"
-Cohesion: 0.18
-Nodes (14): Encodable, NLEmbeddingService, Float, String, BenchmarkReport, EfficiencyBenchmark, EmbeddingBenchmarkResult, EmotionBenchmarkResult (+6 more)
-
-### Community 16 - "Dashboard ContentView"
-Cohesion: 0.21
-Nodes (7): CrashReporter, URL, MetricKit, MXDiagnosticPayload, MXMetricManagerSubscriber, MXMetricPayload, NSObject
-
-### Community 17 - "Auth Crypto & Errors"
-Cohesion: 0.14
-Nodes (8): BaseJournalRepository, Bool, ClosedRange, Int, ModelContext, String, UUID, Bool
-
-### Community 18 - "AI Processing Manager"
-Cohesion: 0.23
-Nodes (6): Cluster, Int, String, Set, Date, formatter()
-
-### Community 19 - "Emotion Model Quantization"
-Cohesion: 0.22
-Nodes (16): Path, get_input_spec(), infer(), load_model(), main(), make_dummy(), make_fp16(), make_int8() (+8 more)
-
-### Community 20 - "Efficiency Benchmark"
-Cohesion: 0.15
-Nodes (6): ReminderScheduler, Bool, Int, os.log, UserNotifications, AppLogger
-
-### Community 21 - "Add/Edit Entry View"
-Cohesion: 0.16
-Nodes (9): Accelerate, SemanticUtils, Float, Int, HybridSearchService, Float, Int, String (+1 more)
-
-### Community 23 - "Trajectory Dashboard View"
-Cohesion: 0.23
-Nodes (7): MockClusteringService, MockEmotionDetectionService, SeededRandomNumberGenerator, Float, String, UInt64, RandomNumberGenerator
-
-### Community 25 - "Add/Edit View Animation"
-Cohesion: 0.17
-Nodes (11): AIProcessingManager, Bool, ModelContainer, ModelContext, Never, String, Task, UUID (+3 more)
-
-### Community 26 - "Behavioral Tag Model"
+### Community 0 - "GGM Network Estimation"
 Cohesion: 0.07
 Nodes (27): InsightEngine, GGMEstimator, NetworkVariable, emotion, tag, PsychNetworkEdge, PsychologicalNetwork, Bool (+19 more)
 
-### Community 27 - "Base Repository CRUD"
-Cohesion: 0.29
-Nodes (9): ClusteringStrategyChoice, classic, hdbscan, mrlAdapted, ClusteringServiceProtocol, EmbeddingServiceProtocol, EmotionDetectionServiceProtocol, SafetyFilterServiceProtocol (+1 more)
-
-### Community 28 - "Regulatory Compliance Concepts"
-Cohesion: 0.16
-Nodes (9): Element, Array, ClusterCard, ClusterCardsView, UnsortedCard, DayDetailView, RelatedEntryRow, DeletedEntryRow (+1 more)
-
-### Community 29 - "Tag Processor Pipeline"
-Cohesion: 0.11
-Nodes (15): BehavioralTag, Bool, Data, Float, Int, String, CandidateTag, Float (+7 more)
-
-### Community 30 - "ML Model Manifest"
-Cohesion: 0.24
-Nodes (8): Decodable, ExportError, contextUnavailable, serializationFailed, SeedDataManager, SeedEntry, SeedFile, ModelContext
-
-### Community 31 - "GGM Math Concepts"
-Cohesion: 0.29
-Nodes (6): 1. Project Context & Technical Stack, 2. Target Models & Integration Goals, 3. Local SwiftData Graph Representation, 4. Key Technical Questions for Gemini Web, Core Persistence Schemas, GJournal: Local Gemma LLM Integration Research Brief
-
-### Community 32 - "Crisis Resources View"
-Cohesion: 0.12
-Nodes (6): NetworkGraphLoadingView, StoreKit, SwiftUI, OnboardingView, StoreRecoveryView, TagManagementView
-
-### Community 33 - "Calendar View"
-Cohesion: 0.36
-Nodes (3): Int, String, UUID
-
-### Community 34 - "HDBSCAN Math Concepts"
-Cohesion: 0.25
-Nodes (10): Bit, Bool, Cluster, Data, Double, Float, Int, String (+2 more)
-
-### Community 35 - "Security & PH Concepts"
-Cohesion: 0.26
-Nodes (6): MockEmbeddingService, Float, ModelContext, String, TagProcessor, TagProcessorTests
-
-### Community 36 - "AI Service Protocols"
-Cohesion: 0.20
-Nodes (9): AIServiceError, clusteringFailed, embeddingGenerationFailed, emotionDetectionFailed, insufficientData, modelNotLoaded, SafetyResult, Bool (+1 more)
-
-### Community 37 - "SafetyFilter"
-Cohesion: 0.22
-Nodes (7): ClusterAssignment, Bool, Int, UUID, ClusterableEntry, Float, UUID
-
-### Community 38 - "Cluster Cards View"
-Cohesion: 0.31
-Nodes (7): TrajectoryMetrics, MetricCard, Bool, Color, Double, String, TrajectoryView
-
-### Community 39 - "AIServiceError"
-Cohesion: 0.61
-Nodes (4): ClusterNamer, Int, Set, String
-
-### Community 40 - "Date Formatting Utilities"
+### Community 1 - "PIN & Biometric Auth"
 Cohesion: 0.07
-Nodes (20): Comparable, Int, TrajectoryPersonas, Point2, SplitMix64, Bool, Double, Hasher (+12 more)
+Nodes (21): AuthManager, PINVerificationResult, correct, incorrect, lockedOut, Bool, Int, String (+13 more)
 
-### Community 41 - "NLEmbeddingService"
-Cohesion: 0.33
-Nodes (6): ContentCategory, exploitation, illegalActivity, selfHarm, violence, SafetyFilter
+### Community 2 - "Trajectory Analysis"
+Cohesion: 0.07
+Nodes (24): Comparable, Double, Float, TrajectoryEngine, Int, TrajectoryPersonas, Point2, SplitMix64 (+16 more)
 
-### Community 44 - "Repository Query Methods"
+### Community 3 - "Hybrid Search & Cluster Naming"
+Cohesion: 0.07
+Nodes (26): Accelerate, Bit, Bool, Cluster, Data, Double, Float, Int (+18 more)
+
+### Community 4 - "On-Device Embedding & Emotion"
+Cohesion: 0.08
+Nodes (23): Character, CoreML, CoreMLEmbeddingService, PoolingMode, cls, mean, Float, MLModel (+15 more)
+
+### Community 5 - "Force-Directed Graph Physics"
+Cohesion: 0.12
+Nodes (25): ForceDirectedLayout, GraphEdge, GraphNode, Bool, CGFloat, CGPoint, CGSize, Float (+17 more)
+
+### Community 6 - "Export & Model Choice Tests"
+Cohesion: 0.09
+Nodes (11): ExportAndModelChoiceTests, String, ImportExportTests, Int, ModelContext, String, GJournalUITests, Bool (+3 more)
+
+### Community 7 - "Crash Reporting & App Lifecycle"
+Cohesion: 0.08
+Nodes (18): App, GJournalApp, PrivacyShieldView, Error, ModelContainer, CrashReporter, URL, Bool (+10 more)
+
+### Community 8 - "HDBSCAN Clustering"
+Cohesion: 0.19
+Nodes (8): CondensedEdge, DendrogramMerge, HDBSCANClusterer, Bool, Double, Float, Int, HDBSCANTests
+
+### Community 9 - "Efficiency Benchmarking"
+Cohesion: 0.13
+Nodes (19): Encodable, EmbeddingModelChoice, appleNLP, miniLM, Notification.Name, Int, NLEmbeddingService, Float (+11 more)
+
+### Community 10 - "Persistent Homology"
+Cohesion: 0.17
+Nodes (6): PersistenceBar, PersistentHomology, Bool, Double, Int, PersistentHomologyTests
+
+### Community 11 - "DBSCAN Clustering"
+Cohesion: 0.26
+Nodes (7): CustomStringConvertible, CalibrationResult, DBSCANClusterer, Double, Float, Int, String
+
+### Community 12 - "Dashboard ContentView"
+Cohesion: 0.13
+Nodes (20): AnyPublisher, AIErrorBanner, ContentView, FirstTimeWelcomeView, IdentifiableDate, InsightGateCard, InsightGatingSection, RecentEntryRow (+12 more)
+
+### Community 13 - "Behavioral Tag Substrate"
+Cohesion: 0.10
+Nodes (11): Combine, Foundation, JournalRepositoryProtocol, AppLinks, Bool, NaturalLanguage, ObservableObject, os.log (+3 more)
+
+### Community 14 - "Cluster Model & Dashboard Data"
+Cohesion: 0.11
+Nodes (15): Cluster, Int, String, Set, CalendarView, DayCell, MonthYearPickerView, Binding (+7 more)
+
+### Community 15 - "Bits List View"
 Cohesion: 0.13
 Nodes (20): CaseIterable, BitsListView, ClusterCardInList, FilterSheetView, IdentifiableInt, SortOrder, highIntensity, lowIntensity (+12 more)
 
-### Community 47 - "Onboarding Flow"
-Cohesion: 0.33
-Nodes (6): ChangePINStep, confirmNew, enterNew, success, verifyOld, ChangePINView
+### Community 16 - "Repository Base Layer"
+Cohesion: 0.14
+Nodes (9): BaseJournalRepository, Bool, ClosedRange, Int, ModelContext, String, UUID, DeletedEntryRow (+1 more)
 
-### Community 48 - "PIN Keypad View"
-Cohesion: 0.33
-Nodes (4): PINKeypadView, Int, String, Void
+### Community 17 - "Crisis Directory Tests"
+Cohesion: 0.20
+Nodes (4): CryptoKit, GJournal, SwiftData, XCTest
 
-### Community 70 - ".log"
+### Community 18 - "AI Processing Pipeline"
+Cohesion: 0.16
+Nodes (11): AIProcessingManager, Bool, ModelContainer, ModelContext, Never, String, Task, UUID (+3 more)
+
+### Community 19 - "Emotion Taxonomy"
+Cohesion: 0.11
+Nodes (19): Codable, Emotion, anger, anxiety, disgust, excitement, fear, gratitude (+11 more)
+
+### Community 20 - "Import & Delete Operations"
+Cohesion: 0.16
+Nodes (6): unsupportedVersion, SeedDataManager, Bool, ModelContext, URL, UUID
+
+### Community 21 - "Local Repository Core"
+Cohesion: 0.27
+Nodes (4): LocalJournalRepository, RetentionPurgeTests, ModelContext, String
+
+### Community 22 - "StoreKit Entitlements"
+Cohesion: 0.15
+Nodes (10): EntitlementManager, Bool, Never, String, Task, Void, AppLogger, Bool (+2 more)
+
+### Community 23 - "PBKDF2 Security Tests"
+Cohesion: 0.25
+Nodes (5): AuthManagerSecurityTests, Int, String, TimeInterval, UInt32
+
+### Community 24 - "Statistical Design Rationale"
+Cohesion: 0.18
+Nodes (17): Task 3: Reorganize GJournal Services into 6 Domains, Behavioral Tags Shared Substrate (SchemaV2), Tier 1 FDR-Controlled Association Network, GGMEstimator (psychological network, Pillar A), HDBSCANClusterer (Swift), Ledoit-Wolf Shrinkage, Mutual Reachability Distance, Permutation Null Hypothesis Safeguard (200 shuffles) (+9 more)
+
+### Community 25 - "Export Error Handling"
+Cohesion: 0.18
+Nodes (15): Decodable, ExportError, contextUnavailable, serializationFailed, ImportError, contextUnavailable, malformedPayload, saveFailed (+7 more)
+
+### Community 26 - "Entry Composer Steps"
+Cohesion: 0.38
+Nodes (15): View, ActionStepView, EditFormView, EditSection, EventStepView, FeelStepView, IntensityStepView, ProgressIndicator (+7 more)
+
+### Community 27 - "Tag Extraction"
+Cohesion: 0.20
+Nodes (5): Float, Int, Set, TagExtractor, TagExtractorTests
+
+### Community 28 - "Add & Edit Entry Flow"
 Cohesion: 0.17
-Nodes (4): LocalJournalRepository, URL, ExportAndModelChoiceTests, String
+Nodes (12): AddEditBitView, CGFloat, Double, Int, TherapyStep, actionPlan, eventExplore, feelCheck (+4 more)
 
-### Community 73 - "Bit"
+### Community 29 - "Crisis Resources"
+Cohesion: 0.23
+Nodes (7): CrisisDirectory, CrisisResource, CrisisResourcesView, Color, String, URL, CrisisDirectoryTests
+
+### Community 30 - "Model Training Scripts"
 Cohesion: 0.22
+Nodes (16): Path, get_input_spec(), infer(), load_model(), main(), make_dummy(), make_fp16(), make_int8() (+8 more)
+
+### Community 31 - "Bit Card & Detail"
+Cohesion: 0.24
 Nodes (10): DateFormatter, BitCard, BitDetailView, ConnectedMomentRow, MicroJournalSection, Bool, Float, Int (+2 more)
 
-### Community 74 - "love"
-Cohesion: 0.23
-Nodes (16): View, String, ActionStepView, EditFormView, EditSection, EventStepView, FeelStepView, IntensityStepView (+8 more)
+### Community 32 - "Login & Registration"
+Cohesion: 0.21
+Nodes (10): LoginStep, biometricOptIn, name, pinConfirm, pinSetup, LoginView, Bool, CGFloat (+2 more)
 
-### Community 77 - "AD71AD21-7802-4497-ADB4-4D07D94B0834"
+### Community 33 - "Settings Screen"
+Cohesion: 0.15
+Nodes (8): ActivityView, Any, Context, UIActivityViewController, UIViewControllerRepresentable, UniformTypeIdentifiers, StoreRecoveryShareSheet, StoreRecoveryView
+
+### Community 34 - "Account Flow UI Tests"
+Cohesion: 0.24
+Nodes (6): AccountFlowUITests, StaticString, String, UInt, XCUIApplication, XCUIElement
+
+### Community 35 - "Reorganization Progress Ledger"
+Cohesion: 0.18
+Nodes (14): Project Reorganization Progress Ledger, Task 4: Reorganize Utilities and Extensions, SafetyFilter + CrisisResourcesView, Phase 3 — SHIP, CrashReporter (MetricKit diagnostics), Tier 3: Launch and Polish, UITestSupport launch-argument hooks, AppLinks (privacy policy + support URLs) (+6 more)
+
+### Community 36 - "Behavioral Tag Model"
+Cohesion: 0.21
+Nodes (13): Equatable, BehavioralTag, Bool, Data, Float, Int, String, CandidateTag (+5 more)
+
+### Community 37 - "Safety Filter"
+Cohesion: 0.18
+Nodes (9): ContentCategory, exploitation, illegalActivity, selfHarm, violence, SafetyFilter, Bool, String (+1 more)
+
+### Community 38 - "Training Pipeline Scripts"
 Cohesion: 0.14
 Nodes (13): author, description, name, path, author, description, name, path (+5 more)
 
-### Community 80 - "Task 1 Report: Engine State & Focus Calculation"
-Cohesion: 0.14
-Nodes (13): 1. Planning Directory Creation, 2. Move Planning Documents, 3. Relocate and Refactor Security Tests, 4. Remove Empty tests Directory, 5. Build and Test Verification, 6. Git Stage and Commit, 7. Graphify Update, Commands Executed (+5 more)
+### Community 39 - "Auth Design Rationale"
+Cohesion: 0.19
+Nodes (13): Task 1: Root Workspace and Planning Cleanup, AuthManagerSecurityTests (script to XCTestCase port), Task 1 Report: Root Workspace and Planning Cleanup, PBXFileSystemSynchronizedRootGroup (Xcode folder sync), Task 3 Report: Service Reorganization, PBKDF2 PIN Authentication with Escalating Lockout, Phase 1 — HARDEN (foundation), GJournal Production-Ready Innovative MVP Plan (+5 more)
 
-### Community 89 - "GJournal — AI-Powered Micro-Journaling"
-Cohesion: 0.22
-Nodes (8): 🏗️ Architecture, GJournal — AI-Powered Micro-Journaling, 🚀 Key Features, 🕸️ Knowledge Graph Visualization, 🧠 On-Device AI Pipeline, 📱 Premium User Experience, 📈 Project Status, 🛠️ Technology Stack
+### Community 40 - "Legacy Path Orphans"
+Cohesion: 0.19
+Nodes (7): Element, Array, ClusterCard, ClusterCardsView, UnsortedCard, DayDetailView, RelatedEntryRow
 
-### Community 90 - "CalendarView"
-Cohesion: 0.29
-Nodes (3): CalendarView, DayCell, MonthYearPickerView
+### Community 41 - "Network Graph View"
+Cohesion: 0.19
+Nodes (7): NetworkGraphLoadingView, SwiftUI, Cluster, Collection, EmotionDetailView, EmotionBarRow, TopEmotionsView
 
-### Community 93 - "Task 2 Report: Interaction State & Two-Pass Rendering"
+### Community 42 - "Service Container & Protocols"
+Cohesion: 0.31
+Nodes (8): ClusteringServiceProtocol, EmbeddingServiceProtocol, EmotionDetectionServiceProtocol, SafetyFilterServiceProtocol, MockClusteringService, MockEmbeddingService, MockEmotionDetectionService, ServiceContainer
+
+### Community 43 - "Debug Settings"
 Cohesion: 0.15
-Nodes (12): 1. Created target folders, 2. Relocated Database Models, 3. Relocated Config Models, 4. Cleaned up old Models directory, 5. Relocated Repositories, 6. Cleaned up old Repository directory, 7. Verified project builds successfully, 8. Committed changes (+4 more)
+Nodes (5): DebugSettingsView, Binding, Int, String, URL
 
-### Community 94 - "cosine_distance_matrix"
+### Community 44 - "Forgot PIN Recovery"
+Cohesion: 0.19
+Nodes (9): ForgotPINStep, confirmErase, confirmNew, enterNew, options, success, ForgotPINView, Bool (+1 more)
+
+### Community 45 - "Reminder Scheduling"
+Cohesion: 0.21
+Nodes (4): ReminderScheduler, Bool, Int, UserNotifications
+
+### Community 46 - "Edit Window Enforcement"
+Cohesion: 0.38
+Nodes (4): EditWindowTests, Int, ModelContext, String
+
+### Community 47 - "Tag Processing"
+Cohesion: 0.27
+Nodes (5): Float, ModelContext, String, TagProcessor, TagProcessorTests
+
+### Community 48 - "AI Service Errors"
+Cohesion: 0.20
+Nodes (9): AIServiceError, clusteringFailed, embeddingGenerationFailed, emotionDetectionFailed, insufficientData, modelNotLoaded, SafetyResult, Bool (+1 more)
+
+### Community 49 - "Data Model Specs"
+Cohesion: 0.31
+Nodes (9): Task 2: Reorganize GJournal Models and Repositories, BehavioralTag Model (lemma / category / count), Bit Model (feel / event / action schema), Cluster Model (index / name / bits), Same-Day-Only Entry Editing Rule, Feel-Event-Action Micro-Journaling Framework, GJournal — AI-Powered Micro-Journaling, Repository Pattern Architecture (+1 more)
+
+### Community 50 - "Regulatory & Validation Notes"
+Cohesion: 0.22
+Nodes (9): Dead Model Cleanup (Nomic / MobileBERT removal), Emotion Classifier Quantization (94MB to ~25MB), EU AI Act Article 5(1)(f) / Article 50(3) Position, GoEmotions Classifier Validation and Binarization, Local Gemma LLM Recommendation System (planned), Local Gemma LLM Integration Research Brief, Knowledge-Graph Serialization into LLM Prompt Context, iOS Local LLM Runtime Comparison (MediaPipe / llama.cpp / MLX) (+1 more)
+
+### Community 51 - "Cluster Assignment"
+Cohesion: 0.22
+Nodes (7): ClusterAssignment, Bool, Int, UUID, ClusterableEntry, Float, UUID
+
+### Community 52 - "Mock AI Services"
+Cohesion: 0.33
+Nodes (5): SeededRandomNumberGenerator, Float, String, UInt64, RandomNumberGenerator
+
+### Community 53 - "Search & Competitor Notes"
+Cohesion: 0.29
+Nodes (8): HybridSearchService (BM25 + vector, RRF k=60), Rosebud (generative-AI wellness competitor), Accessibility Pass (VoiceOver graph summaries), vocab_gjournalembeddingminilm.txt (MiniLM embedding vocabulary), BERT Embeddings (semantic vectors), DBSCAN Clustering of Journal Entries, Force-Directed Knowledge Graph Visualization, On-Device AI Pipeline
+
+### Community 54 - "Schema Migration"
+Cohesion: 0.36
+Nodes (7): GJournalMigrationPlan, SchemaV1, SchemaV2, MigrationStage, PersistentModel, SchemaMigrationPlan, VersionedSchema
+
+### Community 55 - "Paywall View"
+Cohesion: 0.29
+Nodes (5): PaywallView, Color, String, Observation, StoreKit
+
+### Community 56 - "Change PIN Flow"
+Cohesion: 0.32
+Nodes (7): ChangePINStep, confirmNew, enterNew, success, verifyOld, ChangePINView, String
+
+### Community 57 - "Graphify Agent Rules"
+Cohesion: 0.33
+Nodes (7): Graphify Knowledge Graph Consultation Rule, graphify query / path / explain CLI, graphify update (AST-only refresh), graphify-out/wiki/index.md navigation surface, graphify Workflow (folder to knowledge graph), Task 2 Report: Models and Repositories under Sources, GEMINI.md Graphify Rules (god nodes, communities)
+
+### Community 58 - "Settings Actions"
+Cohesion: 0.29
+Nodes (4): SettingsView, Bool, String, URL
+
+### Community 59 - "Trajectory Metrics Design"
+Cohesion: 0.33
+Nodes (6): EU MDR Software-as-a-Medical-Device Boundary, Flare Index (FI) as Exploration Proxy, Loop Persistence (LP) as Rumination Proxy, Semantic Recovery Velocity (SRV), Chandra et al., The Topology of Recovery, LLM Wellness-Only Guardrails and Structured JSON Output
+
+### Community 60 - "Clustering Strategy Choice"
+Cohesion: 0.33
+Nodes (5): ClusteringStrategyChoice, classic, hdbscan, mrlAdapted, Notification.Name
+
+### Community 61 - "Auth Error Types"
+Cohesion: 0.33
+Nodes (6): AuthError, biometricUnavailable, invalidName, keychainError, userAlreadyExists, userNotFound
+
+### Community 62 - "Account Erasure"
+Cohesion: 0.53
+Nodes (3): AccountEraser, Bool, ModelContext
+
+### Community 63 - "Onboarding Flow"
+Cohesion: 0.40
+Nodes (5): OnboardingPageView, OnboardingView, Color, String, Void
+
+### Community 64 - "PIN Keypad"
+Cohesion: 0.33
+Nodes (4): PINKeypadView, Int, String, Void
+
+### Community 65 - "Training Utilities"
 Cohesion: 0.40
 Nodes (5): cosine_distance_matrix(), pairwise_agreement(), 1 - normalised_dot, same formula as Swift cosineDistance()., Fraction of pairs where same-cluster-in-A == same-cluster-in-B., run_oracle()
 
-### Community 98 - "diagram"
+### Community 66 - "Freemium Gating Design"
+Cohesion: 0.40
+Nodes (5): EntitlementManager (StoreKit 2, on-device JWS), Freemium Gating of the Three Insight Pillars, Stoic (quantitative habit-tracker competitor), InsightGatingSection (data-volume gates), App Store Connect IAP Product (com.gjournal.insights)
+
+### Community 69 - "Training Helpers (Aux)"
 Cohesion: 0.67
 Nodes (3): diagram(), main(), Run ripser on a point cloud; return finite H0 bars, H1 bars, and inf-H0 count.
 
-### Community 371 - "ObservableObject"
-Cohesion: 0.06
-Nodes (28): CommonCrypto, CryptoKit, GJournal, GJournalMigrationPlan, SchemaV1, SchemaV2, AuthError, invalidName (+20 more)
-
-### Community 378 - ".compute"
-Cohesion: 0.22
-Nodes (5): Cluster, Collection, EmotionDetailView, EmotionBarRow, TopEmotionsView
-
 ## Knowledge Gaps
-- **178 isolated node(s):** `classic`, `mrlAdapted`, `hdbscan`, `Notification.Name`, `appleNLP` (+173 more)
+- **116 isolated node(s):** `classic`, `mrlAdapted`, `hdbscan`, `Notification.Name`, `appleNLP` (+111 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **98 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **42 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Foundation` connect `DBSCAN Clustering` to `GGM Estimator Service`, `Persistent Homology Engine`, `AI Service Errors`, `Schema Migration`, `App Entry Point`, `Bit Collection Extensions`, `Dashboard ContentView`, `AI Processing Manager`, `Efficiency Benchmark`, `Add/Edit Entry View`, `Trajectory Dashboard View`, `Behavioral Tag Model`, `Base Repository CRUD`, `Regulatory Compliance Concepts`, `Tag Processor Pipeline`, `ML Model Manifest`, `Crisis Resources View`, `Security & PH Concepts`, `SafetyFilter`, `Date Formatting Utilities`, `NLEmbeddingService`, `DeletedEntryRow`, `ObservableObject`, `.compute`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
-- **Why does `View` connect `love` to `Crisis Resources View`, `Auth Manager & Biometrics`, `CalendarView`, `Cluster Cards View`, `Schema Migration`, `Graph Physics Engine`, `Bit`, `Repository Query Methods`, `Emotion Model`, `Settings View & Export`, `Onboarding Flow`, `PIN Keypad View`, `.compute`, `ObservableObject`, `Add/Edit View Animation`, `Behavioral Tag Model`, `Regulatory Compliance Concepts`?**
-  _High betweenness centrality (0.113) - this node is a cross-community bridge._
-- **Why does `AuthManager` connect `Auth Manager & Biometrics` to `DBSCAN Clustering`, `App Entry Point`, `ObservableObject`, `Schema Migration`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
-- **Are the 7 inferred relationships involving `Bit` (e.g. with `.createBit()` and `.generateSeedData()`) actually correct?**
-  _`Bit` has 7 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `Foundation` connect `Behavioral Tag Substrate` to `GGM Network Estimation`, `Trajectory Analysis`, `Hybrid Search & Cluster Naming`, `On-Device Embedding & Emotion`, `Crash Reporting & App Lifecycle`, `HDBSCAN Clustering`, `Efficiency Benchmarking`, `Persistent Homology`, `DBSCAN Clustering`, `Emotion Taxonomy`, `Export Error Handling`, `Safety Filter`, `Legacy Path Orphans`, `Network Graph View`, `Service Container & Protocols`, `Reminder Scheduling`, `Tag Processing`, `Cluster Assignment`, `Schema Migration`, `Clustering Strategy Choice`, `Account Erasure`, `Biometric Lock Screen`?**
+  _High betweenness centrality (0.140) - this node is a cross-community bridge._
+- **Why does `View` connect `Entry Composer Steps` to `GGM Network Estimation`, `PIN & Biometric Auth`, `Trajectory Analysis`, `Force-Directed Graph Physics`, `Crash Reporting & App Lifecycle`, `Dashboard ContentView`, `Behavioral Tag Substrate`, `Cluster Model & Dashboard Data`, `Bits List View`, `Repository Base Layer`, `AI Processing Pipeline`, `Add & Edit Entry Flow`, `Crisis Resources`, `Bit Card & Detail`, `Login & Registration`, `Settings Screen`, `Legacy Path Orphans`, `Network Graph View`, `Debug Settings`, `Forgot PIN Recovery`, `Paywall View`, `Change PIN Flow`, `Settings Actions`, `Onboarding Flow`, `PIN Keypad`?**
+  _High betweenness centrality (0.140) - this node is a cross-community bridge._
+- **Why does `AuthManager` connect `PIN & Biometric Auth` to `Login & Registration`, `Biometric Lock Screen`, `Crash Reporting & App Lifecycle`, `Dashboard ContentView`, `Behavioral Tag Substrate`, `Forgot PIN Recovery`, `AI Processing Pipeline`, `Change PIN Flow`, `Settings Actions`, `Account Erasure`?**
+  _High betweenness centrality (0.098) - this node is a cross-community bridge._
+- **Are the 8 inferred relationships involving `Bit` (e.g. with `.createBit()` and `.importData()`) actually correct?**
+  _`Bit` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `AuthManager` (e.g. with `GJournalApp` and `.configureLaunchState()`) actually correct?**
   _`AuthManager` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 4 inferred relationships involving `BaseJournalRepository` (e.g. with `HybridSearchService` and `.nodeDetailCard()`) actually correct?**
+  _`BaseJournalRepository` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `classic`, `mrlAdapted`, `hdbscan` to the rest of the system?**
-  _189 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Persistent Homology Engine` be split into smaller, more focused modules?**
-  _Cohesion score 0.07801418439716312 - nodes in this community are weakly interconnected._
+  _127 weakly-connected nodes found - possible documentation gaps or missing edges._

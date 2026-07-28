@@ -223,6 +223,9 @@ struct ProgressIndicator: View {
             }
         }
         .padding()
+        // Five bare dots read as nothing useful; announce the position instead.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Step \(currentStep) of \(totalSteps)"))
     }
 }
 
@@ -282,6 +285,8 @@ struct TitleStepView: View {
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .focused($focused).padding(.horizontal, 30)
                     .onChange(of: title) { _, v in if v.count > maxTitleLength { title = String(v.prefix(maxTitleLength)) } }
+                    .accessibilityLabel(Text("Entry title"))
+                    .accessibilityHint(Text("Optional"))
                 HStack(spacing: 20) {
                     Button(action: onSkip) {
                         Text("Skip").font(.body).foregroundColor(.gray)
@@ -322,6 +327,8 @@ struct FeelStepView: View {
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .frame(minHeight: 120).focused($focused).padding(.horizontal, 30)
                     .onChange(of: feel) { _, v in if v.count > maxBodyLength { feel = String(v.prefix(maxBodyLength)) } }
+                    .accessibilityLabel(Text("How you're feeling"))
+                    .accessibilityHint(Text("Describe your emotional state"))
                 Button(action: onNext) {
                     Text("Next").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -359,6 +366,8 @@ struct EventStepView: View {
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .frame(minHeight: 120).focused($focused).padding(.horizontal, 30)
                     .onChange(of: event) { _, v in if v.count > maxBodyLength { event = String(v.prefix(maxBodyLength)) } }
+                    .accessibilityLabel(Text("What happened"))
+                    .accessibilityHint(Text("Describe the events that shaped how you feel"))
                 Button(action: onNext) {
                     Text("Next").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -396,6 +405,8 @@ struct ActionStepView: View {
                     .background(Color.gray.opacity(0.2)).cornerRadius(15)
                     .frame(minHeight: 120).focused($focused).padding(.horizontal, 30)
                     .onChange(of: action) { _, v in if v.count > maxBodyLength { action = String(v.prefix(maxBodyLength)) } }
+                    .accessibilityLabel(Text("What you'll do next"))
+                    .accessibilityHint(Text("Describe the actions you'll take"))
                 Button(action: onNext) {
                     Text("Next").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -437,7 +448,11 @@ struct IntensityStepView: View {
                         Text("\(Int(intensity))/4").font(.caption).foregroundColor(.gray)
                     }
                 }
+                // The ring restates the slider; announcing both is just noise.
+                .accessibilityHidden(true)
                 Slider(value: $intensity, in: 1...4, step: 1).accentColor(Color(red: 0.55, green: 0.4, blue: 0.95)).padding(.horizontal, 50)
+                    .accessibilityLabel(Text("Intensity"))
+                    .accessibilityValue(Text("\(labels[Int(intensity) - 1]), \(Int(intensity)) of 4"))
                 Button(action: onNext) {
                     Text("Almost Done").font(.headline).foregroundColor(.black)
                         .frame(maxWidth: .infinity).padding()
@@ -548,6 +563,8 @@ struct EditFormView: View {
                                 Text("\(Int(intensity))/4").font(.caption).foregroundColor(.gray)
                             }
                             Slider(value: $intensity, in: 1...4, step: 1).accentColor(Color(red: 0.55, green: 0.4, blue: 0.95))
+                                .accessibilityLabel(Text("Intensity"))
+                                .accessibilityValue(Text("\(labels[Int(intensity) - 1]), \(Int(intensity)) of 4"))
                         }
                         .padding(.vertical, 12).padding(.horizontal, 16)
                         .background(Color.gray.opacity(0.2)).cornerRadius(12)
@@ -577,10 +594,15 @@ struct EditSection: View {
                 .padding(.vertical, 12).padding(.horizontal, 16)
                 .background(Color.gray.opacity(0.2)).cornerRadius(12)
                 .overlay(
-                    text.isEmpty ? Text(placeholder).foregroundColor(.gray.opacity(0.5)).padding(20) : nil,
+                    text.isEmpty
+                        ? Text(placeholder).foregroundColor(.gray.opacity(0.5)).padding(20)
+                            .accessibilityHidden(true)   // carried by the field's own hint
+                        : nil,
                     alignment: .topLeading
                 )
                 .onChange(of: text) { _, v in if v.count > limit { text = String(v.prefix(limit)) } }
+                .accessibilityLabel(Text(label))
+                .accessibilityHint(Text(placeholder))
         }
     }
 }

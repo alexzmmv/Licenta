@@ -149,6 +149,12 @@ struct DayCell: View {
     let isSelected: Bool
     let isToday: Bool
 
+    // A seven-column grid can't widen, so day numbers are capped and allowed to
+    // shrink rather than clip. The cell height still grows with the text.
+    @ScaledMetric(relativeTo: .subheadline) private var dayFontSize: CGFloat = 15
+    @ScaledMetric(relativeTo: .subheadline) private var tileSize: CGFloat = 36
+    @ScaledMetric(relativeTo: .subheadline) private var cellHeight: CGFloat = 52
+
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
@@ -156,16 +162,18 @@ struct DayCell: View {
                     .fill(isSelected
                           ? Color(red: 0.42, green: 0.26, blue: 0.88)
                           : Color.clear)
-                    .frame(width: 36, height: 36)
+                    .frame(width: tileSize, height: tileSize)
 
                 if isToday && !isSelected {
                     RoundedRectangle(cornerRadius: 9)
                         .stroke(Color.white.opacity(0.35), lineWidth: 1.5)
-                        .frame(width: 36, height: 36)
+                        .frame(width: tileSize, height: tileSize)
                 }
 
                 Text(date.dayNumber)
-                    .font(.system(size: 15, weight: isToday ? .bold : .regular))
+                    .font(.system(size: min(dayFontSize, 24), weight: isToday ? .bold : .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                     .foregroundColor(.white)
             }
 
@@ -175,7 +183,12 @@ struct DayCell: View {
                       : Color.clear)
                 .frame(width: 12, height: 3)
         }
-        .frame(height: 52)
+        .frame(height: cellHeight)
+        // The dot is the only "has entries" signal, and it's invisible to VoiceOver.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(date.formatted(.dateTime.weekday(.wide).month(.wide).day())))
+        .accessibilityValue(Text(hasBits ? "Has entries" : "No entries"))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
