@@ -34,7 +34,10 @@ struct OnboardingView: View {
             icon: "lock.shield.fill",
             iconColor: Color(red: 0.35, green: 0.65, blue: 1.0),
             title: "Your journal stays with you",
-            bodyText: "GJournal runs entirely on your device. Your thoughts never leave — no accounts, no cloud, no tracking. Everything is encrypted and protected by your PIN or Face ID.",
+            // Careful with this claim: the PIN is an access gate, it does not
+            // encrypt anything. At-rest protection comes from iOS file
+            // protection, which is tied to the device passcode.
+            bodyText: "GJournal runs entirely on your device. Your thoughts never leave — no accounts, no cloud, no tracking. Your journal is locked behind your PIN or Face ID, and stored using your device's built-in file protection.",
             tag: "PRIVACY FIRST"
         )
     }

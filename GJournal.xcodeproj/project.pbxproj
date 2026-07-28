@@ -42,10 +42,23 @@
 		};
 		F4F7EA542EA75BAC0058A8AD /* GJournal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F4F7EA9900000000000000E1 /* Exceptions for "GJournal" folder in "GJournal" target */,
+			);
 			path = GJournal;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F4F7EA9900000000000000E1 /* Exceptions for "GJournal" folder in "GJournal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				GJournal.storekit,
+			);
+			target = F4F7EA512EA75BAC0058A8AD /* GJournal */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		E5F7EA0000000000000000A5 /* Frameworks */ = {

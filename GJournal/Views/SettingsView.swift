@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -21,6 +22,10 @@ struct SettingsView: View {
     @State private var diagnosticsStatusMessage: String?
     @State private var deleteErrorMessage: String?
     @State private var notificationsDenied = false
+    @State private var showingImportPicker = false
+    @State private var importStatusMessage: String?
+    @State private var importFailed = false
+    @State private var pendingImportURL: URL?
     @State private var reminderTime: Date = ReminderScheduler.shared.scheduledTime
     @State private var isRestoring = false
     @State private var restoreStatusMessage: String?
@@ -164,6 +169,13 @@ struct SettingsView: View {
                                     .clipShape(Capsule())
                             }
                         }
+                        // Otherwise the badge reads as a bare number after the title.
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(
+                            repository.deletedBits.isEmpty
+                                ? Text("Recently Deleted")
+                                : Text("Recently Deleted, \(repository.deletedBits.count) entries")
+                        )
                     }
                     NavigationLink(destination: TagManagementView(repository: repository)) {
                         HStack {
@@ -195,6 +207,21 @@ struct SettingsView: View {
                         Text(exportErrorMessage)
                             .font(.caption)
                             .foregroundColor(.red)
+                    }
+
+                    Button {
+                        showingImportPicker = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.and.arrow.down")
+                            Text("Import from Backup")
+                        }
+                    }
+
+                    if let importStatusMessage {
+                        Text(importStatusMessage)
+                            .font(.caption)
+                            .foregroundColor(importFailed ? .red : .secondary)
                     }
 
                     Button {
@@ -304,6 +331,15 @@ struct SettingsView: View {
 
                 #if DEBUG
                 Section {
+                    if AppLinks.hasUnconfiguredLinks {
+                        Label {
+                            Text("Privacy Policy / Support still point at example.com — replace before submitting.")
+                                .font(.caption)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                        }
+                    }
                     NavigationLink(destination: DebugSettingsView(repository: repository)) {
                         HStack {
                             Image(systemName: "hammer.fill")
@@ -377,6 +413,57 @@ struct SettingsView: View {
             .sheet(isPresented: $showingDiagnosticsSheet) {
                 ActivityView(items: diagnosticFileURLs)
             }
+            .fileImporter(
+                isPresented: $showingImportPicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else { return }
+                    pendingImportURL = url
+                case .failure(let error):
+                    importFailed = true
+                    importStatusMessage = "Couldn't open that file."
+                    AppLogger.error("[Settings] Import picker failed: \(error)")
+                }
+            }
+            .confirmationDialog(
+                "Import Backup",
+                isPresented: Binding(
+                    get: { pendingImportURL != nil },
+                    set: { if !$0 { pendingImportURL = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Merge with My Entries") { performImport(replaceExisting: false) }
+                Button("Replace Everything", role: .destructive) { performImport(replaceExisting: true) }
+                Button("Cancel", role: .cancel) { pendingImportURL = nil }
+            } message: {
+                Text("Merging keeps what's already here and adds anything missing. Replacing deletes your current entries first.")
+            }
+        }
+    }
+
+    // MARK: - Import
+
+    private func performImport(replaceExisting: Bool) {
+        guard let url = pendingImportURL,
+              let local = repository as? LocalJournalRepository else {
+            pendingImportURL = nil
+            return
+        }
+        pendingImportURL = nil
+
+        do {
+            let summary = try local.importData(from: url, replaceExisting: replaceExisting)
+            importFailed = false
+            importStatusMessage = summary.message
+        } catch {
+            importFailed = true
+            importStatusMessage = (error as? LocalizedError)?.errorDescription
+                ?? "Couldn't import that backup."
+            AppLogger.error("[Settings] Import failed: \(error)")
         }
     }
 

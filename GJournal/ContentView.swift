@@ -430,16 +430,18 @@ struct ContentView: View {
             Spacer()
 
             HStack(spacing: 10) {
-                headerButton(icon: "list.bullet") { showingBitsList = true }
-                headerButton(icon: "point.3.connected.trianglepath.dotted") { showingGraph = true }
-                headerButton(icon: "gearshape.fill") { showingSettings = true }
+                headerButton(icon: "list.bullet", label: "All entries") { showingBitsList = true }
+                headerButton(icon: "point.3.connected.trianglepath.dotted", label: "Theme graph") { showingGraph = true }
+                headerButton(icon: "gearshape.fill", label: "Settings") { showingSettings = true }
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
     }
 
-    private func headerButton(icon: String, action: @escaping () -> Void) -> some View {
+    /// `label` is required: without it VoiceOver falls back to the SF Symbol
+    /// name and announces things like "point.3.connected.trianglepath.dotted".
+    private func headerButton(icon: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .medium))
@@ -449,6 +451,10 @@ struct ContentView: View {
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Color.white.opacity(0.1), lineWidth: 1))
         }
+        // Identifier stays the symbol name so UI tests keep locating these;
+        // the label is what a person actually hears.
+        .accessibilityIdentifier(icon)
+        .accessibilityLabel(Text(label))
     }
 
     private var dashboardSearchBar: some View {
@@ -592,40 +598,53 @@ struct WeekDayPill: View {
     let emotion: Emotion?
     let isToday: Bool
 
+    // The strip's 10pt labels sit inside a hard 38x46 tile. Scaling the type
+    // without the tile just clips it, so both grow together.
+    @ScaledMetric(relativeTo: .caption2) private var labelSize: CGFloat = 10
+    @ScaledMetric(relativeTo: .caption2) private var emojiSize: CGFloat = 22
+    @ScaledMetric(relativeTo: .caption2) private var tileWidth: CGFloat = 38
+    @ScaledMetric(relativeTo: .caption2) private var tileHeight: CGFloat = 46
+
     var body: some View {
         VStack(spacing: 6) {
             Text(date.weekdayLetter)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: labelSize, weight: .medium))
                 .foregroundColor(.gray)
 
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(emotion != nil
-                          ? emotion!.color.opacity(0.25)
-                          : Color.white.opacity(0.04))
-                    .frame(width: 38, height: 46)
+                    .fill(emotion?.color.opacity(0.25) ?? Color.white.opacity(0.04))
+                    .frame(width: tileWidth, height: tileHeight)
 
                 if isToday {
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.white.opacity(0.45), lineWidth: 1.5)
-                        .frame(width: 38, height: 46)
+                        .frame(width: tileWidth, height: tileHeight)
                 }
 
-                if let emotion = emotion {
+                if let emotion {
                     Text(emotion.emoji)
-                        .font(.system(size: 22))
+                        .font(.system(size: emojiSize))
                 } else {
                     Image(systemName: "minus")
-                        .font(.system(size: 10))
+                        .font(.system(size: labelSize))
                         .foregroundColor(.gray.opacity(0.4))
                 }
             }
 
             Text(date.dayNumber)
-                .font(.system(size: 10, weight: isToday ? .bold : .regular))
+                .font(.system(size: labelSize, weight: isToday ? .bold : .regular))
                 .foregroundColor(isToday ? .white : .gray.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
+        // Seven separate tiles per day is 21 swipes across the strip.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            Text(date.formatted(.dateTime.weekday(.wide).month(.wide).day()))
+        )
+        .accessibilityValue(
+            emotion.map { Text($0.rawValue) } ?? Text("No entry")
+        )
     }
 }
 
